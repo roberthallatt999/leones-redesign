@@ -1,0 +1,26 @@
+.DS_Store
+
+# Images
+images/avatars/
+images/captchas/
+images/smileys/
+images/member_photos/
+images/signature_attachments/
+images/pm_attachments/
+images/uploads/\*
+images/uploads
+images/uploads/*
+images/uploads/.gitkeep
+
+# Caches
+sclmin/user/cache/
+sclmin/user/cache/\*
+sclmin/user/cache/*
+sclmin/user/cache/current_version
+sized/
+thumbs/
+_thumbs/
+*/expressionengine/cache/*
+
+# Multi Environment Config
+lcmin/user/config/config.local.php
