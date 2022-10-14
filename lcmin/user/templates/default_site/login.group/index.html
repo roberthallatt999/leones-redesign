@@ -1,0 +1,48 @@
+<!doctype html>
+<html class="no-js" lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Please Login</title>
+        <meta name="description" content="">
+        <meta property="og:title" content=""/>
+        <meta property="og:image" content=""/>
+        <meta property="og:description" content=""/>
+        <meta property="og:url" content=""/>
+        <meta property="og:site_name" content=""/>  
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.3.1/css/foundation.min.css">
+        <script src="{site_url}js/vendor/modernizr.js"></script>         
+        <link rel="stylesheet" href="{site_url}css/custom.css" />
+    </head>
+    <body class="login">
+
+
+      
+
+          <div class="row">
+            <div class="small-11 medium-5 columns small-centered login-box">
+        {exp:member:login_form return="{current_path}"}
+            <div class="log-in-form">
+            <h4 class="text-center">Please login to view this part of the website</h4>
+            <label>Username
+               <input type="text" placeholder="Username" name="username" value="" maxlength="32" size="25">
+            </label>
+            <label>Password
+              <input type="password" placeholder="Password" name="password" value="" maxlength="32" size="25">
+            </label>
+            <p><input type="submit" name="submit" class="button expanded" value="Log in"></input></p>
+           </div>
+        {/exp:member:login_form} 
+         </div>
+        </div>
+
+  
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.3.1/js/foundation.min.js"></script>
+<script>
+      $(document).foundation();
+</script>
+
+
+   </body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leones' Creamery: Website Training Library</title>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,500,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/css/foundation.min.css" />
+    <link rel="stylesheet" href="{site_url}css/training.css" />
+  </head>
+  <body>
+    
+<div class="header">
+      <div class="grid-container">
+        <div class="grid-x">
+          <div class="large-1 small-5 cell"><a href="https://digitaldesigns.com/" target="_blank"><img src="https://digitaldesigns.com/img/dd-logo-trsp.png"/></a></div>
+          <div class="large-11 small-12 cell title">Leones' Creamery: Website Training Library</div>
+        </div>
+      </div>
+</div>
+    
+<div class="grid-container">
+    <div class="grid-x grid-padding-x">
+      <div class="large-2 cell">
+        <nav class="sticky-container" data-sticky-container>
+          <div class="docs-toc sticky" data-sticky data-sticky-on="large" data-margin-top="7">
+           <ul class="vertical menu" data-magellan>
+            <li class="docs-nav-title">Menu</li>
+            <li><a href="#terminology">Common Terminology</a></li>
+            {exp:low_reorder:entries set="videos" status="standard video" disable="categories|member_data|pagination|category_fields"}  
+            <li><a href="#{count}standard">{title}</a></li>
+            {/exp:low_reorder:entries}
+            {exp:low_reorder:entries set="videos" status="open" disable="categories|member_data|pagination|category_fields"}
+            <li><a href="#{count}site">{title}</a></li>
+            {/exp:low_reorder:entries}
+          </ul>
+         </div>
+       </nav>
+      </div><!--end of sidenav-->
+       <div class="large-10 cell">
+        <div class="panel" id="terminology" data-magellan-target="terminology">
+          <h2 class="no-pad">Common Terminology</h2>
+          <p><strong>BACKEND/CONTROL PANEL</strong><br>The web-based interface where the site&rsquo;s content is managed.</p>
+          <p><strong>FRONTEND</strong><br>The public interface that is visible when someone visits the website.</p>
+          <p><strong>CHANNEL</strong><br>The database container that houses a certain type of content.</p>
+          <p><strong>ENTRY</strong><br>Any type of content that is editable in the backend.</p>
+          <p><strong>CREATE</strong><br>Create a new entry.</p>
+          <p><strong>EDIT</strong><br>Allows you to change an existing entry.</p>
+        </div>
+
+         {exp:low_reorder:entries set="videos" status="standard video" disable="categories|member_data|pagination|category_fields"}
+         <div data-magellan-target="{count}standard" id="{count}standard">
+           <h2>{title}</h2>
+              {if video}
+              <div class="video">
+                {exp:antenna url="{video}" wmode="transparent|opaque|window"}
+                  <div class="flex-video">{embed_code}</div>
+                {/exp:antenna}     
+              </div> <!--end video-->
+              {/if}
+              {video_description}
+          </div> 
+          {/exp:low_reorder:entries}
+          {exp:low_reorder:entries set="videos" status="open" disable="categories|member_data|pagination|category_fields"}
+           <div data-magellan-target="{count}site" id="{count}site"> 
+             <h2>{title}</h2>
+              {if video}
+              <div class="video">
+                {exp:antenna url="{video}" wmode="transparent|opaque|window"}
+                  <div class="flex-video">{embed_code}</div>
+                {/exp:antenna}     
+              </div> <!--end video-->
+              {/if}
+              {video_description}
+            </div>
+            {/exp:low_reorder:entries}
+   </div><!--end of right column-->
+  </div>
+</div><!--emd main grid container-->  
+<div class="footer text-center">
+<a href="https://digitaldesigns.com/?utm_source={site_url}&utm_medium=footer_link" target="_blank" title="Digital Designs Link opens in new window">Ⓒ DIGITAL DESIGNS</a>
+</div>
+<div id="back-top" style="display: block;">
+     <a class="button totop" href="#" title="Back to Top of Page"><i class="fa fa-arrow-up" aria-hidden="true"></i></a>
+   </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+ <script>
+      $(document).ready(function(){
+      
+        // hide #back-top first
+        $("#back-top").hide();
+      
+        // fade in #back-top
+        $(function () {
+          $(window).scroll(function () {
+            if ($(this).scrollTop() > 100) {$('#back-top').fadeIn();} else {$('#back-top').fadeOut();}
+          });
+      
+          // scroll body to 0px on click
+          $('#back-top .fi-arrow-up').click(function () {
+            $('body,html').animate({
+              scrollTop: 0
+            }, 800);
+            return false;
+          });
+        });
+      
+      });
+  </script>
+         
+    
+    <script src="{site_url}js/vendor/jquery.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+    </script>
+  </body>
+</html>

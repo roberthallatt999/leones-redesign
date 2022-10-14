@@ -1,0 +1,45 @@
+{layout='layouts/_layout_main'}
+{exp:stash:cache}
+
+{exp:channel:entries channel="pages" entry_id="14" dynamic="no"}
+{layout:set name='meta_title'}Leones' Creamery | Find our Ice Cream Shop{/layout:set}
+{layout:set name='meta_description'}Our address is 722 &frac12; Main Street in Downtown Spearfish, South Dakota. Leones&rsquo; Creamery is attached to the North side of the Old City Hall building. If all else fails, follow your nose. The scent of freshly-baked waffle cones will guide you in the right direction.{/layout:set}
+{layout:set name='social_title'}Leones' Creamery | Find our Ice Cream Shop{/layout:set}
+{layout:set name='social_description'}Our address is 722 &frac12; Main Street in Downtown Spearfish, South Dakota. Leones&rsquo; Creamery is attached to the North side of the Old City Hall building. If all else fails, follow your nose. The scent of freshly-baked waffle cones will guide you in the right direction.{/layout:set}
+{layout:set name='social_image'}{top_image}{img:url:resize width='1200' height='630' crop='true'}{/top_image}{/layout:set}
+
+{top_image}<div class="hero-section inner" style="background-image:url({img:url})">{/top_image}
+    <div class="words"><h1>{title}</h1></div>
+    <div class="overlay"></div>
+</div><!--end of hero-->
+
+
+<div class="content-area"><!--start of main content-->
+   <div class="triangle-border"></div><!--end of doodle border--> 
+     <div class="grid-container top-margin">
+        <div class="grid-x">
+          <div class="cell small-12 medium-10 large-5 float-center">
+            <p>{text_area_1}</p>
+          </div>
+          <div class="cell small-12 medium-10 large-6 float-center">
+            <p><img src="{site_url}images/find-us-outside-leones.jpg" alt="Outside of Leones' Creamery"/></p>
+          </div>
+        </div><!--end of first paragraph-->
+      </div>
+     <div class="grid-container top-margin">
+        <div class="grid-x">
+          <div class="cell small-12 medium-10 large-8 float-center">
+            <p>{text_area_2}</p>
+            <a href="https://goo.gl/maps/eyqjH9SiUAy" target="_blank" class="button getdirections" onclick="dataLayer.push({'event': 'ddgetdirections','eventlabel':'Get Directions Click'});">Get Directions</a>
+          </div>
+        </div>
+      </div>
+{/exp:channel:entries}
+
+      <div class="grid-x map">
+         <div class="cell small-12">
+          <iframe src="https://snazzymaps.com/embed/47806" width="100%" height="600px" style="border:none;"></iframe>
+        </div>
+     </div><!--end of map-->
+</div><!--end of main content-->
+{/exp:stash:cache}

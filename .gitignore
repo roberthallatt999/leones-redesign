@@ -13,10 +13,10 @@ images/uploads/*
 images/uploads/.gitkeep
 
 # Caches
-sclmin/user/cache/
-sclmin/user/cache/\*
-sclmin/user/cache/*
-sclmin/user/cache/current_version
+lcmin/user/cache/
+lcmin/user/cache/\*
+lcmin/user/cache/*
+lcmin/user/cache/current_version
 sized/
 thumbs/
 _thumbs/
@@ -24,3 +24,4 @@ _thumbs/
 
 # Multi Environment Config
 lcmin/user/config/config.local.php
+LocalValetDriver.php

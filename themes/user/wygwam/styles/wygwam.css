@@ -1,0 +1,45 @@
+div.wygwam { margin-bottom: 10px; }
+div.wygwam textarea.cke_source{ max-height: none;}
+iframe.wygwam { border: 1px solid #bbb; width: 100%; background: #fff;
+	opacity: 0.7; -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=70)"; filter: alpha(opacity=70);
+	border-radius: 2px; -webkit-border-radius: 2px; -moz-border-radius: 2px; }
+iframe.wygwam:hover { opacity: 1; -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=100)"; filter: alpha(opacity=100); }
+.cke_reset_all .cke_dialog > tbody > tr > td:first-child {
+	padding-left: 0;
+}
+.cke_reset_all .cke_dialog > tbody > tr > td:last-child {
+	padding-right: 0;
+}
+.cke_dialog_contents td:first-child, .cke_dialog_contents td:last-child {
+    padding-left: 5px;
+}
+.cke_dialog_contents td:first-child, .cke_dialog_contents td:last-child {
+    padding-right: 5px;
+}
+
+.cke_dialog_contents .cke_dialog_ui_vbox td:first-child, .cke_dialog_contents .cke_dialog_ui_vbox td:last-child {
+    padding-left: 0;
+}
+.cke_dialog_contents .cke_dialog_ui_vbox td:first-child, .cke_dialog_contents .cke_dialog_ui_vbox td:last-child {
+    padding-right: 0;
+}
+
+select.cke_dialog_ui_input_select {
+	background-image: none;
+	appearance: auto;
+	-webkit-appearance: auto;
+	-moz-appearance: auto;
+}
+.cke_reset_all select.cke_dialog_ui_input_select {
+	padding: initial !important; 
+	padding-left: 0.5em !important;
+}
+
+select.cke_dialog_ui_input_select {
+	height: auto;
+}
+
+.cke_reset_all input[type="text"] {
+	line-height: unset;
+	font-size: unset;
+}

@@ -1,0 +1,67 @@
+{layout='layouts/_layout_main'}
+{exp:stash:cache}
+{exp:channel:entries channel="pages" entry_id="18" dynamic="no"}
+{layout:set name='meta_title'}Leones' Creamery | {title}{/layout:set}
+{layout:set name='social_description'}{exp:chopper words="40" append="..."}{text_area_1}{/exp:chopper}{/layout:set}
+{layout:set name='social_title'}Leones' Creamery | {title}{/layout:set}
+{layout:set name='social_description'}{exp:chopper words="40" append="..."}{text_area_1}{/exp:chopper}{/layout:set}
+{layout:set name='social_image'}{top_image}{img:url:resize width='1200' height='630' crop='true'}{/top_image}{/layout:set}
+
+
+{top_image}<div class="hero-section inner" style="background-image:url({img:url})">{/top_image}
+    <div class="words"><h1>{title}</h1></div>
+    <div class="overlay"></div>
+</div><!--end of hero-->
+
+
+<div class="content-area"><!--start of main content-->
+   <div class="triangle-border"></div><!--end of doodle border--> 
+  
+     <div class="grid-container">
+      <div class="grid-x">
+          <div class="cell small-12 medium-10 large-8 text-center float-center intro">
+            <p>{text_area_1}</p>
+          </div>
+        </div> 
+{/exp:channel:entries}
+
+{exp:channel:entries channel="blog_entry" dynamic="no" limit="6" paginate="bottom"}
+        <div class="grid-x grid-padding-x blog"> 
+          <div class="cell small-12 medium-12 large-7 small-order-2 medium-order-2 large-order-1"><a href="{site_url}blog/{url_title}" class="article">
+            <h3 class="blog-title">{title}</h3>
+            <div class="date">{entry_date format="%F %d, %Y"} | by {blog_author}</div>
+            <p>{exp:chopper words="22" append="..."}{body_area}{/exp:chopper}</p></a>
+            <a class="button" href="{site_url}blog/{url_title}">Read Post</a>
+          </div>
+          <div class="cell small-12 medium-12 large-5 small-order-1 medium-order-1 large-order-2"><a href="{site_url}blog/{url_title}">
+            <img src="{top_image}{img:url}{/top_image}" alt="{img:title}"/></a>
+          </div>
+        </div><!--end of one blog-->
+
+
+
+
+      {paginate}
+         {pagination_links}
+          <ul class="pagination-pointed pagination text-center" role="navigation" aria-label="Pagination">
+          {previous_page}
+          <li class="pagination-previous"><a class="pagination-pointed-button" href="{pagination_url}" aria-label="Previous page">Previous</a></li>
+          {/previous_page}
+          {page}
+          {if current_page}
+           <li class="current">{pagination_page_number}</li>
+           {if:else}
+            <li><a class="pagination-pointed-button" aria-label="Page {pagination_page_number}" href="{pagination_url}">{pagination_page_number}</a></li>
+          {/if} 
+         {/page}
+          {next_page}<li class="pagination-next"><a class="pagination-pointed-button" href="{pagination_url}" aria-label="Next page">Next</a></li>{/next_page}
+          </ul>
+          {/pagination_links}
+      {/paginate}
+
+
+{/exp:channel:entries}
+        
+      </div><!--end of wrapping grid-container-->
+</div><!--end of main content-->
+{/exp:stash:cache}

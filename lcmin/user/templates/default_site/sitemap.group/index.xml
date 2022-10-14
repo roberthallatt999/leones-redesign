@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
+<url>
+  <loc>https://leonescreamery.com/</loc>
+  <lastmod>2018-04-06T20:06:58+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/scoop-it-forward</loc>
+  <lastmod>2020-09-06T20:07:04+00:00</lastmod>
+  <priority>0.90</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/flavors</loc>
+  <lastmod>2018-04-06T20:06:58+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/about</loc>
+  <lastmod>2018-04-06T20:06:59+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/find-us</loc>
+  <lastmod>2018-04-06T20:06:59+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/special-orders</loc>
+  <lastmod>2018-04-06T20:07:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/faqs</loc>
+  <lastmod>2018-04-06T20:07:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/blog</loc>
+  <lastmod>2018-04-06T20:07:01+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/contact</loc>
+  <lastmod>2018-04-06T20:07:03+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://leonescreamery.com/join-the-team</loc>
+  <lastmod>2018-04-06T20:07:04+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+{exp:channel:entries channel="blog_entry" dynamic="no" orderby="date"}
+<url>
+  <loc>{site_url}blog/{url_title}</loc>
+  <lastmod>{entry_date format="%Y-%m-%d"}</lastmod>
+  <priority>0.80</priority>
+</url>
+{/exp:channel:entries}
+</urlset>

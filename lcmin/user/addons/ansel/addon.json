@@ -1,0 +1,13 @@
+{
+	"author": "TJ Draper",
+	"authorUrl": "https://buzzingpixel.com",
+	"bugs": "https://www.buzzingpixel.com/support",
+	"description": "Crop images with pre-defined constraints",
+	"docsUrl": "https://www.buzzingpixel.com/software/ansel-ee/documentation",
+	"homepage": "https://www.buzzingpixel.com/software/ansel-ee",
+	"label": "Ansel",
+	"name": "ansel",
+	"namespace": "BuzzingPixel\\Ansel",
+	"settingsExist": true,
+	"version": "2.3.0"
+}

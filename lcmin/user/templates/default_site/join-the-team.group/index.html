@@ -1,0 +1,33 @@
+{layout='layouts/_layout_main'}
+{exp:stash:cache}
+{exp:channel:entries channel="pages" entry_id="21" dynamic="no"}
+{layout:set name='meta_title'}Leones' Creamery | {title}{/layout:set}
+{layout:set name='meta_description'}{exp:chopper words="41" append="..."}{text_area_1}{/exp:chopper}{/layout:set}
+{layout:set name='social_title'}Leones' Creamery | {title}{/layout:set}
+{layout:set name='social_description'}{exp:chopper words="41" append="..."}{text_area_1}{/exp:chopper}{/layout:set}
+{layout:set name='social_image'}{top_image}{img:url:resize width='1200' height='630' crop='true'}{/top_image}{/layout:set}
+
+{top_image}<div class="hero-section inner" style="background-image:url({img:url})">{/top_image}
+    <div class="words"><h1>{title}</h1></div>
+    <div class="overlay"></div>
+</div><!--end of hero-->
+
+
+<div class="content-area"><!--start of main content-->
+   <div class="triangle-border"></div><!--end of doodle border--> 
+   
+      <div class="grid-container top-margin">
+        <div class="grid-x grid-padding-x">
+          <div class="cell small-12 medium-10 large-6 float-center small-order-2 medium-order-2 large-order-1">
+            <p><img src="{site_url}images/join-the-team-lily.jpg" alt="Teammate offering ice cream in waffle cone"/></p>
+          </div>
+          <div class="cell small-12 medium-10 large-6 float-center small-order-1 medium-order-1 large-order-2">
+            <p>{text_area_1}</p>
+{/exp:channel:entries}
+            <a class="button" href="{site_url}images/leones-creamery-employment-application.pdf" target="_blank">Download</a>
+          </div>
+        </div><!--end of first paragraph-->
+      </div><!--end of wrapping grid-container-->
+
+</div><!--end of main content-->
+{/exp:stash:cache}

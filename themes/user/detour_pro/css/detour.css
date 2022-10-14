@@ -1,0 +1,198 @@
+.dataTables_filter, .dataTables_length, .detour_form
+{
+    margin-bottom: 8px;
+}
+
+table.mainTable th a {
+    color: #fff;
+    text-decoration: none;
+}
+
+table.mainTable th.sorting_desc {
+    background:         transparent url('../images/table_sort_desc.gif') center right no-repeat;
+    border-left:        1px solid #C60047;
+
+}
+
+table.mainTable th.sorting_asc {
+    background:         transparent url('../images/table_sort_asc.gif') center right no-repeat;
+    border-left:        1px solid #C60047;
+}
+
+
+table.mainTable th.sorting {
+    background:     #2a3940 url('../images/backgrounds_sprite.png') repeat-x 0 -540px !important;
+    color:              #fff;
+    padding:            9px 8px 10px 8px;
+    border-left:        1px solid #45555f;
+    cursor:             pointer;
+}
+
+table.mainTable th {
+    background:     #2a3940 url('../images/backgrounds_sprite.png') repeat-x 0 -540px;
+    color:              #fff;
+    padding:            9px 8px 10px 8px;
+    border-left:        1px solid #45555f;
+    /*cursor:               pointer;*/
+}
+
+
+table.mainTable thead {
+    background:         #C60047 url('../images/table_column_heading_active_bg.jpg') bottom left repeat-x !important;
+}
+
+
+
+table.addDetour th {
+    background:     #2a3940 url('../images/backgrounds_sprite.png') repeat-x 0 -540px !important;
+    color:              #fff;
+    padding:            9px 8px 10px 8px;
+    border-left:        1px solid #45555f;
+    /*cursor:               pointer;*/
+}
+
+.settings-note {
+    clear: both;
+    margin-bottom: 10px;
+    padding: 10px 20px;
+    background-color: #cae5ef;
+    }
+
+.btn-right {
+    float: right;
+    display: inline;
+    }
+
+.ee3 .notice {
+    color: #ce0000;
+    }
+
+
+/* EE2 Style Fixes */
+.ee2 h1 {
+    border-bottom: 1px solid #e8e8e8;
+    color: gray;
+    font-size: 18px;
+    font-weight: 400;
+    padding: 10px;
+    position: relative;
+    background-image: -moz-linear-gradient(top,#fff,#f9f9f9);
+    background-image: -webkit-linear-gradient(top,#fff,#f9f9f9);
+    background-image: linear-gradient(to right,top,#fff,#f9f9f9);
+    }
+.ee2 .tbl-search {
+    float: right;
+    display: inline;
+    border: 0;
+    position: relative;
+    z-index: 10;
+    }
+.ee2 fieldset.tbl-search input[type=text] {
+    margin: 0;
+    width: 200px;
+    }
+.ee2 .mainTable th a {
+    text-decoration: none !important;
+    }
+.ee2 fieldset.col-group {
+    border: 0;
+    border-bottom: 1px solid #e3e3e3;
+    }
+.ee2 .col-group .col {
+    float: left;
+    display: inline;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    }
+.ee2 .col-group .col.w-8 {
+    width: 50%;
+    }
+.ee2 .col-group {
+    background-color: #fff;
+    }
+.ee2 .setting-txt h3 {
+    font-size: 14px !important;
+    }
+.ee2 .setting-txt em {
+    color: gray;
+    font-size: 12px;
+    font-style: normal;
+    margin: 5px 0;
+    padding-right: 10px;
+    display: block;
+    }
+.ee2 fieldset.col-group:last-of-type {
+    margin-bottom: 20px !important;
+    }
+.ee2 .txt-wrap {
+    padding: 10px;
+    border: 1px solid #e3e3e3;
+    border-top: 0;
+    background-color: #fff;
+    }
+.ee2 .tbl-wrap {
+    margin-bottom: 15px;
+    padding: 10px 10px 1px 10px;
+    background-color: #fff;
+    }
+.ee2 a.btn.submit:hover {
+    text-decoration: none !important;
+    }
+
+.ee2 #original_url_check {
+    margin-top: 5px;
+    }
+#original_url_check {
+    color: #999;
+    }
+#original_url_check.check-success {
+    color: #00a700;
+    font-weight: bold;
+    }
+#original_url_check.check-error {
+    color: #cd0003;
+    }
+.loader,
+.loader:after {
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    }
+.loader {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 5px 0 0;
+    font-size: 10px;
+    position: relative;
+    text-indent: -9999em;
+    border-top: 3px solid rgba(100, 100, 100, 0.2);
+    border-right: 3px solid rgba(100, 100, 100, 0.2);
+    border-bottom: 3px solid rgba(100, 100, 100, 0.2);
+    border-left: 2px solid #999;
+    -webkit-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-animation: load8 1.1s infinite linear;
+    animation: load8 1.1s infinite linear;
+    }
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}

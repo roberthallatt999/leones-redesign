@@ -1,0 +1,16 @@
+{
+    "name": "Low Reorder",
+    "shortname": "low_reorder",
+    "version": "4.0.1",
+    "foundation_version": "4.9.0",
+    "description": "Create sets of entries and order them any way you want",
+    "license": "EEHarbor",
+    "namespace": "Low\\Reorder",
+    "require": {
+        "php": ">=5.3.*",
+        "expressionengine/core": ">=2.11"
+    },
+    "resources": {
+        
+    }
+}

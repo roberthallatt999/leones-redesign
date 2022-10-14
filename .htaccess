@@ -1,0 +1,25 @@
+<IfModule mod_rewrite.c>
+Options +FollowSymLinks
+RewriteEngine On
+RewriteBase /
+
+RewriteCond %{SERVER_PORT} 80 
+RewriteRule ^(.*)$ https://leonescreamery.com/$1 [R,L]
+
+# Removes index.php from ExpressionEngine URLs
+RewriteCond %{THE_REQUEST} ^GET.*index\.php [NC]
+RewriteCond %{REQUEST_URI} !/system/.* [NC]
+RewriteRule (.*?)index\.php/*(.*) /$1$2 [R=301,NE,L]
+
+# Directs all EE web requests through the site index file
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.php?/$1 [L]
+
+# Remove www from any URLs that have them:
+RewriteEngine on
+RewriteCond %{HTTP_HOST} ^www\.
+RewriteRule ^(.*)$ https://leonescreamery.com/$1 [R=301,L]
+
+</IfModule>
+

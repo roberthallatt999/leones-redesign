@@ -1,0 +1,49 @@
+{layout='layouts/_layout_main'}
+{layout:set name='meta_title'}Scoop it Forward | Leones' Creamery{/layout:set}
+{layout:set name='meta_description'}Find out if you have a special treat waiting for you at Leones' Creamery{/layout:set}
+{layout:set name='social_title'}Scoop it Forward | Leones' Creamery{/layout:set}
+{layout:set name='social_description'}Find out if you have a special treat waiting for you at Leones' Creamery{/layout:set}
+{layout:set name='social_image'}{site_url}images/socialmedia-og-image.jpg{/layout:set}
+
+<div class="hero-section inner" style="background-image:url({site_url}images/uploads/cropped/DSC_5727-83-1523038807.jpg)">
+    <div class="words"><h1>Scoop it Forward</h1></div>
+    <div class="overlay"></div>
+</div><!--end of hero-->
+
+<div class="content-area"><!--start of main content-->
+   <div class="triangle-border"></div><!--end of doodle border--> 
+
+      <div class="grid-container scoop-it-forward">
+          <div class="grid-x">
+             <div class="cell small-12 medium-10 large-8 float-center">
+                <h4 class="text-center">Hooray, someone decided to show their love and appreciation for you in the tastiest way! Here is the online version of our shop's Scoop it Forward chalkboard! </h4><p>Want to treat a pal anonymously? Swing by the creamery or give us a call at 605-644-6461, tell us who you'd like to treat, what you'd like to treat them to (a scoop, a sundae, a pint, etc.), and pay for their ice cream in advance. We keep a log of all purchases (recipients can find their name/treat below). Names are also rotated on to our shop's physical Scoop it Forward chalkboard!<br><br> <b>Search for your last name below to find out what deliciousness awaits you.</b></p>
+                <div class="search">
+                  {exp:low_search:form search_mode="all" result_page="scoop-it-forward/results/%s" secure="no"}
+                   <div class="input-group">
+                        <label for="keywords-desktop" class="hide">Search</label>
+                        <input class="input-group-field desktop" name="keywords" id="keywords-desktop" type="text" placeholder="Last Name or Company Name" onfocus="this.placeholder=''">
+                        <div class="input-group-button">
+                          <label for="search-submit-desktop" class="hide">Search</label>
+                          <input type="submit" class="button search-submit" id="search-submit-desktop" value="Search">
+                        </div>
+                    </div>
+                  {/exp:low_search:form}
+                </div>
+  			     </div>
+          </div>
+        </div><!--end of wrapping grid-container-->
+ <div class="structured-collage" style="background-image:url({site_url}images/faqs-collage-fullwidth.jpg)">
+          <div class="grid-x">
+             <div class="cell small-12 medium-10 large-6 float-center">
+                 <div class="bottom-fact">
+                   <div class="grid-x grid-padding-x">
+                     <div class="cell small-12 medium-4 large-4 fact-icon"><img src="{site_url}images/fact.svg" alt=""/></div>
+                     <div class="cell small-12 medium-12 large-8">There’s ALWAYS room for ice cream.</div>
+                  </div>
+               </div>
+            </div>
+           </div>
+          <div class="overlay"></div>            
+        </div><!--end of structured collage, 3:1 ratio-->
+   
+</div><!--end of main content-->

@@ -1,0 +1,152 @@
+{layout='layouts/_layout_main_2022'}
+{exp:stash:cache}
+
+{layout:set name='meta_title'}Leones' Creamery | Handcrafted Ice Cream & Frozen Desserts{/layout:set}
+{layout:set name='meta_description'}Nestled in the heart of Spearfish, South Dakota, Leones' Creamery specializes in hand-crafting traditional and unique ice creams and frozen desserts from fresh, high-quality ingredients. Let us satisfy your sweet tooth!{/layout:set}
+{layout:set name='social_title'}Leones' Creamery | Handcrafted Ice Cream & Frozen Desserts{/layout:set}
+{layout:set name='social_description'}Nestled in the heart of Spearfish, South Dakota, Leones' Creamery specializes in hand-crafting traditional and unique ice creams and frozen desserts from fresh, high-quality ingredients. Let us satisfy your sweet tooth!{/layout:set}
+{layout:set name='social_image'}{site_url}images/socialmedia-og-image.jpg{/layout:set}
+
+{exp:channel:entries channel="homepage_carousel" dynamic="no" limit="6"}
+<div class="hero-section">
+     <div class="slideshow">
+          <div class="slides">
+              {carousel}<div style="background-image:url({img:url});" alt="{img:title}"></div>{/carousel}
+          </div>
+          <!--end slides-->
+     </div>
+</div><!--end of hero-->
+{/exp:channel:entries}
+
+<div class="content-area"><!--start of main content-->
+  <div class="triangle-border"></div><!--end of doodle border-->
+
+{exp:channel:entries channel="pages" entry_id="19" dynamic="no"}
+        <div class="grid-container">
+          <div class="grid-x welcome">
+              <div class="cell small-12 medium-10 text-center float-center">
+                <h1 class="home">Hand-crafted with
+                  <span class="hide-for-large"><br></span>
+                  <img src="{site_url}images/heart.svg"/>
+                  <span class="hide-for-large"><br></span>
+                in small batches</h1>
+              </div>
+             <div class="cell small-12 medium-10 large-8 text-center float-center">
+                {text_area_1}
+                <a class="button" href="{site_url}about">Our Story</a>
+                 </div>
+          </div>
+        </div><!--end of intro-->
+
+
+
+        <div class="flavor-board">
+        <div class="grid-x">
+          <div class="cell small-11 medium-10 large-8 intro text-center float-center">
+            <h2><div class="rays"><img src="{site_url}images/flavor-rays.svg"></div>Current Flavor Board</h2>
+            <p>{text_area_2}</p>
+          </div>
+        </div>
+{/exp:channel:entries}
+        <div class="grid-x">
+{exp:low_reorder:entries set="flavors" limit="8"}
+            <div class="cell small-6 medium-3 flavor-card" {flavor_image}style="background-image:url({img:url})"{/flavor_image}">
+                  <div class="flavor-title">{title}</div>
+                  <div class="flavor-overlay"></div>
+            </div>
+{/exp:low_reorder:entries}
+        </div>
+
+          <div class="cell small-12 text-center">
+            <a class="button" href="{site_url}flavors">See More Products</a>
+          </div>
+        </div><!--end of flavor board-->
+
+
+
+    <div class="blog home">
+       <h2 class="text-center">From the Blog</h2>
+       <div class="grid-container">
+         <div class="grid-x grid-padding-x">
+{exp:channel:entries channel="blog_entry" limit="1"}
+          <div class="cell small-12 medium-6"><a href="{site_url}blog/{url_title}" class="article">
+            <h3 class="blog-title">{title}</h3>
+            <div class="date">{entry_date format="%F %d, %Y"} | by {blog_author}</div>
+            <p>{exp:chopper words="50" append="..."}{body_area}{/exp:chopper}</p></a>
+          </div>
+          <div class="cell small-12 medium-6"><a href="{site_url}blog/{url_title}">
+            <img src="{top_image}{img:url}{/top_image}" alt="{img:title}"/></a>
+          </div>
+{/exp:channel:entries}
+          <div class="cell small-12 text-center">
+            <a class="button" href="{site_url}blog">See More Posts</a>
+          </div>
+          </div>
+        </div>
+    </div><!--end of blog-->
+
+
+
+        <div class="instagram">
+          <div class="grid-x grid-padding-x">
+            <div class="small-12 cell">
+              <i class="fa fa-instagram" aria-hidden="true"></i><span> leonescreamery</span>
+            </div>
+          </div>
+         
+          <div id="instafeed" class="grid-x"></div>
+        </div>
+      
+      
+      
+</div><!--end of main content-->
+
+
+
+ {layout:set name='extra_js'}
+  <script type="text/javascript" src="{site_url}js/slick/slick.min.js"></script>         
+  <script type="text/javascript">
+            $('.slides').slick({
+  centerMode: true,
+  centerPadding: '0px',
+  arrows:false,
+  slidesToShow: 1,
+  infinite: true,
+  autoplay: true,
+  autoplaySpeed:5000,
+  fade: true,
+  dots:false,
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        centerMode: true,
+        centerPadding: '0px',
+        slidesToShow: 1
+      }
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        centerMode: true,
+        centerPadding: '0px',
+        slidesToShow: 1,
+      }
+    }
+  ]
+});
+</script>
+    <script type="text/javascript" src="{site_url}js/instafeed.min.js"></script>
+    <script type="text/javascript">
+        var feed = new Instafeed({
+            get: 'user',
+            userId: '1582665758',
+            accessToken: '1582665758.1677ed0.577af98bb2834994bd0a66992d666b89',
+            resolution: 'standard_resolution',
+            limit:'6',
+            template: '<div class="cell small-4 medium-2"><a href="{{link}}" target="_blank"><img src="{{image}}" /></a></div>'
+      });
+      feed.run();
+    </script>
+{/layout:set}
+{/exp:stash:cache}
