@@ -1,73 +1,80 @@
-<div id="low-find-replace" class="box">
+<div id="low-find-replace" class="panel box">
 
-	<h1><?=lang('find_replace')?></h1>
+    <h1 class="panel-heading"><?=lang('find_replace')?></h1>
 
-	<?=form_open($action)?> <!-- preview=yes -->
+    <div class="panel-body">
 
-		<div class="low-tabs col w-4" data-names="legend">
-			<div class="low-tabs-pages">
+    <?=form_open($action)?> <!-- preview=yes -->
 
-				<fieldset class="low-tab active">
-					<legend><?=lang('channels')?></legend>
+        <div class="low-tabs col w-4" data-names="legend">
+            <div class="low-tabs-pages">
 
-					<div class="low-boxes">
-						<label><input type="checkbox" class="low-select-all" /> <?=lang('select_all')?></label>
-					</div>
+                <fieldset class="low-tab active">
+                    <legend><?=lang('channels')?></legend>
 
-					<?php foreach ($channels as $channel_id => $row): ?>
+                    <div class="low-boxes">
+                        <label><input type="checkbox" class="low-select-all" /> <?=lang('select_all')?></label>
+                    </div>
 
-					<div class="low-boxes">
-						<h4><span><?=htmlspecialchars($row['channel_title'])?></span></h4>
-						<?php foreach ($row['fields'] as $field_id => $field_name): ?>
-							<label>
-								<input type="checkbox" name="fields[<?=$channel_id?>][]" value="<?=$field_id?>" />
-								<?=htmlspecialchars($field_name)?>
-							</label>
-						<?php endforeach; ?>
-					</div>
-					<?php endforeach; ?>
+                    <?php foreach ($channels as $channel_id => $row) : ?>
+                    <div class="low-boxes">
+                        <h4><span><?=htmlspecialchars($row['channel_title'])?></span></h4>
+                        <?php foreach ($row['fields'] as $field_id => $field_name) : ?>
+                            <label>
+                                <input type="checkbox" name="fields[<?=$channel_id?>][]" value="<?=$field_id?>" />
+                                <?=htmlspecialchars($field_name)?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endforeach; ?>
 
-				</fieldset>
+                </fieldset>
 
-				<?php if ($categories): ?>
-					<fieldset class="low-tab">
-						<legend><?=lang('categories')?></legend>
+                <?php if ($categories) : ?>
+                    <fieldset class="low-tab">
+                        <legend><?=lang('categories')?></legend>
 
-						<div class="low-boxes">
-							<label><input type="checkbox" class="low-select-all" /> <?=lang('select_all')?></label>
-						</div>
+                        <div class="low-boxes">
+                            <label><input type="checkbox" class="low-select-all" /> <?=lang('select_all')?></label>
+                        </div>
 
-						<?php foreach ($categories as $group_id => $row): ?>
-						<div class="low-boxes">
-							<h4><span><?=htmlspecialchars($row['group_name'])?></span></h4>
-							<?php foreach ($row['cats'] as $cat_id => $cat): ?>
-								<label>
-									<?=$cat['indent']?>
-									<input type="checkbox" name="cats[]" value="<?=$cat_id?>" />
-									<?=$cat['name']?>
-								</label>
-							<?php endforeach; ?>
-						</div>
-						<?php endforeach; ?>
+                        <?php foreach ($categories as $group_id => $row) : ?>
+                        <div class="low-boxes">
+                            <h4><span><?=htmlspecialchars($row['group_name'])?></span></h4>
+                            <?php foreach ($row['cats'] as $cat_id => $cat) : ?>
+                                <label>
+                                    <?=$cat['indent']?>
+                                    <input type="checkbox" name="cats[]" value="<?=$cat_id?>" />
+                                    <?=$cat['name']?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endforeach; ?>
 
-					</fieldset>
-				<?php endif; ?>
+                    </fieldset>
+                <?php endif; ?>
 
-			</div> <!-- .low-tabs-pages -->
-		</div> <!-- .low-sidebar -->
+            </div> <!-- .low-tabs-pages -->
+        </div> <!-- .low-sidebar -->
 
-		<div class="low-find col w-12">
-			<fieldset class="low-inline-form">
-				<input type="text" id="low-keywords" name="keywords" autocomplete="off" placeholder="Find text" />
-				<input type="submit" class="btn" value="<?=lang('show_preview')?>" />
-			</fieldset>
-		</div>
+        <div class="low-find col w-12">
+            <fieldset class="low-inline-form">
+                <input type="text" id="low-keywords" name="keywords" autocomplete="off" placeholder="Find text" />
+                <input type="submit" class="btn" value="<?=lang('show_preview')?>" />
+            </fieldset>
+        </div>
 
-	</form>
+    </form>
 
-	<div class="low-dynamic-content col w-12">
-		<?php if (isset($feedback)) include(PATH_THIRD.'/low_search/views/ajax_replace_feedback.php'); ?>
-		<?php if (isset($preview))  include(PATH_THIRD.'/low_search/views/ajax_preview.php'); ?>
-	</div>
+    <div class="low-dynamic-content col w-12">
+        <?php if (isset($feedback)) {
+            include(PATH_THIRD . '/low_search/views/ajax_replace_feedback.php');
+        } ?>
+        <?php if (isset($preview)) {
+            include(PATH_THIRD . '/low_search/views/ajax_preview.php');
+        } ?>
+    </div>
+
+    </div>
 
 </div>

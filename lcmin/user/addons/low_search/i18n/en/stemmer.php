@@ -65,35 +65,36 @@ class Low_search_en_stemmer
     {
         // Part a
         if (substr($word, -1) == 's') {
-
-               self::replace($word, 'sses', 'ss')
-            OR self::replace($word, 'ies', 'i')
-            OR self::replace($word, 'ss', 'ss')
-            OR self::replace($word, 's', '');
+            self::replace($word, 'sses', 'ss')
+            or self::replace($word, 'ies', 'i')
+            or self::replace($word, 'ss', 'ss')
+            or self::replace($word, 's', '');
         }
 
         // Part b
-        if (substr($word, -2, 1) != 'e' OR !self::replace($word, 'eed', 'ee', 0)) { // First rule
+        if (substr($word, -2, 1) != 'e' or !self::replace($word, 'eed', 'ee', 0)) { // First rule
             $v = self::$regex_vowel;
 
             // ing and ed
-            if (   preg_match("#$v+#", substr($word, 0, -3)) && self::replace($word, 'ing', '')
-                OR preg_match("#$v+#", substr($word, 0, -2)) && self::replace($word, 'ed', '')) { // Note use of && and OR, for precedence reasons
-
+            if (
+                preg_match("#$v+#", substr($word, 0, -3)) && self::replace($word, 'ing', '')
+                or preg_match("#$v+#", substr($word, 0, -2)) && self::replace($word, 'ed', '')
+            ) { // Note use of && and OR, for precedence reasons
                 // If one of above two test successful
-                if (    !self::replace($word, 'at', 'ate')
-                    AND !self::replace($word, 'bl', 'ble')
-                    AND !self::replace($word, 'iz', 'ize')) {
-
+                if (
+                    !self::replace($word, 'at', 'ate')
+                    and !self::replace($word, 'bl', 'ble')
+                    and !self::replace($word, 'iz', 'ize')
+                ) {
                     // Double consonant ending
-                    if (    self::doubleConsonant($word)
-                        AND substr($word, -2) != 'll'
-                        AND substr($word, -2) != 'ss'
-                        AND substr($word, -2) != 'zz') {
-
+                    if (
+                        self::doubleConsonant($word)
+                        and substr($word, -2) != 'll'
+                        and substr($word, -2) != 'ss'
+                        and substr($word, -2) != 'zz'
+                    ) {
                         $word = substr($word, 0, -1);
-
-                    } else if (self::m($word) == 1 AND self::cvc($word)) {
+                    } elseif (self::m($word) == 1 and self::cvc($word)) {
                         $word .= 'e';
                     }
                 }
@@ -131,12 +132,12 @@ class Low_search_en_stemmer
         switch (substr($word, -2, 1)) {
             case 'a':
                    self::replace($word, 'ational', 'ate', 0)
-                OR self::replace($word, 'tional', 'tion', 0);
+                or self::replace($word, 'tional', 'tion', 0);
                 break;
 
             case 'c':
                    self::replace($word, 'enci', 'ence', 0)
-                OR self::replace($word, 'anci', 'ance', 0);
+                or self::replace($word, 'anci', 'ance', 0);
                 break;
 
             case 'e':
@@ -149,29 +150,29 @@ class Low_search_en_stemmer
 
             case 'l':
                    self::replace($word, 'entli', 'ent', 0)
-                OR self::replace($word, 'ousli', 'ous', 0)
-                OR self::replace($word, 'alli', 'al', 0)
-                OR self::replace($word, 'bli', 'ble', 0)
-                OR self::replace($word, 'eli', 'e', 0);
+                or self::replace($word, 'ousli', 'ous', 0)
+                or self::replace($word, 'alli', 'al', 0)
+                or self::replace($word, 'bli', 'ble', 0)
+                or self::replace($word, 'eli', 'e', 0);
                 break;
 
             case 'o':
                    self::replace($word, 'ization', 'ize', 0)
-                OR self::replace($word, 'ation', 'ate', 0)
-                OR self::replace($word, 'ator', 'ate', 0);
+                or self::replace($word, 'ation', 'ate', 0)
+                or self::replace($word, 'ator', 'ate', 0);
                 break;
 
             case 's':
                    self::replace($word, 'iveness', 'ive', 0)
-                OR self::replace($word, 'fulness', 'ful', 0)
-                OR self::replace($word, 'ousness', 'ous', 0)
-                OR self::replace($word, 'alism', 'al', 0);
+                or self::replace($word, 'fulness', 'ful', 0)
+                or self::replace($word, 'ousness', 'ous', 0)
+                or self::replace($word, 'alism', 'al', 0);
                 break;
 
             case 't':
                    self::replace($word, 'biliti', 'ble', 0)
-                OR self::replace($word, 'aliti', 'al', 0)
-                OR self::replace($word, 'iviti', 'ive', 0);
+                or self::replace($word, 'aliti', 'al', 0)
+                or self::replace($word, 'iviti', 'ive', 0);
                 break;
         }
 
@@ -197,7 +198,7 @@ class Low_search_en_stemmer
 
             case 't':
                    self::replace($word, 'icate', 'ic', 0)
-                OR self::replace($word, 'iciti', 'ic', 0);
+                or self::replace($word, 'iciti', 'ic', 0);
                 break;
 
             case 'u':
@@ -231,7 +232,7 @@ class Low_search_en_stemmer
 
             case 'c':
                    self::replace($word, 'ance', '', 1)
-                OR self::replace($word, 'ence', '', 1);
+                or self::replace($word, 'ence', '', 1);
                 break;
 
             case 'e':
@@ -244,19 +245,19 @@ class Low_search_en_stemmer
 
             case 'l':
                    self::replace($word, 'able', '', 1)
-                OR self::replace($word, 'ible', '', 1);
+                or self::replace($word, 'ible', '', 1);
                 break;
 
             case 'n':
                    self::replace($word, 'ant', '', 1)
-                OR self::replace($word, 'ement', '', 1)
-                OR self::replace($word, 'ment', '', 1)
-                OR self::replace($word, 'ent', '', 1);
+                or self::replace($word, 'ement', '', 1)
+                or self::replace($word, 'ment', '', 1)
+                or self::replace($word, 'ent', '', 1);
                 break;
 
             case 'o':
-                if (substr($word, -4) == 'tion' OR substr($word, -4) == 'sion') {
-                   self::replace($word, 'ion', '', 1);
+                if (substr($word, -4) == 'tion' or substr($word, -4) == 'sion') {
+                    self::replace($word, 'ion', '', 1);
                 } else {
                     self::replace($word, 'ou', '', 1);
                 }
@@ -268,7 +269,7 @@ class Low_search_en_stemmer
 
             case 't':
                    self::replace($word, 'ate', '', 1)
-                OR self::replace($word, 'iti', '', 1);
+                or self::replace($word, 'iti', '', 1);
                 break;
 
             case 'u':
@@ -299,9 +300,7 @@ class Low_search_en_stemmer
         if (substr($word, -1) == 'e') {
             if (self::m(substr($word, 0, -1)) > 1) {
                 self::replace($word, 'e', '');
-
-            } else if (self::m(substr($word, 0, -1)) == 1) {
-
+            } elseif (self::m(substr($word, 0, -1)) == 1) {
                 if (!self::cvc(substr($word, 0, -1))) {
                     self::replace($word, 'e', '');
                 }
@@ -309,7 +308,7 @@ class Low_search_en_stemmer
         }
 
         // Part b
-        if (self::m($word) > 1 AND self::doubleConsonant($word) AND substr($word, -1) == 'l') {
+        if (self::m($word) > 1 and self::doubleConsonant($word) and substr($word, -1) == 'l') {
             $word = substr($word, 0, -1);
         }
 
@@ -335,7 +334,7 @@ class Low_search_en_stemmer
 
         if (substr($str, $len) == $check) {
             $substr = substr($str, 0, $len);
-            if (is_null($m) OR self::m($substr) > $m) {
+            if (is_null($m) or self::m($substr) > $m) {
                 $str = $substr . $repl;
             }
 
@@ -386,7 +385,7 @@ class Low_search_en_stemmer
     {
         $c = self::$regex_consonant;
 
-        return preg_match("#$c{2}$#", $str, $matches) AND $matches[0]{0} == $matches[0]{1};
+        return preg_match("#$c{2}$#", $str, $matches) and $matches[0][0] == $matches[0][1];
     }
 
 
@@ -402,9 +401,9 @@ class Low_search_en_stemmer
         $v = self::$regex_vowel;
 
         return     preg_match("#($c$v$c)$#", $str, $matches)
-               AND strlen($matches[1]) == 3
-               AND $matches[1]{2} != 'w'
-               AND $matches[1]{2} != 'x'
-               AND $matches[1]{2} != 'y';
+               and strlen($matches[1]) == 3
+               and $matches[1][2] != 'w'
+               and $matches[1][2] != 'x'
+               and $matches[1][2] != 'y';
     }
 }

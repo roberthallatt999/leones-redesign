@@ -1,4 +1,8 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (! defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
 
 /**
  * Filter by search:title="foo"
@@ -6,222 +10,216 @@
  * @package        low_search
  * @author         Lodewijk Schutte ~ Low <hi@gotolow.com>
  * @link           http://gotolow.com/addons/low-search
- * @copyright      Copyright (c) 2019, Low
+ * @copyright      Copyright (c) 2020, Low
  */
-class Low_search_filter_field_search extends Low_search_filter {
+class Low_search_filter_field_search extends Low_search_filter
+{
 
-	/**
-	 * Prefix
-	 */
-	private $_pfx = 'search:';
+    /**
+     * Prefix
+     */
+    private $_pfx = 'search:';
 
-	/**
-	 * Channel IDs
-	 */
-	private $_channel_ids = array();
+    /**
+     * Channel IDs
+     */
+    private $_channel_ids = array();
 
-	// --------------------------------------------------------------------
+    // --------------------------------------------------------------------
 
-	/**
-	 * Allows for search:title="foo|bar" parameter
-	 *
-	 * @access     private
-	 * @return     void
-	 */
-	public function filter($entry_ids)
-	{
-		// --------------------------------------
-		// Check if search:title is there
-		// --------------------------------------
+    /**
+     * Allows for search:title="foo|bar" parameter
+     *
+     * @access     private
+     * @return     void
+     */
+    public function filter($entry_ids)
+    {
+        // --------------------------------------
+        // Check if search:title is there
+        // --------------------------------------
 
-		$params = $this->params->get_prefixed($this->_pfx, TRUE);
-		$params = array_filter($params, 'low_not_empty');
+        $params = $this->params->get_prefixed($this->_pfx, true);
+        $params = array_filter($params, 'low_not_empty');
 
-		// --------------------------------------
-		// Don't do anything if nothing's there
-		// --------------------------------------
+        // --------------------------------------
+        // Don't do anything if nothing's there
+        // --------------------------------------
 
-		if (empty($params)) return $entry_ids;
+        if (empty($params)) {
+            return $entry_ids;
+        }
 
-		// --------------------------------------
-		// Log it
-		// --------------------------------------
+        // --------------------------------------
+        // Log it
+        // --------------------------------------
 
-		$this->_log('Applying '.__CLASS__);
+        $this->_log('Applying ' . __CLASS__);
 
-		// --------------------------------------
-		// Set channel IDs
-		// --------------------------------------
+        // --------------------------------------
+        // Set channel IDs
+        // --------------------------------------
 
-		$this->_channel_ids = ee()->low_search_collection_model->get_channel_ids();
+        $this->_channel_ids = ee()->low_search_collection_model->get_channel_ids();
 
-		$native_table = $this->fields->native_table();
+        $native_table = $this->fields->native_table();
 
-		// --------------------------------------
-		// Loop through search filters and prep queries accordingly
-		// --------------------------------------
+        // --------------------------------------
+        // Loop through search filters and prep queries accordingly
+        // --------------------------------------
 
-		$queries = array();
+        $queries = array();
 
-		foreach ($params as $key => $val)
-		{
-			// Make sure value is prepped correctly with exact/exclude/require_all values
-			$val = $this->params->prep($this->_pfx.$key, $val);
+        foreach ($params as $key => $val) {
+            // Make sure value is prepped correctly with exact/exclude/require_all values
+            $val = $this->params->prep($this->_pfx . $key, $val);
 
-			// Search channel_titles fields
-			if ($this->fields->is_native($key))
-			{
-				// (URL) Title search
-				$queries[$native_table][] = $this->fields->sql($native_table.'.'.$key, $val);
-			}
+            // Search channel_titles fields
+            if ($this->fields->is_native($key)) {
+                // (URL) Title search
+                $queries[$native_table][] = $this->fields->sql($native_table . '.' . $key, $val);
+            } elseif (strpos($key, ':')) {
+                // Search grid or matrix cols
+                list($field_name, $col_name) = explode(':', $key, 2);
 
-			// Search grid or matrix cols
-			elseif (strpos($key, ':'))
-			{
-				list($field_name, $col_name) = explode(':', $key, 2);
+                // Skip invalid fields
+                if (! ($field_id = $this->fields->id($field_name))) {
+                    continue;
+                }
 
-				// Skip invalid fields
-				if ( ! ($field_id = $this->fields->id($field_name))) continue;
+                $table = false;
 
-				$table = FALSE;
+                // Make sure it's an omelette!
+                if (
+                    $this->fields->is_grid($field_name) &&
+                    ($col_id = $this->fields->grid_col_id($field_id, $col_name))
+                ) {
+                    $table = 'channel_grid_field_' . $field_id;
+                    $field = $table . '.col_id_' . $col_id;
+                } elseif (
+                    $this->fields->is_matrix($field_name) &&
+                    ($col_id = $this->fields->matrix_col_id($field_id, $col_name))
+                ) {
+                    $table = 'matrix_data';
+                    $field = $table . '.col_id_' . $col_id;
+                }
 
-				// Make sure it's an omelette!
-				if ($this->fields->is_grid($field_name) &&
-					($col_id = $this->fields->grid_col_id($field_id, $col_name)))
-				{
-					$table = 'channel_grid_field_'.$field_id;
-					$field = $table.'.col_id_'.$col_id;
-				}
-				elseif ($this->fields->is_matrix($field_name) &&
-					($col_id = $this->fields->matrix_col_id($field_id, $col_name)))
-				{
-					$table = 'matrix_data';
-					$field = $table.'.col_id_'.$col_id;
-				}
+                if ($table) {
+                    $queries[$table][] = $this->fields->sql($field, $val);
+                }
+            } elseif ($field_ids = $this->fields->ids($key)) {
+                // Search custom channel fields
+                $wheres = array();
 
-				if ($table)
-				{
-					$queries[$table][] = $this->fields->sql($field, $val);
-				}
-			}
+                // One for each MSM site
+                foreach ($field_ids as $site_id => $field_id) {
+                    $field = $this->fields->get($field_id);
+                    $table = $field->getDataStorageTable();
 
-			// Search custom channel fields
-			elseif ($field_ids = $this->fields->ids($key))
-			{
-				$wheres = array();
+                    // Get where-clause
+                    $where = $this->fields->sql($table . '.field_id_' . $field_id, $val);
 
-				// One for each MSM site
-				foreach ($field_ids as $site_id => $field_id)
-				{
-					$field = $this->fields->get($field_id);
-					$table = $field->getDataStorageTable();
+                    // Enable Smart Field Searches?
+                    $channel_ids = ($this->params->get('smart_field_search') == 'yes')
+                        ? $this->_get_channel_ids_by_field($field)
+                        : array();
 
-					// Get where-clause
-					$where = $this->fields->sql($table.'.field_id_'.$field_id, $val);
+                    // If so, add CASE to this statement
+                    if (! empty($channel_ids)) {
+                        $where = sprintf(
+                            "(CASE WHEN {$native_table}.channel_id IN (%s) THEN %s ELSE {$native_table}.site_id = '%s' END)",
+                            implode(', ', $channel_ids),
+                            $where,
+                            $site_id
+                        );
+                    }
 
-					// Enable Smart Field Searches?
-					$channel_ids = ($this->params->get('smart_field_search') == 'yes')
-						? $this->_get_channel_ids_by_field($field)
-						: array();
+                    $wheres[] = $where;
+                }
 
-					// If so, add CASE to this statement
-					if ( ! empty($channel_ids))
-					{
-						$where = sprintf("(CASE WHEN {$native_table}.channel_id IN (%s) THEN %s ELSE {$native_table}.site_id = '%s' END)",
-							implode(', ', $channel_ids), $where, $site_id);
-					}
+                // And add the where clause to the queries
+                $queries[$table][] = count($wheres) > 1
+                    ? '(' . implode(' OR ', $wheres) . ')'
+                    : current($wheres);
+            }
 
-					$wheres[] = $where;
-				}
+            // For performance reasons, don't let EE perform the same search again
+            $this->params->forget[] = $this->_pfx . $key;
+        }
 
-				// And add the where clause to the queries
-				$queries[$table][] = count($wheres) > 1
-					? '('. implode(' OR ', $wheres) .')'
-					: current($wheres);
-			}
+        // --------------------------------------
+        // Where now contains a list of clauses
+        // --------------------------------------
 
-			// For performance reasons, don't let EE perform the same search again
-			$this->params->forget[] = $this->_pfx.$key;
-		}
+        if (empty($queries)) {
+            return $entry_ids;
+        }
 
-		// --------------------------------------
-		// Where now contains a list of clauses
-		// --------------------------------------
+        // --------------------------------------
+        // Query the lot!
+        // --------------------------------------
 
-		if (empty($queries)) return $entry_ids;
+        ee()->db
+            ->select($native_table . '.entry_id')
+            ->from($native_table . ' as ' . $native_table);
 
-		// --------------------------------------
-		// Query the lot!
-		// --------------------------------------
+        foreach ($queries as $table => $wheres) {
+            // Join another table if necessary
+            if ($table != $native_table) {
+                ee()->db->join($table . ' as ' . $table, "{$table}.entry_id = {$native_table}.entry_id");
+            }
 
-		ee()->db
-			->select($native_table.'.entry_id')
-			->from($native_table .' as '.$native_table);
+            // Add wheres
+            foreach ($wheres as $sql) {
+                ee()->db->where($sql);
+            }
+        }
 
-		foreach ($queries AS $table => $wheres)
-		{
-			// Join another table if necessary
-			if ($table != $native_table)
-			{
-				ee()->db->join($table.' as '.$table, "{$table}.entry_id = {$native_table}.entry_id");
-			}
+        // Limit by given entry ids?
+        if (! empty($entry_ids)) {
+            ee()->db->where_in($native_table . '.entry_id', $entry_ids);
+        }
 
-			// Add wheres
-			foreach ($wheres AS $sql)
-			{
-				ee()->db->where($sql);
-			}
-		}
+        // Limit to this lot
+        // Limit by channel
+        if ($this->_channel_ids) {
+            ee()->db->where_in($native_table . '.channel_id', $this->_channel_ids);
+        }
 
-		// Limit by given entry ids?
-		if ( ! empty($entry_ids))
-		{
-			ee()->db->where_in($native_table.'.entry_id', $entry_ids);
-		}
+        // Limit by site
+        if ($site_ids = $this->params->site_ids()) {
+            ee()->db->where_in($native_table . '.site_id', $site_ids);
+        }
 
-		// Limit to this lot
-		// Limit by channel
-		if ($this->_channel_ids)
-		{
-			ee()->db->where_in($native_table.'.channel_id', $this->_channel_ids);
-		}
+        // Execute!
+        $query = ee()->db->get();
 
-		// Limit by site
-		if ($site_ids = $this->params->site_ids())
-		{
-			ee()->db->where_in($native_table.'.site_id', $site_ids);
-		}
+        // Get entry IDs
+        $entry_ids = low_flatten_results($query->result_array(), 'entry_id');
+        $entry_ids = array_unique($entry_ids);
 
-		// Execute!
-		$query = ee()->db->get();
+        return $entry_ids;
+    }
 
-		// Get entry IDs
-		$entry_ids = low_flatten_results($query->result_array(), 'entry_id');
-		$entry_ids = array_unique($entry_ids);
+    // --------------------------------------------------------------------
 
-		return $entry_ids;
-	}
+    /**
+     * Get channel IDs based on field ID
+     */
+    private function _get_channel_ids_by_field($field)
+    {
+        return $field->getAllChannels()->pluck('channel_id');
+    }
 
-	// --------------------------------------------------------------------
+    // --------------------------------------------------------------------
 
-	/**
-	 * Get channel IDs based on field ID
-	 */
-	private function _get_channel_ids_by_field($field)
-	{
-		return $field->getAllChannels()->pluck('channel_id');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Results: remove rogue {low_search_search:...} vars
-	 */
-	public function results($query)
-	{
-		$this->_remove_rogue_vars($this->_pfx);
-		return $query;
-	}
-
+    /**
+     * Results: remove rogue {low_search_search:...} vars
+     */
+    public function results($query)
+    {
+        $this->_remove_rogue_vars($this->_pfx);
+        return $query;
+    }
 }
 // End of file lsf.field_search.php
