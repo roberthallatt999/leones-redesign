@@ -305,7 +305,7 @@ window.Wygwam;
             $('.modal-file').css({'z-index': modalZIndex});
             $('.overlay').css({'z-index': overlayZindex});
             $('.app-overlay').css({'z-index': appOverlayZindex});
-            $('body').css({ position:'initial', width:'initial' });
+            $('body').css({overflow:'', position:'initial', width:'initial' });
         };
 
         var $trigger = $('<trigger class="m-link filepicker" rel="modal-file" href="' + dirURL + '"/>').appendTo('body');
@@ -313,7 +313,10 @@ window.Wygwam;
         $trigger.FilePicker({
             callback: function(data, references)
             {
-                var url = Wygwam.filedirUrls[data.upload_location_id] + data.file_name;
+                //var url = Wygwam.filedirUrls[data.upload_location_id] + data.file_name;
+                // ee7 : the old way above is not working for subfolders because subfolders are not considered to be "upload locations" that are passed to the js earlier.
+                var url = data.path;
+
                 CKEDITOR.tools.callFunction(params.CKEditorFuncNum, url);
                 references.modal.find('.m-close').click();
                 $('body').off('modal:close', '.modal-file', restoreZIndexes);
@@ -324,5 +327,32 @@ window.Wygwam;
 
         // Set up the listener to restore the z-indexes.
         $('body').on('modal:close', '.modal-file', restoreZIndexes);
+    };
+
+    // If we are in the front end such as a wygwam field in a channels form
+
+    Wygwam.loadEEFileBrowserFront = function(params, directory, content_type, dirURL) {
+        const collection = document.getElementsByClassName("cke_dialog_ui_hbox_first")[0];
+        var parser = new DOMParser();
+        var htmlDoc = parser.parseFromString(dirURL, 'text/html');
+        collection.appendChild(htmlDoc.body);
+        var select = document.getElementById('unique_file_id');
+
+
+        var img = document.createElement('img');
+        img.src = select.options[select.selectedIndex].value;
+        img.style = "width:150px;height:150px;";
+        collection.appendChild(img);
+
+        select.addEventListener("change", function() {
+            var value = select.options[select.selectedIndex].value;
+            img.src = select.options[select.selectedIndex].value;
+            img.style = "width:150px;height:150px;";
+            var url_bar = document.getElementsByClassName("cke_dialog_ui_input_text")[0];
+            const inputElements = url_bar.querySelectorAll("input, select, checkbox, textarea")[0];
+            inputElements.value = value;
+
+
+        });
     };
 })(jQuery);
