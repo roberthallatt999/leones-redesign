@@ -1,4 +1,8 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (! defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
 
 /**
  * Low Search language file
@@ -6,7 +10,7 @@
  * @package        low_search
  * @author         Lodewijk Schutte <hi@gotolow.com>
  * @link           http://gotolow.com/addons/low-search
- * @copyright      Copyright (c) 2019, Low
+ * @copyright      Copyright (c) 2020, Low
  */
 
 $lang = array(
@@ -437,12 +441,6 @@ $lang = array(
 "permissions" =>
 "Permissions",
 
-"license_key" =>
-"License Key",
-
-"license_key_help" =>
-"Enter the license key you obtained from gotolow.com or devot-ee.com.",
-
 "encode_query" =>
 "Encode query",
 
@@ -594,6 +592,13 @@ of these words.",
 "no_entries_selected" =>
 "No entries selected",
 
+//----------------------------------------
+// License
+//----------------------------------------
+
+"license" =>
+"License",
+
 /* END */
-''=>''
+'' => ''
 );

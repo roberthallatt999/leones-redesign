@@ -561,6 +561,43 @@ class Helper
     }
 
     /**
+	 * Copy of function from filemanager, which is private in v7, but not 7.
+     * Takes a string like `{filedir_1}somefile.jpg` and returns a file model for it
+     *
+     * @param string $data Standard file field data string
+     * @return File Model
+     */
+    private static function getFileModelForFieldData($data)
+    {
+		if (version_compare(APP_VER, '7.0', '>=')) {
+			
+			return ee()->file_field->getFileModelForFieldData($data);
+		}
+		
+        $file = null;
+
+        // If the file field is in the "{filedir_n}image.jpg" format
+        if (preg_match('/^{filedir_(\d+)}/', (string) $data, $matches)) {
+            // Set upload directory ID and file name
+            $dir_id = $matches[1];
+            $file_name = str_replace($matches[0], '', $data);
+
+            $file = ee('Model')->get('File')
+                ->filter('file_name', $file_name)
+                ->filter('upload_location_id', $dir_id)
+                ->filter('site_id', ee()->config->item('site_id'))
+                ->first();
+        }
+        // If file field is just a file ID
+        elseif (! empty($data) && is_numeric($data)) {
+            $file = ee('Model')->get('File', $data)->first();
+        }
+
+        return $file;
+		
+	}
+
+    /**
      * Inserts the Wygwam config JS in the page foot by config ID.
      *
      * @param $configId
@@ -693,17 +730,60 @@ class Helper
 
                 // load the file browser
                 // pass in the uploadDir to limit the directory to the one choosen
-                $dir_link = ee('CP/FilePicker')->make($uploadDir)->getUrl();
 
-                static::insertJs(NL . "\t" . "Wygwam.fpUrl = '" . $dir_link . "';" . NL);
+                // We are in some sort of Channel form or something like that: we wont have the filepicker available so we do...
+                if (REQ == 'PAGE') {
 
-                // if no upload directory was set, just default to "all"
-                if (! $uploadDir) {
-                    $uploadDir = '"all"';
+                    if (! $uploadDir) {
+                        $uploadDir = '"all"';
+                    }
+
+                    ee()->load->library('file_field');
+                    $results = ee()->db->query("SELECT * FROM exp_files");
+                    $vars = array();
+                    $vars['urls'] = array();
+
+
+                    foreach ($results->result_array() as $row) {
+                        if (version_compare(ee()->config->item('app_version'), '7.0.0', '>=') && !bool_config_item('file_manager_compatibility_mode')) {
+                            $format = "{file:". $row['file_id'] .":url}";
+                        } else {
+                            $format = "{filedir_". $row['upload_location_id'] ."}" . $row['title'];
+                        }
+
+                        $file = static::getFileModelForFieldData($format);
+
+                        // we try one more thing if the format for whatever reason doesnt work... since it allows a single id as well but formats perfered
+                        if ($file == null) {
+                            $file = static::getFileModelForFieldData($row['file_id']);
+                        }
+
+                        if ($file != null) {
+                            $url = $file->getAbsoluteURL();
+                            $vars['urls'][$row['title']] = $url;
+                        }
+                    }
+
+                    $string = '<select name="file" id="unique_file_id">';
+
+                    foreach ($vars['urls'] as $url => $value) {
+                        $string .= '<option value="'.$value.'">'.$url.'</option>';
+                    }
+
+                    $string .= '</select>';
+
+                    $config['filebrowserBrowseFunc']      = "function(params) { Wygwam.loadEEFileBrowserFront(params, ' . $uploadDir . ', 'any', '" . $string . "'); }";
+                    $config['filebrowserImageBrowseFunc'] = "function(params) { Wygwam.loadEEFileBrowserFront(params, ' . $uploadDir . ', 'any', '" . $string . "'); }";
+                } else {
+                    $dir_link = ee('CP/FilePicker')->make($uploadDir)->getUrl();
+                    static::insertJs(NL . "\t" . "Wygwam.fpUrl = '" . $dir_link . "';" . NL);
+
+                    if (! $uploadDir) {
+                        $uploadDir = '"all"';
+                    }
+                    $config['filebrowserBrowseFunc']      = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "any", "' . $dir_link . '"); }';
+                    $config['filebrowserImageBrowseFunc'] = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "image", "' . $dir_link . '"); }';
                 }
-
-                $config['filebrowserBrowseFunc']      = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "any", "' . $dir_link . '"); }';
-                $config['filebrowserImageBrowseFunc'] = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "image", "' . $dir_link . '"); }';
         }
 
         // add any site page data to wygwam config
@@ -832,12 +912,59 @@ class Helper
      */
     public static function replaceFileTags(&$data)
     {
+        //ee 7 we need to change things around internally to have our _getFileTags method work correctly
+
+        if (version_compare(ee()->config->item('app_version'), '7.0.0', '>=')) {
+            //we need to see if this is an empty / new wygwam field.  If so Data is null and we need to be careful of calling preg match on nulls
+            if ($data === null) {
+                return;
+            }
+
+            preg_match_all('/{file\:(\d+)\:url}/', $data, $matches);
+
+            if ($matches) {
+                $file_ids = $matches[1];
+                foreach ($file_ids as $current => $id) {
+                    $file = ee('Model')->get('File', $id)->with('UploadDestination')->first(true);
+                    $additional_subfolder_info = '';
+                    $base_upload_location = $file->directory_id;
+                    $count = 0;
+                    $current_dir_id = $file->directory_id;
+                    while ($base_upload_location != 0) {
+                        ee()->db->select('title, file_id, directory_id');
+                        $query = ee()->db->get_where('files', array('file_id' => $current_dir_id), 1, 0);
+                        $sub_name = $query->result_array()[0]["title"];
+                        $additional_subfolder_info = $sub_name . "/" . $additional_subfolder_info;
+                        $base_upload_location = $query->result_array()[0]["directory_id"];
+                        $current_dir_id = $query->result_array()[0]["directory_id"];
+                    }
+                    $find = '/{file:'.$file->file_id .':url}/';
+                    $data = (preg_replace($find, '{filedir_'. $file->upload_location_id .'}'. $additional_subfolder_info .$file->file_name, $data));
+                }
+            }
+        }
+
+        //ee 6 and below
         $tags = static::_getFileTags();
         $data = str_replace($tags[0], $tags[1], (string) $data);
     }
 
     /**
-     * Replaces File URLs with {filedir_X} tags.
+     * Helper for replaceFileUrls, find the old {filedir_X} format and replace with {file:XX:url}
+     * ***Only if they have compatibility mode set to false which we check for below.
+     */
+    static function getBetween($content,$start,$end)
+    {
+        $r = explode($start, $content);
+        if (isset($r[1])){
+            $r = explode($end, $r[1]);
+            return $r[0];
+        }
+        return '';
+    }
+
+    /**
+     * Replaces File URLs with {filedir_X} tags. Convert to {file:XX:url} for 7
      *
      * @param string &$data
      */
@@ -845,6 +972,38 @@ class Helper
     {
         $tags = static::_getFileTags();
         $data = str_replace($tags[1], $tags[0], $data);
+
+        if (version_compare(ee()->config->item('app_version'), '7.0.0', '>=')) {
+            if (!bool_config_item('file_manager_compatibility_mode')) {
+
+                while ((str_contains($data, '{filedir_'))) {
+                    $start_old_tag = strpos((string)$data, '{filedir_');
+                    $new_data = substr($data, $start_old_tag + 9); // rip the {filedir_ off so we can grab the directory id
+
+                    $directory_id_old_tag = strtok($new_data, '}');
+
+                    $new_data = substr($new_data, strlen($directory_id_old_tag) + 1); //rip off the X file dir and the closing }
+
+                    $test = strtok($new_data, '"');
+
+                    $subfolders = explode("/" , $test);
+
+                    $previous_dir = (int)$directory_id_old_tag;
+
+                    $filter = 'upload_location_id';
+                    foreach ($subfolders as $k => $name) {
+                        ee()->db->select('title, file_id');
+                        $query = ee()->db->get_where('files', array('title' => $name, $filter => $previous_dir), 1, 0);
+                        $previous_dir = $query->result_array()[0]["file_id"];
+                        $filter = "directory_id";
+                    }
+
+                    $new_tag = "{file:" . $previous_dir . ":url}";
+                    $oldfile = "{filedir_" . static::getBetween($data, '{filedir_' , '"');
+                    $data = str_replace($oldfile, $new_tag, $data);
+                }
+            }   
+        }     
     }
 
     /**
@@ -874,6 +1033,10 @@ class Helper
      */
     public static function replaceAssetTags(&$data)
     {
+        if ($data === null) {
+            return;
+        }
+
         preg_match_all("/\\{assets_(\\d*):((.*)(\\}))/uU", $data, $matches);
 
         if ($matches && !empty($matches[0])) {
@@ -945,6 +1108,10 @@ class Helper
      */
     public static function replacePageTags(&$data)
     {
+        if ($data === null) {
+            return;
+        }
+
         if (strpos($data, LD . 'page_') !== false) {
             $tags = static::_getPageTags();
 

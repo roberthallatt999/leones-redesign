@@ -385,6 +385,7 @@ class Wygwam_ft extends Ft
      */
     public function save($data)
     {
+
         // Trim out any whitespace/empty tags
         $data = preg_replace('/^(\s|<(\w+)>(&nbsp;|\s)*<\/\2>|<br \/>)*/', '', $data);
         $data = preg_replace('/(\s|<(\w+)>(&nbsp;|\s)*<\/\2>|<br \/>)*$/', '', $data);
@@ -408,6 +409,7 @@ class Wygwam_ft extends Ft
         // Convert URLs to tags if we have to.
         $preventConversion = ee()->config->item('wygwam_prevent_url_conversion');
 
+
         if (!$preventConversion || $preventConversion == "n" || $preventConversion == "no") {
             $data = $this->_convertUrlsToTags($data);
         }
@@ -419,6 +421,7 @@ class Wygwam_ft extends Ft
         if (ee()->extensions->active_hook('wygwam_before_save')) {
             $data = ee()->extensions->call('wygwam_before_save', $this, $data);
         }
+
 
         return $data;
     }
