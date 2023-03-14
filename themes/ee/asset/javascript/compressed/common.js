@@ -3,12 +3,11 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
 $(document).ready(function(){
-
 	// the code is responsible for preventing the page scrolling when press on 
 	// the dropdown list using the spacebar (code 32)
 	window.addEventListener('keydown', (e) => {
@@ -667,7 +666,10 @@ $(document).ready(function(){
 
 			// scroll up, if needed, but only do so after a significant
 			// portion of the overlay is show so as not to disorient the user
-			if ( ! $(this).is('.modal-form-wrap, .app-modal--side'))
+			if ($(this).is('.app-modal--fullscreen'))
+			{
+				$('body').css('overflow','hidden');
+			}else if ( ! $(this).is('.modal-form-wrap, .app-modal--side'))
 			{
 				setTimeout(function() {
 					$(document).scrollTop(0);
@@ -1024,6 +1026,23 @@ $(document).ready(function(){
 			}
 		});
 
+		// Check if Toggle button has data-group-toggle and 
+		// show and hide dependent blocks depending on toggle button value
+		$('.toggle-btn').find('[data-group-toggle]').each(function() {
+			var val = $(this).val();
+			var inputData = $(this).data('groupToggle')['y'];
+
+			if (val == 'n') {
+				$('[data-group='+inputData+']').each(function() {
+					$(this).hide();
+				});
+			} else {
+				$('[data-group='+inputData+']').each(function() {
+					$(this).show();
+				});
+			}
+		});
+
 		$('body').on('click', '.js-toggle-link', function(e) {
 			e.preventDefault()
 
@@ -1150,4 +1169,14 @@ $(document).ready(function(){
 	        	$(this).attr('data-max', maxValue);
         	});
         }
+
+    if ($('.checkbox-label').length) {
+			$('.checkbox-label').each(function(e){
+				if (!$(this).closest('div[data-input-value^="categories["]').length) {
+						$(this).css('pointer-events', 'none');
+						$(this).find('.checkbox-label__text').css('pointer-events', 'auto');
+						$(this).find('input').css('pointer-events', 'auto');
+				}
+			});
+		}
 }); // close (document).ready

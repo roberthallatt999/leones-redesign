@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -455,6 +455,9 @@ class CommandUpdate extends Cli
     {
         $version = $this->getCurrentVersion();
         $versionNamingMap = UpgradeMap::$versionNaming;
+        if (empty($version)) {
+            $version = $this->currentVersion;
+        }
 
         if (isset($versionNamingMap[$version])) {
             ee()->config

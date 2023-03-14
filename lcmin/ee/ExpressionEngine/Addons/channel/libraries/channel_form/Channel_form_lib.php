@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 require_once PATH_ADDONS . 'channel/libraries/channel_form/Channel_form_exception.php';
@@ -2576,7 +2576,7 @@ GRID_FALLBACK;
 
                 if (count($groups)) {
                     $where .= $where ? ' OR ' : '';
-                    $where .= ee()->db->dbprefix('members') . '.group_id IN (' . implode(', ', $groups) . ')';
+                    $where .= ee()->db->dbprefix('members') . '.role_id IN (' . implode(', ', $groups) . ')';
                     ee()->db->join('members', 'members.member_id = channel_titles.author_id');
                 }
 

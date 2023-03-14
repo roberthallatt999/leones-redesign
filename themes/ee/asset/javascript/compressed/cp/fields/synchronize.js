@@ -3,7 +3,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -24,7 +24,9 @@ EE.fieldManager.sync_listen = function() {
 		event.preventDefault();
 
 		// Disable sync button
-		$('.button', this).prop('disabled', true);
+		$('.button', $('.form-standard form')).each(function() {
+			$(this).val($(this).data('work-text')).addClass('work').prop('disabled', true);
+		});
 
 		// Remove any existing alerts
 		$('.app-notice--inline').remove();

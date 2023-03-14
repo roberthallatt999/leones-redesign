@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -193,9 +193,9 @@ class MimeType
             return false;
         }
 
-        if ($mime == 'image/svg+xml') {
+        if (strpos($mime, 'image/svg') === 0) {
             $file = file_get_contents($path);
-            if ((strpos($file, '<?xml') !==0 && strpos($file, '<svg') !== 0) || strpos($file, '<svg') === false) {
+            if ((strpos($file, '<?xml') !== 0 && strpos($file, '<svg') !== 0) || strpos($file, '<svg') === false) {
                 return false;
             }
             return true;

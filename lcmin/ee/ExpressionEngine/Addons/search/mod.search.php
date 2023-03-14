@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -1007,8 +1007,8 @@ class Search
     {
         $search_id = $this->_get_search_id();
 
-        if (! $search_id) {
-            return '';
+        if (!$search_id) {
+            return ee()->TMPL->no_results();
         }
 
         /** ----------------------------------------
@@ -1017,10 +1017,18 @@ class Search
         $query = ee()->db->query("SELECT total_results FROM exp_search WHERE search_id = '" . ee()->db->escape_str($search_id) . "'");
 
         if ($query->num_rows() == 1) {
-            return $query->row('total_results') ;
-        } else {
-            return 0;
+            if (empty(ee()->TMPL->tagdata)) {
+                return $query->row('total_results');
+            }
+
+            return $query->row('total_results') == 0
+                ? ee()->TMPL->no_results()
+                : ee()->TMPL->parse_variables_row(ee()->TMPL->tagdata, $query->row_array());
         }
+
+        return empty(ee()->TMPL->tagdata)
+            ? 0
+            : ee()->TMPL->no_results();
     }
 
     /** ----------------------------------------

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -64,7 +64,7 @@ class ChannelFieldGroup extends Model
 
     public function validateName($key, $value, $params, $rule)
     {
-        if (! preg_match("#^[a-zA-Z0-9_\-/\s]+$#i", $value)) {
+        if (! preg_match("#^[a-zA-Z0-9_\-/\s]+$#i", (string) $value)) {
             return 'illegal_characters';
         }
 

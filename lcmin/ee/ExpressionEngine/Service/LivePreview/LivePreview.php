@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -158,7 +158,7 @@ class LivePreview
                 if (! $template_id) {
                     $template_id = $entry->getPageTemplateID();
                 }
-            } else {
+            } elseif (!empty($channel->preview_url)) {
                 //channel settings
                 // We want to avoid replacing `{url_title}` with an empty string since that
                 // can cause the wrong thing to render (like 404s).
