@@ -88,6 +88,9 @@ class Detour_pro_upd extends Upd
         if (!$prev_install) {
             $this->_create_table_hits();
         }
+		else {
+			ee()->db->query("ALTER TABLE `exp_detours_hits` ADD KEY (`detour_id`)");
+		}
 
         // Enable the extension to prevent redirect erros while installing.
         ee()->db->where('class', 'Detour_pro_ext');
@@ -135,6 +138,10 @@ class Detour_pro_upd extends Upd
         if (version_compare($current, '2.1.0', '<')) {
             $this->_update_to_2_1_0();
         }
+		
+        if (version_compare($current, '2.6.3', '<')) {
+            $this->_update_to_2_6_3();
+        }		
 
         // If you have updates, drop 'em in here.
         return true;
@@ -223,6 +230,13 @@ class Detour_pro_upd extends Upd
             ee()->dbforge->add_column('detour_pro_settings', $fields);
         }
     }
+	
+    private function _update_to_2_6_3()
+    {
+		ee()->db->query("ALTER TABLE `exp_detours_hits` ADD KEY (`detour_id`)");
+    }
+	
+	
 
     /* Private Functions */
 
@@ -235,6 +249,7 @@ class Detour_pro_upd extends Upd
         );
 
         ee()->dbforge->add_field($fields);
+        ee()->dbforge->add_key('detour_id');		
         ee()->dbforge->add_key('hit_id', true);
 
         return (ee()->dbforge->create_table('detours_hits')) ? true : false;
