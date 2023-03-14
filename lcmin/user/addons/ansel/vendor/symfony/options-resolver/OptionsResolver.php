@@ -734,6 +734,7 @@ class OptionsResolver implements Options
      * @throws OptionDefinitionException If there is a cyclic dependency between
      *                                   lazy options and/or normalizers
      */
+	#[\ReturnTypeWillChange]
     public function offsetGet($option)
     {
         if (!$this->locked) {
@@ -906,6 +907,7 @@ class OptionsResolver implements Options
      *
      * @see \ArrayAccess::offsetExists()
      */
+	#[\ReturnTypeWillChange]
     public function offsetExists($option)
     {
         if (!$this->locked) {
@@ -920,6 +922,7 @@ class OptionsResolver implements Options
      *
      * @throws AccessException
      */
+	#[\ReturnTypeWillChange]
     public function offsetSet($option, $value)
     {
         throw new AccessException('Setting options via array access is not supported. Use setDefault() instead.');
@@ -930,6 +933,7 @@ class OptionsResolver implements Options
      *
      * @throws AccessException
      */
+	#[\ReturnTypeWillChange]
     public function offsetUnset($option)
     {
         throw new AccessException('Removing options via array access is not supported. Use remove() instead.');
@@ -946,6 +950,7 @@ class OptionsResolver implements Options
      *
      * @see \Countable::count()
      */
+	#[\ReturnTypeWillChange]
     public function count()
     {
         if (!$this->locked) {
