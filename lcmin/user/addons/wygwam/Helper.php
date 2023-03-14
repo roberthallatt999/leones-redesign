@@ -781,6 +781,8 @@ class Helper
                     if (! $uploadDir) {
                         $uploadDir = '"all"';
                     }
+
+                    $dir_link->qs['hasUpload'] = 1;
                     $config['filebrowserBrowseFunc']      = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "any", "' . $dir_link . '"); }';
                     $config['filebrowserImageBrowseFunc'] = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "image", "' . $dir_link . '"); }';
                 }
@@ -974,27 +976,27 @@ class Helper
         $data = str_replace($tags[1], $tags[0], $data);
 
         if (version_compare(ee()->config->item('app_version'), '7.0.0', '>=')) {
+
             if (!bool_config_item('file_manager_compatibility_mode')) {
 
-                while ((str_contains($data, '{filedir_'))) {
+                $number_of_images = substr_count($data, '{filedir_');
+
+                for ($x = 0; $x < $number_of_images; $x++) {
                     $start_old_tag = strpos((string)$data, '{filedir_');
                     $new_data = substr($data, $start_old_tag + 9); // rip the {filedir_ off so we can grab the directory id
-
                     $directory_id_old_tag = strtok($new_data, '}');
-
                     $new_data = substr($new_data, strlen($directory_id_old_tag) + 1); //rip off the X file dir and the closing }
-
                     $test = strtok($new_data, '"');
-
                     $subfolders = explode("/" , $test);
-
                     $previous_dir = (int)$directory_id_old_tag;
-
                     $filter = 'upload_location_id';
+
                     foreach ($subfolders as $k => $name) {
                         ee()->db->select('title, file_id');
-                        $query = ee()->db->get_where('files', array('title' => $name, $filter => $previous_dir), 1, 0);
-                        $previous_dir = $query->result_array()[0]["file_id"];
+                        $query = ee()->db->get_where('files', array('file_name' => $name, $filter => $previous_dir), 1, 0);
+                        if (isset($query->result_array()[0]["file_id"])) {
+                            $previous_dir = $query->result_array()[0]["file_id"];
+                        }
                         $filter = "directory_id";
                     }
 
