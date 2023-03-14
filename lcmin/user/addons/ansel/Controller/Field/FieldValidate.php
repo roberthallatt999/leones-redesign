@@ -50,6 +50,10 @@ class FieldValidate
 	 */
 	public function validate($fieldData)
 	{
+		if (!is_array($fieldData)) {
+			return true;
+		}
+
 		// Unset the placeholder
 		unset($fieldData['placeholder']);
 

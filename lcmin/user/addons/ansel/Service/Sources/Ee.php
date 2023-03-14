@@ -365,10 +365,17 @@ class Ee extends BaseSource
 		$dimensions = $this->eeFileModel->get_dimensions_by_dir_id($identifier);
 		$dimensions = $dimensions->result_array();
 
+		/**
+		 * @var UploadDestination $uploadDestination
+		 * @noinspection PhpUndefinedFieldInspection
+		 */
+		$uploadDestination = $file->UploadDestination;
+
 		// Run manipulations and thumbnails
 		$this->eeFileManager->create_thumb(
 			$filePath,
 			array(
+				'directory' => $uploadDestination,
 				'server_path' => $pathInfo['dirname'],
 				'file_name' => $file->getProperty('file_name'),
 				'dimensions' => $dimensions,

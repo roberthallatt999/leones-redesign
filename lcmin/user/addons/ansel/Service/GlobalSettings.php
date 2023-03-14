@@ -295,6 +295,7 @@ class GlobalSettings implements \Iterator, \Countable
 	/**
 	 * Implement count method
 	 */
+	#[\ReturnTypeWillChange]
 	public function count()
 	{
 		if (! $this->records) {
@@ -314,6 +315,7 @@ class GlobalSettings implements \Iterator, \Countable
 	 *
 	 * @return mixed
 	 */
+	#[\ReturnTypeWillChange]
 	public function current()
 	{
 		if (! $this->records) {
@@ -326,6 +328,7 @@ class GlobalSettings implements \Iterator, \Countable
 	/**
 	 * @return mixed
 	 */
+	#[\ReturnTypeWillChange]
 	public function key()
 	{
 		if (! $this->records) {
@@ -338,6 +341,7 @@ class GlobalSettings implements \Iterator, \Countable
 	/**
 	 * Next
 	 */
+	#[\ReturnTypeWillChange]
 	public function next()
 	{
 		if (! $this->records) {
@@ -350,6 +354,7 @@ class GlobalSettings implements \Iterator, \Countable
 	/**
 	 * Rewind
 	 */
+	#[\ReturnTypeWillChange]
 	public function rewind()
 	{
 		if (! $this->records) {
@@ -362,6 +367,7 @@ class GlobalSettings implements \Iterator, \Countable
 	/**
 	 * Valid
 	 */
+	#[\ReturnTypeWillChange]
 	public function valid()
 	{
 		if (! $this->records) {

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -36,6 +36,7 @@ class FieldFacade
 
     public function __construct($field_id, array $metadata)
     {
+        ee()->load->library('api');
         ee()->legacy_api->instantiate('channel_fields');
         $this->api = clone ee()->api_channel_fields;
 

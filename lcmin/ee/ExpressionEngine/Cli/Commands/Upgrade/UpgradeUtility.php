@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -44,8 +44,6 @@ class UpgradeUtility
 
     protected static function rename_installer()
     {
-        $filesystem = new Filesystem();
-
         $installerPath = SYSPATH . 'ee/installer';
 
         // Generate the new path by suffixing a dotless version number
@@ -56,6 +54,6 @@ class UpgradeUtility
         );
 
         // Move the directory
-        return $filesystem->rename($installerPath, $new_path);
+        return ee('Filesystem')->rename($installerPath, $new_path);
     }
 }

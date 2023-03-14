@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -122,7 +122,7 @@ class EntryList
             }
 
             if (count($roles)) {
-                foreach (ee('Model')->get('Role', $roles)->all() as $role) {
+                foreach (ee('Model')->get('Role', $roles)->all(true) as $role) {
                     $members = array_merge($role->getAllMembersData('member_id'), $members);
                 }
             }

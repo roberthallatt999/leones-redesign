@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -163,24 +163,23 @@ class Validator
         }
 
         foreach ($this->rules as $key => $rules) {
-            $value = null;
+            $originalValue = null;
 
             if (array_key_exists($key, $values)) {
-                $value = $values[$key];
+                $originalValue = $values[$key];
             }
 
             $rules = $this->setupRules($rules);
 
             foreach ($rules as $rule) {
+                $value = $originalValue;
+
                 if ($partial && $rule instanceof Rule\Required && $value === null) {
                     continue;
                 }
 
                 $rule->setAllValues($values);
 
-                if (is_null($value)) {
-                    $value = (string) $value;
-                }
                 $rule_return = $rule->validate($key, $value);
 
                 // Skip the rest of the rules?

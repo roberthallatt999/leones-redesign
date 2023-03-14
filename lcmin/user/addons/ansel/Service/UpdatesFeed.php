@@ -82,7 +82,7 @@ class UpdatesFeed
 
 			// Get the feed
 			$feed = file_get_contents(
-				'https://buzzingpixel.com/software/ansel-ee/changelog/feed',
+				'https://www.buzzingpixel.com/software/ansel-ee/changelog/feed',
 				false,
 				$context
 			);

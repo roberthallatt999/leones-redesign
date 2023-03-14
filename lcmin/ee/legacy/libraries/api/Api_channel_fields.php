@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -1392,11 +1392,11 @@ class Api_channel_fields extends Api
      */
     public function get_pair_field($tagdata, $field_name, $prefix = '')
     {
-        //in complex cases, Pro edit link might sneak into tagdata. It's causing regex issues, remove it.
-        $tagdata = str_replace('{' . $field_name . ':frontedit}', '', $tagdata);
         $pfield_chunk = array();
         $offset = 0;
         $field_name = $prefix . $field_name;
+        //in complex cases, Pro edit link might sneak into tagdata. It's causing regex issues, remove it.
+        $tagdata = str_replace('{' . $field_name . ':frontedit}', '', $tagdata);
         $end = strpos($tagdata, LD . '/' . $field_name, $offset);
 
         while ($end !== false) {
