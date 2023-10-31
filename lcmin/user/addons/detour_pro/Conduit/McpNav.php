@@ -12,6 +12,7 @@ class McpNav extends FluxNav
             'index' => lang('nav_home'),
             'settings' => lang('nav_settings'),
             'purge_hits' => lang('nav_purge'),
+            'missing_pages' => lang('nav_missing_page_tracker'),
             'https://eeharbor.com/detour-pro/documentation' => lang('nav_documentation'),
         );
 

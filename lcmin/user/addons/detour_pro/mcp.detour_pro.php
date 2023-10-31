@@ -19,6 +19,7 @@ use EEHarbor\DetourPro\FluxCapacitor\FluxCapacitor;
 
 class Detour_pro_mcp extends Mcp
 {
+    public $flux;
     public $return_data;
     public $return_array = array();
 
@@ -86,23 +87,23 @@ class Detour_pro_mcp extends Mcp
 
         ee()->load->library('table');
 
-        if (isset($_GET['search']) && !empty($_GET['search'])) {
-            $this->search = $_GET['search'];
+        if (!empty(ee()->input->get('search'))) {
+            $this->search = urldecode(ee()->input->get('search'));
         }
 
-        if (isset($_GET['sort']) && !empty($_GET['sort'])) {
-            $this->sort = $_GET['sort'];
+        if (!empty(ee()->input->get('sort'))) {
+            $this->sort = ee()->input->get('sort');
         }
 
-        if (isset($_GET['sort_dir']) && !empty($_GET['sort_dir'])) {
-            if ($_GET['sort_dir'] == 'desc') {
+        if (!empty(ee()->input->get('sort_dir'))) {
+            if (ee()->input->get('sort_dir') == 'desc') {
                 $this->sort_dir = 'desc';
             } else {
                 $this->sort_dir = 'asc';
             }
         }
-
         $this->_data['ee_ver'] = substr(APP_VER, 0, 1);
+		$this->_data['search_query'] = $this->search;		
 
         $this->_data['sort']                = $this->sort;
         $this->_data['sort_dir']['current'] = $this->sort_dir;
@@ -129,9 +130,9 @@ class Detour_pro_mcp extends Mcp
             'detour' => ee()->lang->line('option_detour'),
             'ignore' => ee()->lang->line('option_ignore'),
         );
-
+		
         $this->_data['detour_methods'] = $this->_detour_methods;
-        $this->_data['total_detours']  = $this->count_detours();
+        $this->_data['total_detours']  = $this->count_detours(ee()->config->item('site_id'));
 
         // Pagination
         $per_page                               = 100;
@@ -168,7 +169,8 @@ class Detour_pro_mcp extends Mcp
     {
         // Convert the search keywords into a query string value.
         $searchVal = urlencode(ee()->input->post('search'));
-        ee()->functions->redirect($this->flux->moduleURL('index', array('search' => $searchVal)));
+        $orig_method = !empty(ee()->input->get('orig_search')) ? ee()->input->get('orig_search') : 'index';
+        ee()->functions->redirect($this->flux->moduleURL($orig_method, array('search' => $searchVal)));
     }
 
     public function delete_detours()
@@ -249,7 +251,7 @@ class Detour_pro_mcp extends Mcp
         $phpDateFormat = str_replace('%', '', ee()->config->item('date_format'));
 
         $this->_data['ee_ver']               = substr(APP_VER, 0, 1);
-        $this->_data['original_url']         = (!empty($detour['original_url'])) ? $detour['original_url'] : '';
+        $this->_data['original_url']         = (!empty($detour['original_url'])) ? $detour['original_url'] : (!empty(ee()->input->get('url')) ? urldecode(ee()->input->get('url')) : '');
         $this->_data['new_url']              = (!empty($detour['new_url'])) ? $detour['new_url'] : '';
         $this->_data['detour_method']        = (!empty($detour['detour_method'])) ? $detour['detour_method'] : (!empty($this->settings->default_method) ? $this->settings->default_method : '');
         $this->_data['detour_hits']          = (!empty($hits[0]['total'])) ? $hits[0]['total'] : '';
@@ -293,18 +295,25 @@ class Detour_pro_mcp extends Mcp
         } else {
             $existing_url = ee()->input->post('existing_url');
 
-            // If there is no existing detour (i.e. new detour) or the entered detour doesn't
-            // match the existing detour, make sure the entered detour doesn't already exist.
-            if (empty($existing_url) || $existing_url != $original_url) {
-                ee()->db->where('site_id', ee()->config->item('site_id'));
-                ee()->db->where('original_url', $original_url);
-                $exists = ee()->db->count_all_results('detours');
+			// If there is no existing detour (i.e. new detour) or the entered detour doesn't
+			// match the existing detour, make sure the entered detour doesn't already exist.
+			if (empty($existing_url) || $existing_url != $original_url) {
+				ee()->db->start_cache();
+		    	ee()->db->where('site_id', ee()->config->item('site_id'));
+		    	ee()->db->where('original_url', $original_url);
+		    	ee()->db->stop_cache();
 
-                if ($exists) {
-                    die(json_encode(array('status' => 'error', 'message' => 'This detour already exists.')));
-                }
-            }
-        }
+				$exists = ee()->db->count_all_results('detours');
+
+		    	if ($exists) {
+		    		$existing_items = ee()->db->get('detours');
+		        	ee()->db->flush_cache();
+		        	$existing_item = current($existing_items->result_array());
+
+		        	die(json_encode(array('status'=>'error', 'message'=>'This detour already exists (<a href="'.$this->_form_url('addUpdate', array('id' => $existing_item['detour_id'])).'">edit</a>).')));
+		    	}
+			}	
+		}	
 
         die(json_encode(array('status' => 'success', 'message' => 'So far so good!')));
     }
@@ -351,14 +360,108 @@ class Detour_pro_mcp extends Mcp
         if (isset($_POST['original_url']) && !empty($_POST['original_url'])) {
             if (!array_key_exists('id', $_POST)) {
                 ee()->db->insert('detours', $data);
+                $detour_id = ee()->db->insert_id();
             } elseif (array_key_exists('id', $_POST) && $_POST['id']) {
                 ee()->db->update('detours', $data, 'detour_id = ' . $_POST['id']);
+                $detour_id = ee()->input->post('id');
             }
+
+            //update record for not founds
+            $not_found = array(
+                'original_url'  => $original_url,
+                'site_id'       => ee()->config->item('site_id'),
+                'detour_id'     => null
+            );
+            $check_q = ee()->db->select('notfound_id')
+                ->from('detours_not_found')
+                ->where($not_found)
+                ->get();
+            if ($check_q->num_rows()>0) {
+                foreach ($check_q->result_array() as $row) {
+                    $not_found_update = array('detour_id'   => $detour_id);
+                    ee()->db->where('notfound_id', $row['notfound_id']);
+                    ee()->db->update('detours_not_found', $not_found_update);
+                }
+            }
+
         }
 
         // Redirect back to Detour Pro landing page
         ee()->functions->redirect($this->_base_url);
     }
+
+    /**
+     * URLs that are not found (404)
+     *
+     * @return  void
+     */
+    public function missing_pages()
+    {
+
+        ee()->load->library('table');
+		
+        if (!empty(ee()->input->get('search'))) {
+            $this->search = urldecode(ee()->input->get('search'));
+        }
+
+        if (!empty(ee()->input->get('sort'))) {
+            $this->sort = ee()->input->get('sort');
+        }
+
+        if (!empty(ee()->input->get('sort_dir'))) {
+            if (ee()->input->get('sort_dir') == 'desc') {
+                $this->sort_dir = 'desc';
+            } else {
+                $this->sort_dir = 'asc';
+            }
+        }
+
+        $this->_data['ee_ver'] = substr(APP_VER, 0, 1);
+		$this->_data['search_query'] = $this->search;		
+
+        $this->_data['sort']                = $this->sort;
+        $this->_data['sort_dir']['current'] = $this->sort_dir;
+
+        $this->_data['sort_dir']['original_url']  = 'asc';
+        $this->_data['sort_dir']['site_id']       = 'asc';
+        $this->_data['sort_dir']['hit_date']    = 'asc';
+        $this->_data['sort_dir']['hits']    = 'asc';
+        $this->_data['sort_dir']['detour_id']      = 'asc';
+
+        if ($this->sort_dir == 'asc') {
+            $this->_data['sort_dir'][$this->sort] = 'desc';
+        } else {
+            $this->_data['sort_dir'][$this->sort] = 'asc';
+        }
+
+        $this->_data['base_url']          = $this->flux->getBaseURL('missing_pages');
+        $this->_data['search_url']        = $this->_form_url('search_post', array('orig_search' => 'missing_pages'));
+
+        // Pagination
+        $per_page                               = 100;
+        $pagination_config['per_page']          = $per_page;
+        $pagination_config['base_url']          = $this->flux->getBaseURL('missing_pages', AMP . 'sort=' . $this->sort . AMP . 'sort_dir=' . $this->sort_dir);
+
+        $pagination_config['total_rows']   = $this->count_not_found();
+        $pagination_config['current_page'] = $this->flux->getCurrentPage($pagination_config);
+
+        $start = $this->flux->getStartNum($pagination_config);
+
+        if (!$this->search) {
+            $this->_data['pagination'] = $this->flux->pagination($pagination_config);
+        }
+
+        $this->_data['current_rows'] = $this->get_not_found(null, $start, $per_page);
+
+        // If we're not on page 1 and there are no results, redirect to page 1.
+        if ($pagination_config['current_page'] > 1 && count($this->_data['current_rows']) == 0) {
+            ee()->functions->redirect($this->_base_url);
+        }
+
+        $this->skinSupport();
+        return $this->flux->view('missing_pages', $this->_data, true);
+    }
+
 
     public function purge_hits()
     {
@@ -398,6 +501,9 @@ class Detour_pro_mcp extends Mcp
         if (!isset($this->_data['settings']->allow_trailing_slash)) {
             $this->_data['settings']->allow_trailing_slash = '';
         }
+        if (!isset($this->_data['settings']->allow_qs)) {
+            $this->_data['settings']->allow_qs = '';
+        }
 
         ee()->javascript->output(array("$('input[name=allow_trailing_slash]').on('click', function() { if($(this).is(':checked')) { $('select[name=url_detect]').val('php'); } });"));
         ee()->javascript->output(array("$('select[name=url_detect]').on('change', function() { if($(this).val() == 'ee') { $('input[name=allow_trailing_slash]').attr('checked', false); } });"));
@@ -415,6 +521,7 @@ class Detour_pro_mcp extends Mcp
         $data['default_method']       = ee()->input->post('default_method', true);
         $data['hit_counter']          = ee()->input->post('hit_counter', true);
         $data['allow_trailing_slash'] = ee()->input->post('allow_trailing_slash', true);
+        $data['allow_qs'] = ee()->input->post('allow_qs', true);
 
         // Find out if the settings exist, if not, insert them.
         ee()->db->where('site_id', ee()->config->item('site_id'));
@@ -526,6 +633,81 @@ class Detour_pro_mcp extends Mcp
                     'detour_method' => $detour_method,
                     'hits'          => $hits,
                     'update_link' => $this->flux->moduleURL('addUpdate', array('id' => $detour_id)),
+                );
+            }
+        } else {
+            if ($start > 0 || $per_page > 0) {
+                ee()->db->limit($per_page, $start);
+            }
+
+            $this->return_array = ee()->db->get_where('detours', $vars)->row_array();
+        }
+
+        return $this->return_array;
+    }
+
+    private function count_not_found($id = '')
+    {
+        $vars = array(
+            'site_id' => ee()->config->item('site_id'),
+        );
+
+        if ($id) {
+            $vars['notfound_id'] = $id;
+        }
+
+        if (!array_key_exists('notfound_id', $vars)) {
+
+            if ($this->search) {
+                ee()->db->like('original_url', $this->search);
+            }
+
+            $detour_count = ee()->db->count_all_results('detours_not_found');
+        } else {
+            ee()->db->where('site_id', $vars['site_id']);
+            $detour_count = ee()->db->count_all_results('detours_not_found');
+        }
+
+        return $detour_count;
+    }
+
+    private function get_not_found($id = '', $start = 0, $per_page = 0)
+    {
+        $vars = array(
+            'site_id' => ee()->config->item('site_id'),
+        );
+
+        if ($id) {
+            $vars['notfound_id'] = $id;
+        }
+
+        if (!array_key_exists('notfound_id', $vars)) {
+            ee()->db->select('*');
+            ee()->db->select('DATE_FORMAT(hit_date, \'%m/%d/%Y\') AS hit_date', false);
+
+            if ($this->search) {
+                ee()->db->like('original_url', $this->search);
+            }
+
+            if ($this->sort) {
+                ee()->db->order_by($this->sort, $this->sort_dir);
+            }
+
+            if ($start > 0 || $per_page > 0) {
+                ee()->db->limit($per_page, $start);
+            }
+            $current_not_found = ee()->db->get_where('detours_not_found', $vars)->result_array();
+
+            foreach ($current_not_found as $value) {
+                extract($value);
+
+                $this->return_array[] = array(
+                    'original_url'  => $original_url,
+                    'hits'    => $hits,
+                    'hit_date'    => $hit_date,
+                    'detour_id'     => $detour_id,
+                    'edit_detour_link' => $this->flux->moduleURL('addUpdate', array('id' => $detour_id)),
+                    'add_detour_link' => $this->flux->moduleURL('addUpdate', array('url' => urlencode($original_url))),
                 );
             }
         } else {

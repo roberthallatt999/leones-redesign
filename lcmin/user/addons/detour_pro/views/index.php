@@ -3,7 +3,7 @@
     <div class="panel-heading">
         <?php echo form_open($search_url); ?>
             <fieldset class="tbl-search right">
-                <input placeholder="type phrase..." type="text" name="search" value="" style="float: left; margin-right: 5px;">
+                <input placeholder="type phrase..." type="text" name="search" value="<?= $search_query ?>" style="float: left; margin-right: 5px;">
                 <button type="submit" class="btn action submit">search</button>
             </fieldset>
         </form>
