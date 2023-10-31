@@ -16,6 +16,13 @@ class Wygwam_ft extends Ft
 
     public $entry_manager_compatible = true;
 
+    public $col_id;
+    public $cell_name;
+    public $settings;
+    public $row;
+    public $field_name;
+    public $info = array();
+
     /**
      * A list of operators that this field type supports
      *
@@ -421,7 +428,9 @@ class Wygwam_ft extends Ft
         if (ee()->extensions->active_hook('wygwam_before_save')) {
             $data = ee()->extensions->call('wygwam_before_save', $this, $data);
         }
-
+		
+        // Update POST to keep entry versions in sync
+        $_POST[$this->field_name] = $data;
 
         return $data;
     }
