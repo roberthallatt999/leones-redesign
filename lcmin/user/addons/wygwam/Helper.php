@@ -730,59 +730,40 @@ class Helper
 
                 // load the file browser
                 // pass in the uploadDir to limit the directory to the one choosen
-
-                // We are in some sort of Channel form or something like that: we wont have the filepicker available so we do...
-                if (REQ == 'PAGE') {
-
-                    if (! $uploadDir) {
-                        $uploadDir = '"all"';
-                    }
-
-                    ee()->load->library('file_field');
-                    $results = ee()->db->query("SELECT * FROM exp_files");
-                    $vars = array();
-                    $vars['urls'] = array();
-
-
-                    foreach ($results->result_array() as $row) {
-                        if (version_compare(ee()->config->item('app_version'), '7.0.0', '>=') && !bool_config_item('file_manager_compatibility_mode')) {
-                            $format = "{file:". $row['file_id'] .":url}";
-                        } else {
-                            $format = "{filedir_". $row['upload_location_id'] ."}" . $row['title'];
-                        }
-
-                        $file = static::getFileModelForFieldData($format);
-
-                        // we try one more thing if the format for whatever reason doesnt work... since it allows a single id as well but formats perfered
-                        if ($file == null) {
-                            $file = static::getFileModelForFieldData($row['file_id']);
-                        }
-
-                        if ($file != null) {
-                            $url = $file->getAbsoluteURL();
-                            $vars['urls'][$row['title']] = $url;
-                        }
-                    }
-
-                    $string = '<select name="file" id="unique_file_id">';
-
-                    foreach ($vars['urls'] as $url => $value) {
-                        $string .= '<option value="'.$value.'">'.$url.'</option>';
-                    }
-
-                    $string .= '</select>';
-
-                    $config['filebrowserBrowseFunc']      = "function(params) { Wygwam.loadEEFileBrowserFront(params, ' . $uploadDir . ', 'any', '" . $string . "'); }";
-                    $config['filebrowserImageBrowseFunc'] = "function(params) { Wygwam.loadEEFileBrowserFront(params, ' . $uploadDir . ', 'any', '" . $string . "'); }";
-                } else {
+                else {
                     $dir_link = ee('CP/FilePicker')->make($uploadDir)->getUrl();
                     static::insertJs(NL . "\t" . "Wygwam.fpUrl = '" . $dir_link . "';" . NL);
+
+                    if ($uploadDir == '') {
+                        $dir_link->addQueryStringVariables(array(
+                            'requested_directory' => 'all',
+                        ));
+                    } else {
+                        $dir_link->addQueryStringVariables(array(
+                            'requested_directory' => $uploadDir,
+                        ));
+                    }
 
                     if (! $uploadDir) {
                         $uploadDir = '"all"';
                     }
 
                     $dir_link->qs['hasUpload'] = 1;
+                    ee()->load->library('file_field');
+                    ee()->lang->loadfile('fieldtypes');
+                    ee()->file_field->loadDragAndDropAssets();
+
+                    if (REQ == 'CP') {
+                        ee()->cp->add_js_script(['file' => [
+                            'fields/file/file_field_drag_and_drop',
+                            'fields/file/concurrency_queue',
+                            'fields/file/file_upload_progress_table',
+                            'fields/file/drag_and_drop_upload',
+                            'fields/grid/file_grid',
+                            'cp/files/picker']
+                        ]);
+                    }
+
                     $config['filebrowserBrowseFunc']      = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "any", "' . $dir_link . '"); }';
                     $config['filebrowserImageBrowseFunc'] = 'function(params) { Wygwam.loadEEFileBrowser(params, ' . $uploadDir . ', "image", "' . $dir_link . '"); }';
                 }
@@ -985,24 +966,32 @@ class Helper
                     $start_old_tag = strpos((string)$data, '{filedir_');
                     $new_data = substr($data, $start_old_tag + 9); // rip the {filedir_ off so we can grab the directory id
                     $directory_id_old_tag = strtok($new_data, '}');
+                   
                     $new_data = substr($new_data, strlen($directory_id_old_tag) + 1); //rip off the X file dir and the closing }
-                    $test = strtok($new_data, '"');
-                    $subfolders = explode("/" , $test);
+                    //clean up $new_data
+                    $new_data = strtok($new_data, '"');
+                    $subfolders = explode("/" , $new_data);
                     $previous_dir = (int)$directory_id_old_tag;
                     $filter = 'upload_location_id';
-
+                    $image_not_found = false;
                     foreach ($subfolders as $k => $name) {
                         ee()->db->select('title, file_id');
                         $query = ee()->db->get_where('files', array('file_name' => $name, $filter => $previous_dir), 1, 0);
                         if (isset($query->result_array()[0]["file_id"])) {
                             $previous_dir = $query->result_array()[0]["file_id"];
+                        } else {
+                            $image_not_found = true;
+                            break;
                         }
                         $filter = "directory_id";
                     }
 
-                    $new_tag = "{file:" . $previous_dir . ":url}";
-                    $oldfile = "{filedir_" . static::getBetween($data, '{filedir_' , '"');
-                    $data = str_replace($oldfile, $new_tag, $data);
+                    if (!$image_not_found) {
+                        $new_tag = "{file:" . $previous_dir . ":url}";
+                        $oldfile = "{filedir_" . static::getBetween($data, '{filedir_' , '"');
+                        $data = str_replace($oldfile, $new_tag, $data);
+                    }
+                   
                 }
             }   
         }     

@@ -264,7 +264,7 @@ abstract class Base
 		// Crop the image with the correct library
 		if ($resource instanceof \Imagick) {
 			// Set format to jpeg if applicable
-			if ($this->forceJpg) {
+			if ($this->sourceFileType === 2 || $this->forceJpg) {
 				$resource->setImageFormat('jpeg');
 				$resource->setImageCompression(\Imagick::COMPRESSION_JPEG);
 				$resource->setImageCompressionQuality($this->quality);

@@ -9150,6 +9150,13 @@ em label input[type=checkbox] {
   margin-top: 5px;
 }
 
+input[type=text][dir=rtl][field_content_type=numeric],
+input[type=text][dir=rtl][field_content_type=integer],
+input[type=text][dir=rtl][field_content_type=decimal] {
+  direction: ltr;
+  text-align: right;
+}
+
 .grid-instruct {
   display: block;
   color: var(--ee-text-secondary);
@@ -14370,6 +14377,14 @@ input[type=button].btn-block {
   outline: none;
   box-shadow: none;
 }
+@media (max-width: 767px) {
+  .sidebar__link--parent {
+    display: flex;
+  }
+  .sidebar__link--parent a {
+    display: inline-block;
+  }
+}
 
 .ui-sortable .sidebar__link .ui-sortable-handle i, .ui-sortable .add-on-layout .secondary-sidebar .sidebar__section-title a:not(.button):not(.filter-bar__button):not(.license-status-badge):not(.select__button):not(.select-popup):not(select):not(.pagination__link) .ui-sortable-handle i, .add-on-layout .secondary-sidebar .sidebar__section-title .ui-sortable a:not(.button):not(.filter-bar__button):not(.license-status-badge):not(.select__button):not(.select-popup):not(select):not(.pagination__link) .ui-sortable-handle i {
   cursor: move;
@@ -15052,6 +15067,15 @@ input[type=button].btn-block {
 }
 .filter-search-bar .checkbox-label .checkbox-label__text {
   display: block;
+}
+
+.modal-wrap .filter-bar .filter-bar__item:first-child .dropdown, .modal-wrap .filter-bar .filter-bar__item:first-child .select__dropdown {
+  width: max-content;
+}
+@media (max-width: 767px) {
+  .modal-wrap .filter-bar .filter-bar__item:first-child .dropdown, .modal-wrap .filter-bar .filter-bar__item:first-child .select__dropdown {
+    width: 100%;
+  }
 }
 
 .tab-bar {
@@ -17338,6 +17362,36 @@ fieldset .field-control #eye {
     }
   }
 }
+.fields-multiselect label {
+  display: flex;
+  margin-bottom: 10px;
+  align-items: center;
+}
+@media (max-width: 767px) {
+  .fields-multiselect label {
+    display: block;
+  }
+}
+.fields-multiselect label span {
+  min-width: 60px;
+  margin-right: 5px;
+}
+@media (max-width: 767px) {
+  .fields-multiselect label span {
+    max-width: 100%;
+    display: block;
+    margin-bottom: 5px;
+  }
+}
+.fields-multiselect label select {
+  max-width: 100%;
+}
+@media (max-width: 767px) {
+  .fields-multiselect label select {
+    width: 100%;
+  }
+}
+
 .note-fieldtype {
   color: var(--ee-note-fieldtype-color);
   background-color: var(--ee-note-fieldtype-bg);
@@ -18047,6 +18101,9 @@ fieldset .field-control #eye {
   box-shadow: none;
   border: 1px solid var(--ee-border);
   overflow-x: auto;
+}
+.grid-field .ui-sortable-placeholder > * {
+  display: none !important;
 }
 
 .grid-field__table th {

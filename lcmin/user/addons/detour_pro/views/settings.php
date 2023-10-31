@@ -1,7 +1,7 @@
 <?php
 // URI sniffer
 $uri = array(
-    'ee'  => 'Expression Engine: ee()->uri->uri_string',
+    'ee'  => 'ExpressionEngine: ee()->uri->uri_string',
     'php' => 'PHP: $_SERVER[\'REQUEST_URI\']',
 );
 
@@ -56,6 +56,28 @@ $redirects = array(
             <br /><div class="settings-note"><?php echo ee()->lang->line('notice_allow_trailing_slash'); ?></div>
         </div>
     </fieldset>
+
+    <fieldset class="col-group">
+        <div class="setting-txt col w-8">
+            <h3><?php echo ee()->lang->line('label_setting_hit_counter'); ?></h3>
+            <em><?php echo ee()->lang->line('subtext_setting_hit_counter'); ?></em>
+        </div>
+        <div class="setting-field col w-8 last">
+            <label><?php echo form_checkbox('hit_counter', 'y', $settings->hit_counter); ?> <?php echo ee()->lang->line('label_setting_hit_counter'); ?></label>
+        </div>
+    </fieldset>
+
+    <fieldset class="col-group">
+        <div class="setting-txt col w-8">
+            <h3><?php echo ee()->lang->line('label_setting_allow_qs'); ?></h3>
+            <em><?php echo ee()->lang->line('subtext_setting_allow_qs'); ?></em>
+        </div>
+        <div class="setting-field col w-8 last">
+            <label><?php echo form_checkbox('allow_qs', '1', $settings->allow_qs); ?> <?php echo ee()->lang->line('label_setting_allow_qs'); ?></label>
+        </div>
+    </fieldset>
+
+
 
     <?php echo form_submit(array('name' => 'submit', 'value' => ee()->lang->line('btn_save_settings'), 'class' => 'btn submit action')); ?>
 

@@ -75,6 +75,7 @@ class Detour_pro_upd extends Upd
             ee()->dbforge->add_field($fields);
             ee()->dbforge->add_key('detour_id', true);
             ee()->dbforge->create_table('detours');
+
         }
 
         unset($fields);
@@ -91,6 +92,9 @@ class Detour_pro_upd extends Upd
 		else {
 			ee()->db->query("ALTER TABLE `exp_detours_hits` ADD KEY (`detour_id`)");
 		}
+
+        // Create 404s table
+        $this->_create_table_not_found();
 
         // Enable the extension to prevent redirect erros while installing.
         ee()->db->where('class', 'Detour_pro_ext');
@@ -114,6 +118,7 @@ class Detour_pro_upd extends Upd
         ee()->dbforge->drop_table('detours');
         ee()->dbforge->drop_table('detours_hits');
         ee()->dbforge->drop_table('detour_pro_settings');
+        ee()->dbforge->drop_table('detours_not_found');
 
         return true;
     }
@@ -141,6 +146,10 @@ class Detour_pro_upd extends Upd
 		
         if (version_compare($current, '2.6.3', '<')) {
             $this->_update_to_2_6_3();
+        }
+
+        if (version_compare($current, '3.0.0', '<')) {
+            $this->_update_to_3_0_0();
         }		
 
         // If you have updates, drop 'em in here.
@@ -235,6 +244,26 @@ class Detour_pro_upd extends Upd
     {
 		ee()->db->query("ALTER TABLE `exp_detours_hits` ADD KEY (`detour_id`)");
     }
+
+    private function _update_to_3_0_0()
+    {
+        ee()->load->dbforge();
+        $this->_create_table_not_found();
+
+        // Follow same idea from update 2.1 but for allow_qs setting this time
+        if (!ee()->db->field_exists('allow_qs', 'detour_pro_settings')) {
+            $fields = array(
+                'allow_qs' => array(
+                    'type'       => 'tinyint',
+                    'constraint' => 1,
+                    'unsigned'   => true,
+                    'default'    => 0,
+                ),
+            );
+
+            ee()->dbforge->add_column('detour_pro_settings', $fields);
+        }
+    }
 	
 	
 
@@ -255,6 +284,24 @@ class Detour_pro_upd extends Upd
         return (ee()->dbforge->create_table('detours_hits')) ? true : false;
     }
 
+    private function _create_table_not_found()
+    {
+        $fields = array(
+            'notfound_id'     => array('type' => 'int', 'constraint' => '10', 'unsigned' => true, 'auto_increment' => true),
+            'detour_id' => array('type' => 'int', 'constraint' => '10', 'unsigned' => true),
+            'original_url'  => array('type' => 'varchar', 'constraint' => '250'),
+            'hit_date'    => array('type' => 'date', 'null' => true),
+            'hits' => array('type' => 'int', 'constraint' => '10', 'default' => 1, 'unsigned' => true),
+            'site_id'       => array('type' => 'int', 'constraint' => '4', 'unsigned' => true),
+        );
+
+        ee()->dbforge->add_field($fields);
+        ee()->dbforge->add_key('notfound_id', true);
+        ee()->dbforge->add_key('detour_id');
+
+        return (ee()->dbforge->create_table('detours_not_found')) ? true : false;
+    }
+
     private function _createSettingsTable()
     {
         ee()->load->dbforge();
@@ -267,6 +314,7 @@ class Detour_pro_upd extends Upd
             'default_method'       => array('type' => 'varchar(3)', 'null' => false, 'default' => '301'),
             'hit_counter'          => array('type' => 'char(1)', 'null' => false, 'default' => 'n'),
             'allow_trailing_slash' => array('type' => 'tinyint(1)', 'null' => true, 'default' => '0'),
+            'allow_qs'             => array('type' => 'tinyint(1)', 'null' => true, 'default' => '0'),
         );
 
         ee()->dbforge->add_field($fields);
@@ -274,6 +322,7 @@ class Detour_pro_upd extends Upd
         ee()->dbforge->add_key('site_id');
         ee()->dbforge->create_table('detour_pro_settings');
     }
+
 
     private function _isPreviousInstall()
     {

@@ -14,6 +14,7 @@ $lang = array(
     'nav_add_detour'                       => 'Add Detour',
     'nav_settings'                         => 'Settings',
     'nav_purge'                            => 'Purge Hit Counter',
+    'nav_missing_page_tracker'             => 'Missing Page Tracker',
     'nav_documentation'                    => 'Documentation',
     'nav_license'                          => 'License',
 
@@ -26,6 +27,8 @@ $lang = array(
     'title_value'                          => 'Value',
     'title_start'                          => 'Start Date',
     'title_end'                            => 'End Date',
+    'title_hit_date'                       => 'Hit Date',
+    'title_detour'                         => 'Detour',
 
     // Form Labels
     'label_add_detour'                     => 'Add Detour',
@@ -44,6 +47,8 @@ $lang = array(
     'label_setting_default_method'         => 'Default Redirect Method',
     'label_setting_hit_counter'            => 'Enable Hit Counter',
     'label_setting_allow_trailing_slash'   => 'Allow Trailing Slash',
+    'label_setting_allow_qs'               => 'Allow old query strings to be passed to new spot',
+    'subtext_setting_allow_qs'             => 'Example. Allow for /detour/old?color=red to redirect to /detour/new?color=red keeping the color',
 
     // Form Subtext
     'subtext_original_url'                 => 'Example: path/to/page.html or old/ee/page<br />Does not need leading /',
@@ -56,7 +61,7 @@ $lang = array(
     'subtext_detour_method'                => 'Determines whether the redirect is permanent (301) or temporary (302)',
     'subtext_clear_start_date'             => 'Clears previously set start date',
     'subtext_clear_end_date'               => 'Clears previously set end date',
-    'subtext_setting_url_detect'           => 'We recommended Expression Engine.<br />If your redirects are not working, you can try PHP',
+    'subtext_setting_url_detect'           => 'We recommended ExpressionEngine.<br />If your redirects are not working, you can try PHP',
     'subtext_setting_default_method'       => 'Typically you will want permanent 301 redirects',
     'subtext_setting_hit_counter'          => 'Enable if you want to track individual redirects',
     'subtext_setting_allow_trailing_slash' => 'Allows adding a trailing slash on detours saved via the Add Detour page',
@@ -65,6 +70,7 @@ $lang = array(
     'dir_uri'                              => 'Example: path/to/page.html or old/ee/page<br />Does not need leading /',
     'dir_detour'                           => 'Internal: path/to/new/page<br />External: http://www.example.com',
     'dir_no_detours'                       => 'There are no detours in the system.',
+    'dir_no_404s'                          => 'No 404 errors tracked yet',
 
     // Options
     'option_detour'                        => 'Detour all urls, even urls with existing pages.',
@@ -83,6 +89,7 @@ $lang = array(
     'settings_updated'                     => 'Settings Updated Successfully',
 
     'detour_already_exists'                => 'This detour already exists',
+
 );
 
 /* End of file lang.detour_pro.php */

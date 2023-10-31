@@ -21,6 +21,7 @@ class Api_channel_fields extends Api
 
     public $ee_base_ft = false;
     public $global_settings;
+    public $field_type;
 
     protected $custom_field_modules;
 
@@ -130,7 +131,7 @@ class Api_channel_fields extends Api
             }
 
             $opts = get_class_vars($data['class']);
-            $fts[$key] = array_merge($fts[$key], $opts['info']);
+            $fts[$key] = array_merge($fts[$key], (isset($opts['info']) && is_array($opts['info']) ? $opts['info'] : []));
         }
 
         return $fts;

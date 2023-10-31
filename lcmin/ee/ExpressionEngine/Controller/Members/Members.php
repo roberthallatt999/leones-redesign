@@ -22,6 +22,8 @@ use ExpressionEngine\Service\Model\Collection;
  */
 class Members extends CP_Controller
 {
+    public $base_url;
+
     public function __construct()
     {
         parent::__construct();
@@ -36,7 +38,8 @@ class Members extends CP_Controller
         $this->stdHeader();
 
         ee()->javascript->set_global([
-            'cp.validatePasswordUrl' => ee('CP/URL', 'login/validate_password')->compile()
+            'cp.validatePasswordUrl' => ee('CP/URL', 'login/validate_password')->compile(),
+            'lang.password_icon' => lang('password_icon')
         ]);
     }
 
@@ -879,7 +882,7 @@ class Members extends CP_Controller
     private function buildTableFromMemberQuery(Builder $members, $checkboxes = null)
     {
         $primary_icon = ' <sup class="icon--primary" title="' . lang('primary_role') . '"></sup>';
-        
+
         $table = $this->initializeTable();
 
         $sort_map = array(
@@ -946,7 +949,7 @@ class Members extends CP_Controller
 
             $username_display = "
             <div class=\"d-flex align-items-center\">
-            <img src=\"$avatar_url\" alt=\"" . $member->username . "\" class=\"avatar-icon add-mrg-right\">
+            <img src=\"$avatar_url\" alt='" . lang('image_alt') . " " . $member->username . "' class=\"avatar-icon add-mrg-right\">
             <div>$username_display</div>
             </div>
             ";
@@ -1090,29 +1093,23 @@ class Members extends CP_Controller
      */
     public function heirFilter($group_ids = null, $selected = null)
     {
-        $search_term = ee('Request')->get('search') ?: '';
-        $group_ids = $group_ids ?: explode('|', ee('Request')->get('group_ids'));
         $selected = $selected ?: explode('|', ee('Request')->get('selected'));
 
-        $members = ee('Model')->get('Member')
-            ->fields('screen_name', 'username')
-            ->search(
-                ['screen_name', 'username', 'email', 'member_id'],
-                $search_term
-            )
-            ->filter('role_id', 'IN', $group_ids)
-            ->filter('member_id', 'NOT IN', $selected)
-            ->order('screen_name')
-            ->limit(100)
-            ->all();
+        $search = null;
+        if (!empty(ee('Request')->get('search'))) {
+            $search = ee('Request')->get('search');
+        }
+        $authors = ee('Member')->getAuthors($search);
 
-        $heirs = [];
-        foreach ($members as $heir) {
-            $name = ($heir->screen_name != '') ? 'screen_name' : 'username';
-            $heirs[$heir->getId()] = $heir->$name;
+        if (!empty($selected)) {
+            foreach ($selected as $selectedMemberId) {
+                if (array_key_exists($selectedMemberId, $authors)) {
+                    unset($authors[$selectedMemberId]);
+                }
+            }
         }
 
-        return ee('View/Helpers')->normalizedChoices($heirs);
+        return ee('View/Helpers')->normalizedChoices($authors);
     }
 
     /**
@@ -1458,7 +1455,7 @@ class Members extends CP_Controller
                 $member->save();
 
                 // Get a fresh copy of this member model and update statistics for its roles
-                if (!bool_config_item('ignore_member_stats')) { 
+                if (!bool_config_item('ignore_member_stats')) {
                     ee('Model')->get('Member')->filter('member_id', $member->getId())->first()->updateRoleTotalMembers();
                 }
 

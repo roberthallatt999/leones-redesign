@@ -200,8 +200,11 @@ class Low_reorder_mcp extends Mcp
                     )
                 );
 
-                // Add to table rows
-                $rows[] = $row;
+                // Don't show lists users can't reorder or edit
+                if ($perms['can_reorder']) {
+                    // Add to table rows
+                    $rows[] = $row;
+                }
             }
         }
 

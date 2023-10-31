@@ -1,8 +1,8 @@
 {
     "name": "Low Search",
     "shortname": "low_search",
-    "version": "7.1.3",
-    "foundation_version": "4.9.0",
+    "version": "7.2.2",
+    "foundation_version": "4.10.0",
     "description": "Powerful site search and Find &amp; Replace utility",
     "license": "EEHarbor",
     "trial": true,

@@ -190,6 +190,17 @@ class Low_reorder_set_model extends Low_reorder_model
         // Shortcut for current member group
         $group_id = ee()->session->userdata('group_id');
 
+        if (version_compare(ee()->config->item('app_version'), '6.0.0', '>=')) {
+            $query = ee()->db->select('role_id')
+                ->where('member_id', ee()->session->userdata('member_id'))
+                ->get('members_roles');
+
+            $roles = [];
+            foreach($query->result_array() as $row) {
+                $roles[] = $row['role_id'];
+            }
+        }
+
         // Default value for permissions
         $default = ($group_id == 1);
 
@@ -201,7 +212,18 @@ class Low_reorder_set_model extends Low_reorder_model
 
         if ($group_id != 1) {
             // Get permission integer from settings
-            $permission = isset($given_permissions[$group_id]) ? $given_permissions[$group_id] : 0;
+
+            if (version_compare(ee()->config->item('app_version'), '6.0.0', '>=')) {
+                $permission = 0;
+                // Check all user roles for permission to set
+                foreach ($roles as $role_id) {
+                    if (isset($given_permissions[$role_id]) && $given_permissions[$role_id] > $permission) {
+                        $permission = $given_permissions[$role_id];
+                    }
+                }
+            } else {
+                $permission = isset($given_permissions[$group_id]) ? $given_permissions[$group_id] : 0;
+            }
 
             // Set permissions
             // 2: can do both

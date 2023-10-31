@@ -91,6 +91,7 @@ class EE_Session
     private $session_model = null;
     private $member_model = null;
 
+    public $validation;
     /**
      * Session Class Constructor
      */
@@ -281,6 +282,7 @@ class EE_Session
             return false;
         }
 
+        $match = (string) $match;
         foreach (explode('|', $ban) as $val) {
             if ($val == '*') {
                 continue;
@@ -955,7 +957,7 @@ class EE_Session
         if (ee()->config->item('enable_tracking_cookie') === 'n') {
             return true;
         }
-        
+
         if (is_null($tracker)) {
             $tracker = $this->tracker;
         }
@@ -1205,10 +1207,13 @@ class EE_Session
     private function _setupMemberModel($memberId)
     {
         $memberQuery = ee('Model')->get('Member', $memberId)
-                ->with('PrimaryRole', 'Roles', 'RoleGroups');
+            ->with(['PrimaryRole' => 'RoleSettings'])
+            ->with('Roles')
+            ->with('RoleGroups');
         if (REQ == 'CP') {
             $memberQuery->with('EntryManagerViews');
         }
+        $memberQuery->filter('RoleSettings.site_id', ee()->config->item('site_id'));
         $this->member_model = $memberQuery->all()->first();
     }
 

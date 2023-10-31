@@ -22,6 +22,7 @@ if (! class_exists('Low_search_base')) {
  */
 class Low_search_mcp extends Mcp
 {
+    public $flux;
     // Use the base trait
     use Low_search_base;
 

@@ -151,7 +151,7 @@ class SaveRow
 		}
 
 		// Check if there is an image id
-		if ($data['ansel_image_id']) {
+		if (isset($data['ansel_image_id']) && $data['ansel_image_id']) {
 			// Get record query builder
 			$anselRecord = $this->recordBuilder->get('ansel:Image');
 

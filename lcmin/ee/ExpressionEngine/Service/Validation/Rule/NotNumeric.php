@@ -8,20 +8,22 @@
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
-/**
- * Template Router Integer Converter
- */
-class EE_Template_router_min_length_converter implements EE_Template_router_converter
-{
-    protected $length;
+namespace ExpressionEngine\Service\Validation\Rule;
 
-    public function __construct($length)
+use ExpressionEngine\Service\Validation\ValidationRule;
+
+/**
+ * Not Number Validation Rule
+ */
+class NotNumeric extends ValidationRule
+{
+    public function validate($key, $value)
     {
-        $this->length = $length;
+        return ! (bool) preg_match('/^[0-9.-]+$/', (string) $value);
     }
 
-    public function validator()
+    public function getLanguageKey()
     {
-        return "(.{{$this->length},})";
+        return 'is_not_numeric';
     }
 }

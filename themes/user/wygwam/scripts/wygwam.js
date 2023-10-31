@@ -330,29 +330,4 @@ window.Wygwam;
     };
 
     // If we are in the front end such as a wygwam field in a channels form
-
-    Wygwam.loadEEFileBrowserFront = function(params, directory, content_type, dirURL) {
-        const collection = document.getElementsByClassName("cke_dialog_ui_hbox_first")[0];
-        var parser = new DOMParser();
-        var htmlDoc = parser.parseFromString(dirURL, 'text/html');
-        collection.appendChild(htmlDoc.body);
-        var select = document.getElementById('unique_file_id');
-
-
-        var img = document.createElement('img');
-        img.src = select.options[select.selectedIndex].value;
-        img.style = "width:150px;height:150px;";
-        collection.appendChild(img);
-
-        select.addEventListener("change", function() {
-            var value = select.options[select.selectedIndex].value;
-            img.src = select.options[select.selectedIndex].value;
-            img.style = "width:150px;height:150px;";
-            var url_bar = document.getElementsByClassName("cke_dialog_ui_input_text")[0];
-            const inputElements = url_bar.querySelectorAll("input, select, checkbox, textarea")[0];
-            inputElements.value = value;
-
-
-        });
-    };
 })(jQuery);

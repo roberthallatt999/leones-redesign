@@ -96,12 +96,12 @@ if (! isset($row)) {
 	</td>
 	<?php if ($fieldSettings->show_title) : ?>
 		<td class="ansel-table__column ansel-table__column--input">
-			<label>
+			<label style="width: 100%">
 				<input
 					type="text"
 					name="<?=$fieldSettings->field_name?>[ansel_row_id_<?=$rowId?>][title]"
 					maxlength="255"
-					value="<?=htmlentities($row->title)?>"
+					value="<?=htmlentities((string) $row->title)?>"
 					class="js-ansel-input"
 				>
 			</label>
@@ -109,12 +109,12 @@ if (! isset($row)) {
 	<?php endif; ?>
 	<?php if ($fieldSettings->show_caption) : ?>
 		<td class="ansel-table__column ansel-table__column--input">
-			<label>
+			<label style="width: 100%">
 				<input
 					type="text"
 					name="<?=$fieldSettings->field_name?>[ansel_row_id_<?=$rowId?>][caption]"
 					maxlength="255"
-					value="<?=htmlentities($row->caption)?>"
+					value="<?=htmlentities((string) $row->caption)?>"
 					class="js-ansel-input"
 				>
 			</label>
