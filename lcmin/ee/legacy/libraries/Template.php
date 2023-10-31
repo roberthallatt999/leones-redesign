@@ -102,6 +102,9 @@ class EE_Template
     public $realm                 = 'Restricted Content';  // Localize?
     public $marker                = '0o93H7pQ09L8X1t49cHY01Z5j4TT91fGfr'; // Temporary marker used as a place-holder for template data
 
+    public $mb_available;
+    public $annotations;
+
     protected $_tag_cache_prefix  = 'tag_cache'; // Tag cache key namespace
     protected $_page_cache_prefix = 'page_cache'; // Page cache key namespace
 
@@ -226,8 +229,8 @@ class EE_Template
         // Record the New Relic transaction. Use a constant so that separate instances of this
         // class can't accidentally restart the transaction metrics
         if (!defined('EECMS_NEW_RELIC_TRANS_NAME')) {
-            $template = $this->templates_loaded[0];
-            define('EECMS_NEW_RELIC_TRANS_NAME', "{$template['group_name']}/{$template['template_name']}");
+            $templateLoaded = $this->templates_loaded[0];
+            define('EECMS_NEW_RELIC_TRANS_NAME', "{$templateLoaded['group_name']}/{$templateLoaded['template_name']}");
             ee()->core->set_newrelic_transaction(EECMS_NEW_RELIC_TRANS_NAME);
         }
 
@@ -342,7 +345,7 @@ class EE_Template
             'template_id' => $this->template_id,
             'template_type' => $this->embed_type ?: $this->template_type,
             'is_ajax_request' => AJAX_REQUEST,
-            'is_live_preview_request' => ee('LivePreview')->hasEntryData(),
+            'is_live_preview_request' => isset(ee()->session) ? ee('LivePreview')->hasEntryData() : false,
         ];
 
         //Pro conditionals
@@ -388,7 +391,7 @@ class EE_Template
 
                         $replace = $this->wrapInContextAnnotations(
                             $value,
-                            'Snippet "' . $variable . '"'
+                            'Template Partial "' . $variable . '"'
                         );
 
                         $this->template = str_replace(LD . $variable . RD, $replace, $this->template);
@@ -449,7 +452,7 @@ class EE_Template
         }
 
         // Parse error conditinal tags
-        $errors = ee()->session->flashdata('errors');
+        $errors = isset(ee()->session) ? ee()->session->flashdata('errors') : [];
 
         // Make sure to age the flashdata so it doesn't appear on the next request accidentally.
         // ee()->session->_age_flashdata();
@@ -2239,10 +2242,10 @@ class EE_Template
         else {
             if ($query->num_rows() > 1) {
                 $duplicate = true;
-                $log_message = "Duplicate Template Group: " . ee()->uri->segment(1);
+                $this->log_item("Duplicate Template Group: " . ee()->uri->segment(1));
             } else {
                 $duplicate = false;
-                $log_message = "Template group and template not found, showing 404 page";
+                $this->log_item("Template group and template not found, showing 404 page");
             }
 
             // If we are enforcing strict URLs we need to show a 404
@@ -2992,7 +2995,8 @@ class EE_Template
                 if ($info->isInstalled()) {
                     $this->module_data[ucfirst($name)] = $name;
                 }
-            } elseif ($info->hasPlugin() && $info->isInstalled()) {
+            }
+            if ($info->hasPlugin() && $info->isInstalled()) {
                 $this->plugins[] = $name;
             }
         }
@@ -3063,7 +3067,9 @@ class EE_Template
         // Restore XML declaration if it was encoded
         $str = $this->restore_xml_declaration($str);
 
-        ee()->session->userdata['member_group'] = ee()->session->userdata['role_id'];
+        if (isset(ee()->session)) {
+            ee()->session->userdata['member_group'] = ee()->session->userdata['role_id'];
+        }
         $this->user_vars[] = 'member_group';
 
         // parse all standard global variables
@@ -4397,9 +4403,9 @@ class EE_Template
 
     protected function getMemberVariables()
     {
-        static $vars;
+        static $vars = [];
 
-        if (empty($vars)) {
+        if (empty($vars) && isset(ee()->session)) {
             foreach ($this->user_vars as $user_var) {
                 $vars['logged_in_' . $user_var] = ee()->session->userdata[$user_var];
             }
