@@ -324,11 +324,19 @@ class Low_search_upd extends Upd
         }
 
         // --------------------------------------
+        // Update to 7.1.4
+        // --------------------------------------
+
+        if (version_compare($current, '7.1.4', '<')) {
+            $this->_v714();
+        }
+
+        // --------------------------------------
         // Update extension version
         // --------------------------------------
 
         ee()->db->where('class', $this->class_name . '_ext')
-                ->update('extensions', array('version' => $this->version));
+            ->update('extensions', array('version' => $this->version));
 
         // Return TRUE to update version number in DB
         return true;
@@ -409,7 +417,7 @@ class Low_search_upd extends Upd
 
             // Set new property values
             $data['modifier'] = (float) (isset($settings['modifier']) ? $settings['modifier'] : 1.0);
-            $data['excerpt']  = (int) (isset($settings['excerpt']) ? $settings['excerpt'] : 0);
+            $data['excerpt'] = (int) (isset($settings['excerpt']) ? $settings['excerpt'] : 0);
 
             // Remove these properties from settings
             unset($settings['modifier'], $settings['excerpt']);
@@ -464,8 +472,8 @@ class Low_search_upd extends Upd
     {
         // Increase priority number for first hook
         ee()->db->where('class', $this->class_name . '_ext')
-                ->where('hook', $this->hooks[0])
-                ->update('extensions', array('priority' => '101'));
+            ->where('hook', $this->hooks[0])
+            ->update('extensions', array('priority' => '101'));
     }
 
     /**
@@ -624,6 +632,24 @@ class Low_search_upd extends Upd
         );
         $version = new Version();
         $version->saveLicenseKey($data);
+    }
+
+    /**
+     * Update routines for version 7.1.4
+     *
+     * @access     private
+     * @return     void
+     */
+    private function _v714()
+    {
+        // Template query
+        $sql = sprintf(
+            'ALTER TABLE `%s` MODIFY `ip_address` varchar(46) NOT NULL',
+            ee()->low_search_log_model->table()
+        );
+
+        // Add the field to the table
+        ee()->db->query($sql);
     }
 }
 // End class

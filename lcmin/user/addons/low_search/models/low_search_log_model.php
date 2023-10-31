@@ -19,7 +19,6 @@ if (! class_exists('Low_search_model')) {
  */
 class Low_search_log_model extends Low_search_model
 {
-
     /**
      * Key used for caching/flashdata
      *
@@ -51,7 +50,7 @@ class Low_search_log_model extends Low_search_model
                 'site_id'      => 'int(4) unsigned NOT NULL',
                 'member_id'    => 'int(10) unsigned NOT NULL',
                 'search_date'  => 'int(10) unsigned NOT NULL',
-                'ip_address'   => 'varchar(16) NOT NULL',
+                'ip_address'   => 'varchar(46) NOT NULL',
                 'keywords'     => 'varchar(150) NOT NULL',
                 'parameters'   => 'TEXT NOT NULL',
                 'num_results'  => 'int(10) unsigned'
@@ -87,6 +86,7 @@ class Low_search_log_model extends Low_search_model
     public function get_filtered_rows($filters = array())
     {
         $this->_set_filters($filters);
+
         return $this->get_all();
     }
 
@@ -96,6 +96,7 @@ class Low_search_log_model extends Low_search_model
     public function get_filtered_count($filters = array())
     {
         $this->_set_filters($filters);
+
         return ee()->db->count_all_results($this->table());
     }
 
@@ -105,6 +106,7 @@ class Low_search_log_model extends Low_search_model
     public function get_site_count()
     {
         $this->_set_filters(array('site_id' => $this->site_id));
+
         return ee()->db->count_all_results($this->table());
     }
 
@@ -128,10 +130,12 @@ class Low_search_log_model extends Low_search_model
                 case 'keywords':
                 case 'ip_address':
                     ee()->db->like($key, $val);
+
                     break;
 
                 case 'search_date':
                     ee()->db->where("FROM_UNIXTIME(search_date, '%Y-%m-%d') =", $val);
+
                     break;
 
                 default:
