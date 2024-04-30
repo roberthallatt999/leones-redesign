@@ -57,15 +57,6 @@ $redirects = array(
         </div>
     </fieldset>
 
-    <fieldset class="col-group">
-        <div class="setting-txt col w-8">
-            <h3><?php echo ee()->lang->line('label_setting_hit_counter'); ?></h3>
-            <em><?php echo ee()->lang->line('subtext_setting_hit_counter'); ?></em>
-        </div>
-        <div class="setting-field col w-8 last">
-            <label><?php echo form_checkbox('hit_counter', 'y', $settings->hit_counter); ?> <?php echo ee()->lang->line('label_setting_hit_counter'); ?></label>
-        </div>
-    </fieldset>
 
     <fieldset class="col-group">
         <div class="setting-txt col w-8">

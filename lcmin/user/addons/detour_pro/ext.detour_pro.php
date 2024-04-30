@@ -81,8 +81,8 @@ class Detour_pro_ext extends Ext
         }
 
         if (isset($this->settings['url_detect']) && $this->settings['url_detect'] == 'php') {
-            $site_index_file = (ee()->config->item('site_index')) ? ee()->config->item('site_index') . '/' : null;
-            $url             = str_replace($site_index_file, '', $_SERVER['REQUEST_URI']);
+            $site_index_file = (ee()->config->item('site_index')) ? ee()->config->item('site_index') . '/' : '';
+            $url = str_replace($site_index_file, '', $_SERVER['REQUEST_URI']);
             $baseUrlPath = ee()->config->item('base_url');
 
             $position = strpos($url,"?");
