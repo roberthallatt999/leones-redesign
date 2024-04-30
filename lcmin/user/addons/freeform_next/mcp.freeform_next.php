@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -44,6 +44,8 @@ use Solspace\Addons\FreeformNext\Utilities\ControlPanel\RedirectView;
 use Solspace\Addons\FreeformNext\Utilities\ControlPanelView;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
+
+require_once version_compare(PHP_VERSION, '8.0.0') < 0 ? __DIR__ . '/php7/vendor/autoload.php' : __DIR__ . '/vendor/autoload.php';
 
 class Freeform_next_mcp extends ControlPanelView
 {
@@ -111,7 +113,7 @@ class Freeform_next_mcp extends ControlPanelView
             return $this->renderView(new RedirectView($this->getLink('denied')));
         }
 
-        if (strtolower($id) === 'delete') {
+        if ($id && strtolower($id) === 'delete') {
             return $this->renderView($this->getFieldController()->batchDelete());
         }
 
@@ -148,7 +150,7 @@ class Freeform_next_mcp extends ControlPanelView
             return $this->renderView(new RedirectView($this->getLink('denied')));
         }
 
-        if (strtolower($notificationId) === 'delete') {
+        if ($notificationId && strtolower($notificationId) === 'delete') {
             return $this->renderView($this->getNotificationController()->batchDelete());
         }
 
@@ -185,7 +187,7 @@ class Freeform_next_mcp extends ControlPanelView
             return $this->renderView(new RedirectView($this->getLink('denied')));
         }
 
-        if (strtolower($seg1) === 'delete') {
+        if ($seg1 && strtolower($seg1) === 'delete') {
             return $this->renderView($this->getExportProfilesController()->batchDelete());
         }
 
@@ -494,13 +496,13 @@ class Freeform_next_mcp extends ControlPanelView
         $resources = new NavigationLink('Resources');
         $resources
             ->addSubNavItem(
-                new NavigationLink('Product Info', 'https://docs.solspace.com/expressionengine/freeform/v2/')
+                new NavigationLink('Product Info', 'https://docs.solspace.com/expressionengine/freeform/v3/')
             )
             ->addSubNavItem(
-                new NavigationLink('Documentation', 'https://docs.solspace.com/expressionengine/freeform/v2/')
+                new NavigationLink('Documentation', 'https://docs.solspace.com/expressionengine/freeform/v3/')
             )
             ->addSubNavItem(
-                new NavigationLink('Official Support', 'https://docs.solspace.com/expressionengine/freeform/v2/support.html')
+                new NavigationLink('Official Support', 'https://docs.solspace.com/expressionengine/freeform/v3/support.html')
             );
 
         $logs   = null;

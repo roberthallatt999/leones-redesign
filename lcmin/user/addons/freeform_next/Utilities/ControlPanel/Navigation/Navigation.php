@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -95,7 +95,7 @@ class Navigation
             }
 
             if (strpos($this->getCurrentUrl(), 'addons/settings/freeform_next/submissions') === 0) {
-                if (strpos($item->getMethod(), 'form') === 0) {
+                if ($item->getMethod() && strpos($item->getMethod(), 'form') === 0) {
                     $header->isActive();
                 }
             }

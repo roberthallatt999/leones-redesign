@@ -150,16 +150,13 @@ trait Low_reorder_base
         $this->site_id = (int) ee()->config->item('site_id');
 
         // -------------------------------------
-        //  Get license key shortcut
+        //  Get license key and ignore site shortcut
         // -------------------------------------
 
-        $this->license_key = $version->getLicenseKey();
-
-        // -------------------------------------
-        //  Get ignore site shortcut
-        // -------------------------------------
-
-        $this->ignore_site = $version->getIgnoreSite();
+        if (REQ == 'CP') {
+			$this->license_key = $version->getLicenseKey();
+			$this->ignore_site = $version->getIgnoreSite();
+		}
     }
 
     // --------------------------------------------------------------------

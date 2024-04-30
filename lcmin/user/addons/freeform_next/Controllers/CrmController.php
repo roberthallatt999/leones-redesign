@@ -3,7 +3,7 @@
 namespace Solspace\Addons\FreeformNext\Controllers;
 
 use EllisLab\ExpressionEngine\Library\CP\Table;
-use Guzzle\Http\Exception\BadResponseException;
+use GuzzleHttp\Exception\BadResponseException;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
 use Solspace\Addons\FreeformNext\Library\Helpers\ExtensionHelper;
 use Solspace\Addons\FreeformNext\Library\Helpers\UrlHelper;
@@ -118,7 +118,7 @@ class CrmController extends Controller
             $formRightLinks = [
                 [
                     'title' => lang('Upgrade to Pro to Enable'),
-                    'link'  => 'https://docs.solspace.com/expressionengine/freeform/v2/',
+                    'link'  => 'https://docs.solspace.com/expressionengine/freeform/v3/',
                 ],
             ];
         }
@@ -149,7 +149,7 @@ class CrmController extends Controller
         $serviceProviderTypes = $this->getCrmService()->getAllCrmServiceProviders();
 
         if (empty($serviceProviderTypes)) {
-            return new RedirectView('https://docs.solspace.com/expressionengine/freeform/v2/');
+            return new RedirectView('https://docs.solspace.com/expressionengine/freeform/v3/');
         }
 
         if ($id === 'new') {
@@ -338,7 +338,7 @@ class CrmController extends Controller
             }
         }
 
-        $settings = json_decode($model->settings, true) ?: [];
+        $settings = $model->settings ? json_decode($model->settings, true) : [];
 
         $blueprints = $this->getCrmService()->getCrmSettingBlueprints($class);
 
@@ -501,7 +501,7 @@ class CrmController extends Controller
                 }
             } else {
                 $view->addVariable('success', false);
-                $view->addError($e->getResponse()->getBody(true));
+                $view->addError($e->getMessage());
             }
         }
 

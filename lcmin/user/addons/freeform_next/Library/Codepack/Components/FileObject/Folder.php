@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -118,7 +118,8 @@ class Folder extends FileObject implements \Iterator
      * @return mixed Can return any type.
      * @since 5.0.0
      */
-    public function current()
+	#[\ReturnTypeWillChange]
+	public function current()
     {
         return current($this->files);
     }
@@ -130,6 +131,7 @@ class Folder extends FileObject implements \Iterator
      * @return void Any returned value is ignored.
      * @since 5.0.0
      */
+	#[\ReturnTypeWillChange]
     public function next()
     {
         next($this->files);
@@ -142,6 +144,7 @@ class Folder extends FileObject implements \Iterator
      * @return mixed scalar on success, or null on failure.
      * @since 5.0.0
      */
+	#[\ReturnTypeWillChange]
     public function key()
     {
         return key($this->files);
@@ -155,7 +158,7 @@ class Folder extends FileObject implements \Iterator
      *        Returns true on success or false on failure.
      * @since 5.0.0
      */
-    public function valid()
+    public function valid(): bool
     {
         return null !== $this->key() && $this->key() !== false;
     }
@@ -167,6 +170,7 @@ class Folder extends FileObject implements \Iterator
      * @return void Any returned value is ignored.
      * @since 5.0.0
      */
+	#[\ReturnTypeWillChange]
     public function rewind()
     {
         reset($this->files);

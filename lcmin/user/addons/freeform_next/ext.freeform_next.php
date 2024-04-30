@@ -1,6 +1,6 @@
 <?php
 
-use Guzzle\Http\Client;
+use GuzzleHttp\Client;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\AbstractField;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Fields\SubmitField;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Form;
@@ -13,13 +13,15 @@ use Solspace\Addons\FreeformNext\Services\PermissionsService;
 use Solspace\Addons\FreeformNext\Services\SettingsService;
 use Solspace\Addons\FreeformNext\Utilities\AddonInfo;
 
+require_once version_compare(PHP_VERSION, '8.0.0') < 0 ? __DIR__ . '/php7/vendor/autoload.php' : __DIR__ . '/vendor/autoload.php';
+
 /**
  * Freeform for ExpressionEngine
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 class Freeform_next_ext
@@ -44,16 +46,21 @@ class Freeform_next_ext
                 $secret = SettingsRepository::getInstance()->getOrCreate()->getRecaptchaSecret();
 
                 $client  = new Client();
-                $request = $client->post(
+				$postResponse = $client->post(
                     'https://www.google.com/recaptcha/api/siteverify',
-                    ['Content-Type' => 'application/json'],
-                    [
-                        'secret'   => $secret,
-                        'response' => $response,
-                    ]
-                );
+					[
+						'headers' => [
+							'Content-Type' => 'application/x-www-form-urlencoded',
+						],
+						'form_params'         => [
+							'secret'   => $secret,
+							'response' => $response,
+						],
+					]
+				);
 
-                $postResponse = $request->send();
+
+                // $postResponse = $request->send();
                 $result       = json_decode((string) $postResponse->getBody(true), true);
 
                 if (!$result['success']) {

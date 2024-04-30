@@ -11,7 +11,7 @@ $config['show_ee_news'] = 'n';
 // Find more configs and overrides at
 // https://docs.expressionengine.com/latest/general/system_configuration_overrides.html
 
-$config['app_version'] = '6.4.15';
+$config['app_version'] = '6.4.17';
 $config['encryption_key'] = '12730bc09bc146f0e42b62981023b38cf31539f8';
 $config['session_crypt_key'] = '4693fa652d6a79db1bca00e73f5840839dbaf303';
 

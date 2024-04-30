@@ -156,7 +156,6 @@ class Detour_pro_mcp extends Mcp
         }
 
         $this->_data['add_detour_link'] = $this->flux->moduleURL('addUpdate');
-
         $this->skinSupport();
         return $this->flux->view('index', $this->_data, true);
     }
@@ -345,8 +344,34 @@ class Detour_pro_mcp extends Mcp
             }
         }
 
-        $start_date = (isset($_POST['start_date']) && !empty($_POST['start_date']) && !array_key_exists('clear_start_date', $_POST)) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
-        $end_date   = (isset($_POST['end_date']) && !empty($_POST['end_date']) && !array_key_exists('clear_end_date', $_POST)) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
+        $phpDateFormat = str_replace('%', '', ee()->config->item('date_format'));
+
+        if ($phpDateFormat == "j/n/Y") {
+            /*
+            "Note: Be aware of dates in the m/d/y or d-m-y formats; if the separator is a slash (/), then the American m/d/y is assumed. 
+            If the separator is a dash (-) or a dot (.), then the European d-m-y format is assumed. 
+            To avoid potential errors, you should YYYY-MM-DD dates or date_create_from_format() when possible." 
+            -- https://www.w3schools.com/php/func_date_strtotime.asp
+
+                We make use of PHP's goofball rule and just temperarily swap out the / for -
+                This is if the setting is such that it is in the format: dd/mm/YYYY we make a temp dd-mm-YYYY so it saves in the correct European format. 
+                otherwise it was swapping d and m and sending us back to 1970 since the date errors out if you put in a day greater than 12 
+                since it got swapped, did not find a 13th month for example and died.
+
+                if the core adds MM-DD-YYYY in the future that could get weird but this is fine for now and the if conditional should catch that regardless.  
+                Doing it this way also lets us save it in the same format which we want, otherwise someone could have a lot of issues if they swap formats around
+            */
+            $modified_start = str_replace("/", "-", $_POST['start_date']);
+            $modified_end = str_replace("/", "-", $_POST['end_date']);
+
+            $start_date = (isset($modified_start) && !empty($modified_start) && !array_key_exists('clear_start_date', $_POST)) ? date('Y-m-d', strtotime($modified_start)) : null;
+            $end_date   = (isset($modified_end) && !empty($modified_end) && !array_key_exists('clear_end_date', $_POST)) ? date('Y-m-d', strtotime($modified_end)) : null;
+
+        }       
+        else {
+            $start_date = (isset($_POST['start_date']) && !empty($_POST['start_date']) && !array_key_exists('clear_start_date', $_POST)) ? date('Y-m-d', strtotime($_POST['start_date'])) : null;
+            $end_date   = (isset($_POST['end_date']) && !empty($_POST['end_date']) && !array_key_exists('clear_end_date', $_POST)) ? date('Y-m-d', strtotime($_POST['end_date'])) : null;
+        }
 
         $data = array(
             'original_url'  => $original_url,
@@ -596,9 +621,27 @@ class Detour_pro_mcp extends Mcp
         }
 
         if (!array_key_exists('detour_id', $vars)) {
-            ee()->db->select('*');
-            ee()->db->select('DATE_FORMAT(start_date, \'%m/%d/%Y\') AS start_date', false);
-            ee()->db->select('DATE_FORMAT(end_date, \'%m/%d/%Y\') AS end_date', false);
+            $phpDateFormat =  ee()->config->item('date_format');
+
+            $phpDateFormat = str_replace('j', 'd', $phpDateFormat);
+            $phpDateFormat = str_replace('n', 'm', $phpDateFormat);
+
+            $phpDateFormat = "'" . $phpDateFormat . "'";
+            // if ($phpDateFormat == "j/n/Y") {
+            //     //  dd/mm/Y format
+            //     ee()->db->select('*');
+            //     ee()->db->select('DATE_FORMAT(start_date, \'%d/%m/%Y\') AS start_date', false);
+            //     ee()->db->select('DATE_FORMAT(end_date, \'%d/%m/%Y\') AS end_date', false);
+    
+
+            // }else {
+                ee()->db->select('*');
+                ee()->db->select('DATE_FORMAT(start_date,' . $phpDateFormat .') AS start_date', false);
+                ee()->db->select('DATE_FORMAT(end_date,' . $phpDateFormat .') AS end_date', false);
+                //ee()->db->select('DATE_FORMAT(end_date, \'%m/%d/%Y\') AS end_date', false);
+            //}
+
+            
 
             if ($this->search) {
                 ee()->db->like('original_url', $this->search);
