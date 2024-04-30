@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -20,7 +20,11 @@ class ExportDataTSV extends ExportData {
         foreach ($row as $key => $value) {
             // Escape inner quotes and wrap all contents in new quotes.
             // Note that we are using \" to escape double quote not ""
+            if (is_null($value)) {
+                $value = '';
+            }
             $row[$key] = '"'. str_replace('"', '\"', $value) .'"';
+
         }
         return implode("\t", $row) . "\n";
     }

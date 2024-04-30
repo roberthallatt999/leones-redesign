@@ -4,14 +4,14 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Integrations\CRM;
 
-use Guzzle\Http\Client;
+use GuzzleHttp\Client;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
 use Solspace\Addons\FreeformNext\Library\Integrations\SettingBlueprint;
 
@@ -97,10 +97,12 @@ abstract class CRMOAuthConnector extends AbstractCRMIntegration
 
         $body = http_build_query($payload);
 
-        $request = $client->post($this->getAccessTokenUrl());
-        $request->setHeader("Content-Type", "application/x-www-form-urlencoded");
-        $request->setBody($body);
-        $response = $request->send();
+		$response = $client->post($this->getAccessTokenUrl(), [
+			'headers' => [
+				"Content-Type" => "application/x-www-form-urlencoded"
+			],
+			'body' => $body
+		]);
 
         $json = json_decode($response->getBody(true));
 

@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -44,7 +44,7 @@ use Solspace\Addons\FreeformNext\Utilities\ControlPanel\RedirectView;
 
 class SubmissionController extends Controller
 {
-    const MAX_PER_PAGE = 20;
+    const MAX_PER_PAGE = 25;
 
     /**
      * @param Form $form
@@ -254,6 +254,7 @@ class SubmissionController extends Controller
         }
 
         $page = (int) ee()->input->get('page') ?: 1;
+		$perpage = (int) ee()->input->get('perpage') ?: self::MAX_PER_PAGE;
 
         $sortDirection = ee()->input->get('sort_dir');
         $sortDirection = !$sortDirection || $sortDirection === '0' ? 'desc' : $sortDirection;
@@ -270,17 +271,26 @@ class SubmissionController extends Controller
         $attributes
             ->setOrderBy($sortColumn)
             ->setSort($sortDirection)
-            ->setLimit(self::MAX_PER_PAGE)
-            ->setOffset(self::MAX_PER_PAGE * ($page - 1));
+            ->setLimit($perpage)
+            ->setOffset($perpage * ($page - 1));
 
         $submissions = SubmissionRepository::getInstance()->getAllSubmissionsFor($attributes);
 
-        $pagination = ee('CP/Pagination', $totalSubmissionCount)
-            ->perPage(self::MAX_PER_PAGE)
+		$pagination = ee('CP/Pagination', $totalSubmissionCount)
+            ->perPage($perpage)
             ->currentPage($page)
             ->render(
                 $this->getLink('submissions/' . $form->getHandle() . '&' . http_build_query($sortVars) . '&' . http_build_query($searchVars))
             );
+
+		if(! $pagination)
+		{
+			$pagination = '<ul class="pagination"><li class="pagination__item">'.
+				ee('CP/Filter')
+				->add('Perpage', $totalSubmissionCount, 'all_items', false, true)
+				->render($this->getLink('submissions/' . $form->getHandle() . '&' . http_build_query($sortVars) . '&' . http_build_query($searchVars)), '__') .
+				'</li></ul>';
+		}
 
         /** @var Table $table */
         $table = ee(
@@ -716,14 +726,23 @@ class SubmissionController extends Controller
 
 							$modal = ee('View')->make('ee:_shared/modal')->render($modal_vars);
 							ee('CP/Modal')->addModal('modal-view-file', $modal);
-                        }
 
-                        $fields = [
-                            [
-                                'type'    => 'html',
-                                'content' => $content,
-                            ],
-                        ];
+							$fields = [
+								[
+									'type'    => 'html',
+									'content' => $content,
+								],
+							];
+                        }
+                        else
+						{
+							$fields = [
+								($handle.'[]') => [
+									'type'    => 'file',
+									]
+							];
+						}
+
                     } else if ($field instanceof TableField) {
                         $field->setAddButtonMarkup('<ul class="toolbar"><li class="add"><a title="' . lang('add_row') . '" class="add button button--default button--small form-table-add-row"> ' . lang('add_row') . '</a></li></ul>');
                         $field->setRemoveButtonMarkup('<ul class="toolbar"><li class="remove"><a title="' . lang('remove_row') . '" class="remove button button--default button--small form-table-remove-row"> ' . lang('remove_row') . '</a></li></ul>');
@@ -784,6 +803,7 @@ class SubmissionController extends Controller
                     'save_btn_text'         => 'Save',
                     'save_btn_text_working' => 'Saving...',
                     'sections'              => $sectionData,
+					'has_file_input' 		=> count($form->getLayout()->getFileUploadFields()) > 0,
                 ]
             );
 
@@ -808,11 +828,22 @@ class SubmissionController extends Controller
         $submission->statusId = ee()->input->post('statusId', StatusRepository::getInstance()->getDefaultStatusId());
 
         foreach ($form->getLayout()->getFields() as $field) {
-            if ($field instanceof NoStorageInterface || $field instanceof FileUploadField) {
+            if ($field instanceof NoStorageInterface) {
                 continue;
             }
 
             $value = ee()->input->post($field->getHandle(), true);
+
+			if ($field instanceof FileUploadField) {
+				if(isset($_FILES[$field->getHandle()]))
+				{
+					$value = $field->uploadFile();
+				}
+				else
+				{
+					continue;
+				}
+			}
 
             if ($field instanceof CheckboxField) {
                 if (is_array($value)) {

@@ -3,7 +3,7 @@
 namespace Solspace\Addons\FreeformNext\Controllers;
 
 use EllisLab\ExpressionEngine\Library\CP\Table;
-use Guzzle\Http\Exception\BadResponseException;
+use GuzzleHttp\Exception\BadResponseException;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
 use Solspace\Addons\FreeformNext\Library\Helpers\ExtensionHelper;
 use Solspace\Addons\FreeformNext\Library\Helpers\UrlHelper;
@@ -118,7 +118,7 @@ class MailingListsController extends Controller
             $formRightLinks = [
                 [
                     'title' => lang('Upgrade to Pro to Enable'),
-                    'link'  => 'https://docs.solspace.com/expressionengine/freeform/v2/',
+                    'link'  => 'https://docs.solspace.com/expressionengine/freeform/v3/',
                 ],
             ];
         }
@@ -148,7 +148,7 @@ class MailingListsController extends Controller
         $serviceProviderTypes = $this->getMailingListService()->getAllMailingListServiceProviders();
 
         if (empty($serviceProviderTypes)) {
-            return new RedirectView('https://docs.solspace.com/expressionengine/freeform/v2/');
+            return new RedirectView('https://docs.solspace.com/expressionengine/freeform/v3/');
         }
 
         if ($id === 'new') {
@@ -336,7 +336,7 @@ class MailingListsController extends Controller
             }
         }
 
-        $settings = json_decode($model->settings, true) ?: [];
+        $settings = $model->settings ? json_decode($model->settings, true) : [];
 
         $blueprints = $this->getMailingListService()->getMailingListSettingBlueprints($class);
 

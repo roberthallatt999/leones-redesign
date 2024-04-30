@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -1063,10 +1063,10 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * Specify data which should be serialized to JSON
      *
-     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * @return array data which can be serialized by <b>json_encode</b>,
      */
-    public function jsonSerialize()
-    {
+    public function jsonSerialize(): array
+	{
         return [
             'name'          => $this->name,
             'handle'        => $this->handle,
@@ -1084,6 +1084,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return mixed Can return any type.
      */
+	#[\ReturnTypeWillChange]
     public function current()
     {
         return current($this->currentPageRows);
@@ -1094,6 +1095,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return void Any returned value is ignored.
      */
+	#[\ReturnTypeWillChange]
     public function next()
     {
         next($this->currentPageRows);
@@ -1104,6 +1106,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return mixed scalar on success, or null on failure.
      */
+	#[\ReturnTypeWillChange]
     public function key()
     {
         return key($this->currentPageRows);
@@ -1114,7 +1117,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return boolean The return value will be casted to boolean and then evaluated.
      */
-    public function valid()
+    public function valid(): bool
     {
         return null !== $this->key() && $this->key() !== false;
     }
@@ -1124,6 +1127,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return void Any returned value is ignored.
      */
+	#[\ReturnTypeWillChange]
     public function rewind()
     {
         reset($this->currentPageRows);
@@ -1136,7 +1140,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return bool
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->currentPageRows[$offset]);
     }
@@ -1148,6 +1152,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return mixed
      */
+	#[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->offsetExists($offset) ? $this->currentPageRows[$offset] : null;
@@ -1162,6 +1167,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      * @return void
      * @throws FreeformException
      */
+	#[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         throw new FreeformException('Form ArrayAccess does not allow for setting values');
@@ -1175,6 +1181,7 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
      * @return void
      * @throws FreeformException
      */
+	#[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         throw new FreeformException('Form ArrayAccess does not allow unsetting values');

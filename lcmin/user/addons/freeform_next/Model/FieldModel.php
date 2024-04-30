@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -121,11 +121,11 @@ class FieldModel extends Model implements \JsonSerializable
      * Specify data which should be serialized to JSON
      *
      * @link  http://php.net/manual/en/jsonserializable.jsonserialize.php
-     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * @return array data which can be serialized by <b>json_encode</b>,
      *        which is a value of any type other than a resource.
      * @since 5.4.0
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         $returnArray = [
             'id'           => (int) $this->id,

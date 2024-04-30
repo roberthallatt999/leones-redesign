@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -430,12 +430,12 @@ class Layout implements \JsonSerializable, \Iterator
      * Specify data which should be serialized to JSON
      *
      * @link  http://php.net/manual/en/jsonserializable.jsonserialize.php
-     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * @return array data which can be serialized by <b>json_encode</b>,
      *        which is a value of any type other than a resource.
      * @since 5.4.0
      */
-    public function jsonSerialize()
-    {
+    public function jsonSerialize(): array
+	{
         return $this->layoutData;
     }
 
@@ -446,6 +446,7 @@ class Layout implements \JsonSerializable, \Iterator
      * @return mixed Can return any type.
      * @since 5.0.0
      */
+	#[\ReturnTypeWillChange]
     public function current()
     {
         return current($this->pages);
@@ -458,6 +459,7 @@ class Layout implements \JsonSerializable, \Iterator
      * @return void Any returned value is ignored.
      * @since 5.0.0
      */
+	#[\ReturnTypeWillChange]
     public function next()
     {
         next($this->pages);
@@ -470,6 +472,7 @@ class Layout implements \JsonSerializable, \Iterator
      * @return mixed scalar on success, or null on failure.
      * @since 5.0.0
      */
+	#[\ReturnTypeWillChange]
     public function key()
     {
         return key($this->pages);
@@ -483,7 +486,7 @@ class Layout implements \JsonSerializable, \Iterator
      *        Returns true on success or false on failure.
      * @since 5.0.0
      */
-    public function valid()
+    public function valid(): bool
     {
         return null !== $this->key() && $this->key() !== false;
     }
@@ -495,6 +498,7 @@ class Layout implements \JsonSerializable, \Iterator
      * @return void Any returned value is ignored.
      * @since 5.0.0
      */
+	#[\ReturnTypeWillChange]
     public function rewind()
     {
         reset($this->pages);

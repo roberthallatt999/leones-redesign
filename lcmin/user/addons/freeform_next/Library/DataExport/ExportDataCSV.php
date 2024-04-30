@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -24,7 +24,7 @@ class ExportDataCSV extends ExportData
     public function generateRow($row) {
         foreach ($row as $key => $value) {
             // Escape inner quotes by double-quoting and wrap non-empty contents in new quotes
-            if ($value !== '') {
+            if (!empty($value)) {
                 $row[$key] = '"' . str_replace('"', '""', $value) . '"';
             }
         }

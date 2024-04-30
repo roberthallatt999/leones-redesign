@@ -4,8 +4,8 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
@@ -86,7 +86,7 @@ class FormValueContext implements \JsonSerializable
      */
     private static function getHashParts($hash)
     {
-        if (preg_match(self::HASH_PATTERN, $hash, $matches)) {
+        if ($hash && preg_match(self::HASH_PATTERN, $hash, $matches)) {
             return [$matches['formId'], $matches['pageIndex'], $matches['payload']];
         }
 
@@ -505,7 +505,7 @@ class FormValueContext implements \JsonSerializable
     /**
      * @inheritdoc
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'currentPageIndex' => $this->currentPageIndex,

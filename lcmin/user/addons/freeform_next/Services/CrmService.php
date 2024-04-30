@@ -4,14 +4,15 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Services;
 
-use Guzzle\Http\Exception\BadResponseException;
+use GuzzleHttp\Exception\BadResponseException;
+use Psr\Http\Message\ResponseInterface;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Layout;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Properties\IntegrationProperties;
 use Solspace\Addons\FreeformNext\Library\Database\CRMHandlerInterface;
@@ -249,10 +250,13 @@ class CrmService implements CRMHandlerInterface
         }
 
         $objectValues = [];
+        $formFields = [];
         foreach ($mapping as $crmHandle => $fieldHandle) {
             try {
                 $crmField  = $crmFieldsByHandle[$crmHandle];
                 $formField = $layout->getFieldByHandle($fieldHandle);
+
+                $formFields[$crmHandle] = $formField;
 
                 if ($crmField->getType() === FieldObject::TYPE_ARRAY) {
                     $value = $formField->getValue();
@@ -272,7 +276,7 @@ class CrmService implements CRMHandlerInterface
 
         if (!empty($objectValues)) {
             try {
-                $result = $integration->pushObject($objectValues);
+                $result = $integration->pushObject($objectValues, $formFields);
 
                 ExtensionHelper::call(ExtensionHelper::HOOK_CRM_AFTER_PUSH, $integration, $objectValues);
 
@@ -284,7 +288,7 @@ class CrmService implements CRMHandlerInterface
                             $this->updateAccessToken($integration);
 
                             try {
-                                $result = $integration->pushObject($objectValues);
+                                $result = $integration->pushObject($objectValues, $formFields);
 
                                 ExtensionHelper::call(ExtensionHelper::HOOK_CRM_AFTER_PUSH, $integration, $objectValues);
 
@@ -326,12 +330,12 @@ class CrmService implements CRMHandlerInterface
             $finder      = new Finder();
             $crmListPath = __DIR__ . '/../Integrations/CRM';
             if (file_exists($crmListPath) && is_dir($crmListPath)) {
-                $files         = $finder->files()->in($crmListPath)->name('*.php');
+                $files         = $finder->depth(0)->files()->in($crmListPath)->name('*.php');
                 $baseNamespace = 'Solspace\Addons\FreeformNext\Integrations\CRM\\';
 
                 /** @var SplFileInfo $file */
                 foreach ($files as $file) {
-                    $fileName = $file->getFilename();
+                    $fileName = str_replace('/', '\\', $file->getRelativePathname());
                     $baseName = substr(
                         $fileName,
                         0,
@@ -404,5 +408,10 @@ class CrmService implements CRMHandlerInterface
         }
 
         throw new IntegrationException('Could not get Crm settings');
+    }
+
+    public function onAfterResponse(AbstractIntegration $integration, ResponseInterface $response)
+    {
+        //
     }
 }

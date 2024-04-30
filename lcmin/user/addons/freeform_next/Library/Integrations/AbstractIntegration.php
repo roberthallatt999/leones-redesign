@@ -4,14 +4,15 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2021, Solspace, Inc.
- * @link          https://docs.solspace.com/expressionengine/freeform/v2/
+ * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Integrations;
 
 use Solspace\Addons\FreeformNext\Library\Configuration\ConfigurationInterface;
+use Solspace\Addons\FreeformNext\Library\Database\IntegrationHandlerInterface;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
 use Solspace\Addons\FreeformNext\Library\Integrations\DataObjects\FieldObject;
 use Solspace\Addons\FreeformNext\Library\Logging\LoggerInterface;
@@ -49,6 +50,9 @@ abstract class AbstractIntegration implements IntegrationInterface
     /** @var TranslatorInterface */
     private $translator;
 
+    /** @var IntegrationHandlerInterface */
+    private $handler;
+
     /**
      * Returns a list of additional settings for this integration
      * Could be used for anything, like - AccessTokens
@@ -78,7 +82,8 @@ abstract class AbstractIntegration implements IntegrationInterface
         $settings,
         LoggerInterface $logger,
         ConfigurationInterface $configuration,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        IntegrationHandlerInterface $handler
     ) {
         $this->id            = $id;
         $this->name          = $name;
@@ -88,6 +93,7 @@ abstract class AbstractIntegration implements IntegrationInterface
         $this->logger        = $logger;
         $this->configuration = $configuration;
         $this->translator    = $translator;
+        $this->handler       = $handler;
     }
 
     /**
@@ -241,6 +247,11 @@ abstract class AbstractIntegration implements IntegrationInterface
             default:
                 return (string)$value;
         }
+    }
+
+    protected function getHandler(): IntegrationHandlerInterface
+    {
+        return $this->handler;
     }
 
     /**
