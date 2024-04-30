@@ -61,6 +61,16 @@ h1.home img{
     width: 3.5rem;
     margin: .25rem 1rem 1rem 1rem;
 }
+h1.flavor-detail {
+  color: #000;
+  text-align: left;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+  line-height: 2.75rem;
+  margin: 1rem 0 0.75rem 0;
+}
+
 h2 {
   font-size: 1.875rem;
   font-family: 'Fira Sans', sans-serif;
@@ -219,6 +229,7 @@ ul{
     z-index: 11;
     padding: 0 1rem;
 }
+
 .flavor-overlay{
   position: absolute;
   bottom: 0;
