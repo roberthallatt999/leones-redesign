@@ -50,10 +50,14 @@
 {/exp:channel:entries}
         <div class="grid-x">
 {exp:low_reorder:entries set="flavors" limit="8"}
+          
             <div class="cell small-6 medium-3 flavor-card" {flavor_image}style="background-image:url({img:url})"{/flavor_image}">
+               <a href="{site_url}flavors/{url_title}">
                   <div class="flavor-title">{title}</div>
                   <div class="flavor-overlay"></div>
+              </a>
             </div>
+
 {/exp:low_reorder:entries}
         </div>
 
