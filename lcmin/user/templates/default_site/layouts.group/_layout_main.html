@@ -14,23 +14,33 @@
         <meta name="google-site-verification" content="hz2yyQH5cyVJs1lCVtewtowsHr4y9EzD9eOLcVu7QS4" />
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/css/foundation.min.css">
-        <link rel="stylesheet" href="{site_url}js/slick/slick.css" />
+        <link rel="stylesheet" href="/js/slick/slick.css" />
         <link rel="stylesheet" href="https://use.typekit.net/ryy4zfk.css">
-        <link href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300|Fira+Sans:700|Josefin+Sans:400,700,600" rel="stylesheet">
-        <link rel="stylesheet" href="{site_url}css/custom.css">
-        <link rel="apple-touch-icon-precomposed" sizes="57x57" href="{site_url}images/apple-icons/apple-icon-57x57-precomposed.png" />
-        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="{site_url}images/apple-icons/apple-icon-72x72-precomposed.png" />
-        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="{site_url}images/apple-icons/apple-icon-114x114-precomposed.png" />
-        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{site_url}images/apple-icons/apple-icon-144x144-precomposed.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+        <link href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300|Fira+Sans:700|Josefin+Sans:400,700,600&display=swap"
+          rel="preload"
+          as="style"
+          crossorigin
+        >
+        <link href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300|Fira+Sans:700|Josefin+Sans:400,700,600&display=swap"
+          rel="stylesheet"
+        >
+        <link rel="stylesheet" href="/css/custom.css">
+        <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/images/apple-icons/apple-icon-57x57-precomposed.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/images/apple-icons/apple-icon-72x72-precomposed.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/images/apple-icons/apple-icon-114x114-precomposed.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/images/apple-icons/apple-icon-144x144-precomposed.png" />
 
 
     <meta name="apple-mobile-web-app-title" content="Add to Home">
-    <link rel="shortcut icon" sizes="16x16" href="{site_url}images/icon-16x16.png">
-    <link rel="shortcut icon" sizes="196x196" href="{site_url}images/icon-196x196.png">
-    <link rel="apple-touch-icon-precomposed" href="{site_url}images/icon-152x152.png">
-    <link rel="stylesheet" type="text/css" href="{site_url}css/addtohomescreen.css">
+    <link rel="shortcut icon" sizes="16x16" href="/images/icon-16x16.png">
+    <link rel="shortcut icon" sizes="196x196" href="/images/icon-196x196.png">
+    <link rel="apple-touch-icon-precomposed" href="/images/icon-152x152.png">
+    <link rel="stylesheet" type="text/css" href="/css/addtohomescreen.css">
 
-        <script src="{site_url}js/vendor/modernizr.js"></script>
+        <script src="/js/vendor/modernizr.js"></script>
         <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -79,7 +89,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           '{open_close_times:closed_all_day}' != 'y'
         }
           <div class="cell small-2 medium-1 status">
-           <img src="{site_url}images/closed.svg" alt=""/>
+           <img src="/images/closed.svg" alt="closed"/>
          </div>
          <div class="cell small-10 medium-7">
           <div class="notice">{open_close_times:morning_closed_message}</div>
@@ -91,7 +101,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     '{open_close_times:closed_all_day}' != 'y'
      }    
         <div class="cell small-2 medium-1 open status">
-           <img src="{site_url}images/open.svg" alt=""/>
+           <img src="/images/open.svg" alt="open"/>
          </div>
          <div class="cell small-10 medium-7">
           <div class="notice">Come in<span> TODAY</span> until <span>{open_close_times:close format="%g %A"}</span></div>
@@ -103,7 +113,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           '{open_close_times:closed_all_day}' == 'y'
         }
           <div class="cell small-2 medium-1 status">
-           <img src="{site_url}images/closed.svg" alt=""/>
+           <img src="/images/closed.svg" alt="closed"/>
          </div>
          <div class="cell small-10 medium-7">
           <div class="notice">{open_close_times:evening_closed_message}</div>
@@ -115,15 +125,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
      {/open_close_times}
   {/exp:channel:entries}
   <div class="cell medium-4 show-for-medium text-right submenu">
-        <a href="{site_url}find-us">Find Us</a>
-        <a href="{site_url}contact">Contact Us</a>
-        <a href="{site_url}join-the-team">Join the Team</a>
+        <a href="/find-us">Find Us</a>
+        <a href="/contact">Contact Us</a>
+        <a href="/join-the-team">Join the Team</a>
   </div>
 </div>
 
 <div class="off-canvas-content hide-for-large" data-off-canvas-content>
   <div class="top-bar">
-    <div class="top-bar-title logo"><a href="{site_url}"><img src="{site_url}images/lc-logo-mobile.svg"/></a></div>
+    <div class="top-bar-title logo"><a href="/"><img src="/images/lc-logo-mobile.svg" alt="{site_name}"/></a></div>
     <div class="top-bar-right">
       <button class="menu-icon" type="button" data-toggle="offcanvas-full-screen"></button>
     </div>
@@ -137,19 +147,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </button>
 
     <ul class="offcanvas-full-screen-menu">
-      <li><a href="{site_url}">Home</a></li>
-      <li><a href="{site_url}flavors">Flavors</a></li>
+      <li><a href="/">Home</a></li>
+      <li><a href="/flavors">Flavors</a></li>
       <li><a href="https://shop.leonescreamery.com/">Online Store</a></li>
-      <li><a href="{site_url}scoop-it-forward">Scoop it Forward</a></li>
-      <li><a href="{site_url}about">About</a></li>
-      <li><a href="{site_url}special-orders">Special Orders</a></li>
-      <li><a href="{site_url}faqs">FAQs</a></li>
-      <li><a href="{site_url}blog">Blog</a></li>
+      <li><a href="/scoop-it-forward">Scoop it Forward</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/special-orders">Special Orders</a></li>
+      <li><a href="/faqs">FAQs</a></li>
+      <li><a href="/blog">Blog</a></li>
       <div class="dots"></div>
       <div class="cell small-12 text-center submenu">
-        <a href="{site_url}find-us">Find Us</a><br>
-        <a href="{site_url}contact">Contact Us</a><br>
-        <a href="{site_url}join-the-team">Join the Team</a><br>
+        <a href="/find-us">Find Us</a><br>
+        <a href="/contact">Contact Us</a><br>
+        <a href="/join-the-team">Join the Team</a><br>
       </div>
       <div class="cell small-12 text-center social">
         <a href="https://www.facebook.com/LeonesCreamery" target="_blank">
@@ -167,7 +177,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="top-bar hide-for-small-only" id="topmenu">
   <div class="top-left logo-container">
     <div class="half-circle-outside-wrap"><div class="half-circle-inside-wrap"></div></div>
-    <div class="menu-text logo"><a href="{site_url}"><img src="{site_url}images/lc-logo.svg"></a></div>
+    <div class="menu-text logo"><a href="/"><img src="/images/lc-logo.svg" alt="{site_name}"></a></div>
     <!--<div class="circle"></div>-->
   </div>
   <div class="top-center">
@@ -175,13 +185,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
   <div class="top-right">
     <ul class="menu">
-      <li><a href="{site_url}flavors">Flavors</a></li>
+      <li><a href="/flavors">Flavors</a></li>
       <li><a href="https://shop.leonescreamery.com/">Online Store</a></li>
-      <li><a href="{site_url}scoop-it-forward">Scoop it Forward</a></li>
-      <li><a href="{site_url}about">About</a></li>
-      <li><a href="{site_url}special-orders">Special Orders</a></li>
-      <li><a href="{site_url}faqs">FAQs</a></li>
-      <li><a href="{site_url}blog">Blog</a></li>
+      <li><a href="/scoop-it-forward">Scoop it Forward</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/special-orders">Special Orders</a></li>
+      <li><a href="/faqs">FAQs</a></li>
+      <li><a href="/blog">Blog</a></li>
     </ul>
   </div>
 </div>
@@ -194,10 +204,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="grid-x grid-padding-x">
         
         <div class="cell small-12 text-center social">
-          <a href="https://www.facebook.com/LeonesCreamery" target="_blank">
+          <a href="https://www.facebook.com/LeonesCreamery" target="_blank" title="Facebook">
               <i class="fa fa-facebook"></i>
           </a>
-          <a href="https://instagram.com/leonescreamery/" target="_blank">
+          <a href="https://instagram.com/leonescreamery/" target="_blank" title="Instagram">
               <i class="fa fa-instagram"></i>
           </a>
         </div>
@@ -205,24 +215,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       
       <div class="grid-x grid-padding-x">
         <div class="cell small-12 medium-3">
-          <h3>Hours</h3>
+          <h2>Hours</h2>
           <div class="info">{footer_hours}</div>
         </div>
         <div class="cell small-12 medium-3">
-          <h3>Location</h3>
+          <h2>Location</h2>
           <div class="info">722½ Main St<br>Spearfish, SD 57783<br>Attached to the Old City Hall Building</div>
         </div>
         <div class="cell small-12 medium-3">
-          <h3>Contact</h3>
+          <h2>Contact</h2>
           <div class="info">605 644 6461<br>leonescreamery@gmail.com</div>
         </div>
         <div class="cell small-12 medium-3">
           <div class="other-info">
-            <a href="{site_url}contact">Contact Us</a><br>
-            <a href="{site_url}join-the-team">Join The Team</a><br>
-            <a href="{site_url}terms-of-service">Terms of Service</a><br>
-            <a href="{site_url}privacy-policy">Privacy Policy</a><br>
-            <a href="{site_url}cookie-policy">Cookie Policy</a>
+            <a href="/contact">Contact Us</a><br>
+            <a href="/join-the-team">Join The Team</a><br>
+            <a href="/terms-of-service">Terms of Service</a><br>
+            <a href="/privacy-policy">Privacy Policy</a><br>
+            <a href="/cookie-policy">Cookie Policy</a>
           </div>
         </div>
       </div>
@@ -235,7 +245,7 @@ Site by <a href="https://digitaldesigns.com/?utm_source={site_url}&utm_medium=fo
 </div><!--end wrapper-->
 
     <div id="back-top">
-      <a class="button totop" href="#"><i class="fa fa-chevron-up" aria-hidden="true"></i></a>
+      <a class="button totop" href="#" title="Back to top"><i class="fa fa-chevron-up" aria-hidden="true"></i></a>
     </div>
 
 
@@ -245,7 +255,7 @@ Site by <a href="https://digitaldesigns.com/?utm_source={site_url}&utm_medium=fo
         <script>
             $(document).foundation();
         </script>
-{layout:extra_js}
+    {layout:extra_js}
     <script>
     $(document).ready(function(){
     
@@ -273,7 +283,7 @@ Site by <a href="https://digitaldesigns.com/?utm_source={site_url}&utm_medium=fo
     
     });
     </script>
-    <script src="{site_url}js/addtohomescreen.js"></script>
+    <script src="/js/addtohomescreen.js"></script>
 <script>
 // addToHomescreen.removeSession();     // use this to remove the localStorage variable
 var ath = addToHomescreen({
