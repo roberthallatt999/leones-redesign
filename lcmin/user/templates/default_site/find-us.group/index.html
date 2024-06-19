@@ -1,5 +1,11 @@
 {layout='layouts/_layout_main'}
-{exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {exp:stash:cache}
+{/if}
+
 
 {exp:channel:entries channel="pages" entry_id="14" dynamic="no"}
 {layout:set name='meta_title'}Leones' Creamery | Find our Ice Cream Shop{/layout:set}
@@ -22,7 +28,7 @@
             <p>{text_area_1}</p>
           </div>
           <div class="cell small-12 medium-10 large-6 float-center">
-            <p><img src="{site_url}images/find-us-outside-leones.jpg" alt="Outside of Leones' Creamery"/></p>
+            <p><img src="/images/find-us-outside-leones.jpg" alt="Outside of Leones' Creamery"/></p>
           </div>
         </div><!--end of first paragraph-->
       </div>
@@ -42,4 +48,9 @@
         </div>
      </div><!--end of map-->
 </div><!--end of main content-->
-{/exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {/exp:stash:cache}
+{/if}

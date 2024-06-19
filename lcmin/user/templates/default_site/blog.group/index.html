@@ -1,5 +1,10 @@
 {layout='layouts/_layout_main'}
-{exp:stash:cache}
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {exp:stash:cache}
+{/if}
+
 {exp:channel:entries channel="pages" entry_id="18" dynamic="no"}
 {layout:set name='meta_title'}Leones' Creamery | {title}{/layout:set}
 {layout:set name='social_description'}{exp:chopper words="40" append="..."}{text_area_1}{/exp:chopper}{/layout:set}
@@ -27,13 +32,13 @@
 
 {exp:channel:entries channel="blog_entry" dynamic="no" limit="6" paginate="bottom"}
         <div class="grid-x grid-padding-x blog"> 
-          <div class="cell small-12 medium-12 large-7 small-order-2 medium-order-2 large-order-1"><a href="{site_url}blog/{url_title}" class="article">
+          <div class="cell small-12 medium-12 large-7 small-order-2 medium-order-2 large-order-1"><a href="/blog/{url_title}" class="article">
             <h3 class="blog-title">{title}</h3>
             <div class="date">{entry_date format="%F %d, %Y"} | by {blog_author}</div>
             <p>{exp:chopper words="22" append="..."}{body_area}{/exp:chopper}</p></a>
-            <a class="button" href="{site_url}blog/{url_title}">Read Post</a>
+            <a class="button" href="/blog/{url_title}">Read Post</a>
           </div>
-          <div class="cell small-12 medium-12 large-5 small-order-1 medium-order-1 large-order-2"><a href="{site_url}blog/{url_title}">
+          <div class="cell small-12 medium-12 large-5 small-order-1 medium-order-1 large-order-2"><a href="/blog/{url_title}">
             <img src="{top_image}{img:url}{/top_image}" alt="{img:title}"/></a>
           </div>
         </div><!--end of one blog-->
@@ -64,4 +69,9 @@
         
       </div><!--end of wrapping grid-container-->
 </div><!--end of main content-->
-{/exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {/exp:stash:cache}
+{/if}

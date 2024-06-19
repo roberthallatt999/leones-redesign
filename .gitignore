@@ -25,3 +25,14 @@ _thumbs/
 # Multi Environment Config
 lcmin/user/config/config.local.php
 LocalValetDriver.php
+.ddev/
+
+# build script
+
+node_modules/
+package-lock.json
+package.json
+src
+custom.css.map
+.cert
+bs-config.js

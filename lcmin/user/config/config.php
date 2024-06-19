@@ -1,5 +1,6 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+$config['enable_devlog_alerts'] = 'n';
 $config['legacy_member_templates'] = 'y';
 $config['allow_php'] = 'n';
 $config['index_page'] = '';

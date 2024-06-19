@@ -1,5 +1,11 @@
 {layout='layouts/_layout_main'}
-{exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {exp:stash:cache}
+{/if}
+
 {exp:channel:entries channel="pages" entry_id="190" dynamic="no"}
 {layout:set name='meta_title'}{title} | Leones' Creamery{/layout:set}
 {layout:set name='meta_description'}Leones' Creamery's {title}{/layout:set}
@@ -28,4 +34,9 @@
 {/exp:channel:entries}
 
 </div><!--end of main content-->
-{/exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {/exp:stash:cache}
+{/if}

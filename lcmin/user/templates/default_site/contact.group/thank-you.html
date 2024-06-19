@@ -1,5 +1,11 @@
 {layout='layouts/_layout_main'}
-{exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {exp:stash:cache}
+{/if}
+
 {exp:channel:entries channel="pages" entry_id="20" dynamic="no"}
 {layout:set name='meta_title'}Thank you! | Leones' Creamery{/layout:set}
 {layout:set name='meta_description'}Your message is on its way to our front door!{/layout:set}
@@ -37,8 +43,13 @@
         </div>
 
           <div class="cell small-12 text-center">
-            <a class="button" href="{site_url}products">See All Products</a>
+            <a class="button" href="/products">See All Products</a>
           </div>
       </div>
 </div><!--end of main content-->
-{/exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {/exp:stash:cache}
+{/if}
