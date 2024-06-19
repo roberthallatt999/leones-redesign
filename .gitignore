@@ -36,3 +36,8 @@ src
 custom.css.map
 .cert
 bs-config.js
+clean-css.js
+version-css-random.js
+package json notes.txt
+remove-version-css.js
+add-version-css.js
