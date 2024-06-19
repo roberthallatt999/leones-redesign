@@ -15,7 +15,7 @@
   <div class="hero-section">
       <div class="slideshow">
         <div class="slides">
-            {carousel}<div style="background-image:url({img:path});" alt="{img:title}"></div>{/carousel}
+            {carousel}<div style="background-image:url({img:url});" alt="{img:title}"></div>{/carousel}
         </div>
         <!--end slides-->
       </div>
@@ -75,7 +75,7 @@
             <p>{exp:chopper words="50" append="..."}{body_area}{/exp:chopper}</p></a>
           </div>
           <div class="cell small-12 medium-6"><a href="/blog/{url_title}">
-            <img src="{top_image}{img:path}{/top_image}" alt="{img:title}"/></a>
+            <img src="{top_image}{img:url}{/top_image}" alt="{img:title}"/></a>
           </div>
         {/exp:channel:entries}
         <div class="cell small-12 text-center">

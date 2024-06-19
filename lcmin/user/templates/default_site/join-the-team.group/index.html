@@ -1,5 +1,11 @@
 {layout='layouts/_layout_main'}
-{exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {exp:stash:cache}
+{/if}
+
 {exp:channel:entries channel="pages" entry_id="21" dynamic="no"}
 {layout:set name='meta_title'}Leones' Creamery | {title}{/layout:set}
 {layout:set name='meta_description'}{exp:chopper words="41" append="..."}{text_area_1}{/exp:chopper}{/layout:set}
@@ -30,4 +36,9 @@
       </div><!--end of wrapping grid-container-->
 
 </div><!--end of main content-->
-{/exp:stash:cache}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {/exp:stash:cache}
+{/if}

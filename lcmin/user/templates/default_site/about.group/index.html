@@ -1,5 +1,11 @@
 {layout='layouts/_layout_main'}
-{!-- {exp:stash:cache} --}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {exp:stash:cache}
+{/if}
+
 {exp:channel:entries channel="pages" entry_id="13" dynamic="no"}
 {layout:set name='meta_title'}Leones' Creamery | About us and our love affair with ice cream.{/layout:set}
 {layout:set name='meta_description'}Nestled in downtown Spearfish, South Dakota, Leones’ Creamery was founded in 2014 by Rebecca, Hannah & John. We're passionate about ice cream, traditional and unique flavors, all handcrafted with high quality.{/layout:set}
@@ -26,7 +32,7 @@
           </div><!--end of first paragraph-->
       
           <div class="grid-x grid-padding-x quote">    
-            <div class="cell small-12 medium-2"><img src="images/quotes.svg" alt=""/></div>
+            <div class="cell small-12 medium-2"><img src="/images/quotes.svg" alt=""/></div>
             <div class="cell small-12 medium-10"><p>Sure, sure, sugarplums are great and all, but our noggins have visions of ice cream sandwiches jigging about instead.</p></div>
           </div>
 
@@ -53,4 +59,9 @@
         </div><!--end of structured collage, 3:1 ratio-->
    
 </div><!--end of main content-->
-{!-- {/exp:stash:cache} --}
+
+{!-- only use cache in production --}
+
+{if global:env == "production"}
+  {/exp:stash:cache}
+{/if}
