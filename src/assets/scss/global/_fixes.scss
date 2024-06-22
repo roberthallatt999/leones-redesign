@@ -1,0 +1,10 @@
+
+// fixes that override the main style sheet
+
+@include media("screen", ">=sm", "<lg") {
+
+    .top-bar {
+        z-index: 2; /* make sure top bar is behind the off-canvas */
+    }  
+    
+}
