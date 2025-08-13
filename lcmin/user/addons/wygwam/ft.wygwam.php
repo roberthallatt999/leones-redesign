@@ -17,6 +17,7 @@ class Wygwam_ft extends Ft
     public $entry_manager_compatible = true;
 
     public $col_id;
+    public $row_id;
     public $cell_name;
     public $settings;
     public $row;
@@ -497,6 +498,10 @@ class Wygwam_ft extends Ft
      */
     public function replace_tag($data, $params = array(), $tagdata = false)
     {
+        // we early return here because otherwise we can hit errors in the entry listing of the cp if a wyg field is set as one of the columns
+        if ($data == '' || $data == null) {
+            return '';
+        }
         // return images only?
         if (isset($params['images_only']) && $params['images_only'] == 'yes') {
             $data = $this->_parseImages($data, $params, $tagdata);
@@ -560,6 +565,11 @@ class Wygwam_ft extends Ft
      */
     public function replace_excerpt($data, $params)
     {
+        // we early return here because otherwise we can hit errors in the entry listing of the cp if a wyg field is set as one of the columns
+        if ($data == '' || $data == null) {
+            return ''; 
+        }
+
         if (($read_more_tag_pos = strpos($data, '<!--read_more-->')) !== false) {
             $data = substr($data, 0, $read_more_tag_pos);
         }

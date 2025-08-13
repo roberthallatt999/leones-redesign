@@ -129,7 +129,12 @@ if (! function_exists('low_linearize')) {
 if (! function_exists('low_delinearize')) {
     function low_delinearize($string = '', $d = '|')
     {
-        return (array) array_filter(explode($d, trim($string, $d)));
+        // In the base case - as in they did not pass us a value - we return early here to avoid php 8.2 warnings and keep backwards compatibility in earlier php versions php 8 and below would have just returned empty array in that case so this is what we do here now to but explicietly tell it return array empty
+        if ($string == '') {
+            return [];
+        }
+
+        return (array) array_filter(explode($d, trim((string) $string, $d)));
     }
 }
 

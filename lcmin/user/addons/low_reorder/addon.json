@@ -1,7 +1,7 @@
 {
     "name": "Low Reorder",
     "shortname": "low_reorder",
-    "version": "4.0.4",
+    "version": "4.0.5",
     "foundation_version": "4.10.0",
     "description": "Create sets of entries and order them any way you want",
     "license": "EEHarbor",
