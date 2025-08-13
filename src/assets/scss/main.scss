@@ -1,0 +1,16 @@
+@charset "UTF-8";
+
+// 1. Configuration and helpers
+@import
+  'abstracts/variable',
+  'abstracts/mixins';
+
+// 2. custom css 
+@import
+  'global/styles',
+  'global/fixes';
+
+// 3. Page specific styles
+
+@import
+  'pages/flavor';

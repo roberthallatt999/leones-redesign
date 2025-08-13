@@ -91,7 +91,7 @@ class Detour_pro_ext extends Ext
                 $url = substr($url, 0 , $position);
             }
 
-            $url   = ltrim($url, '/');
+            $url = ltrim($url, '/');
             if (empty($this->settings['allow_trailing_slash']) || $this->settings['allow_trailing_slash'] != 1) {
                 $url = rtrim($url, '/');
             }
@@ -103,48 +103,73 @@ class Detour_pro_ext extends Ext
         $url = urldecode($url);
 
         $query_literal = false;
-        $sql = "SELECT detour_id, original_url, new_url, detour_method, start_date, end_date
-                FROM exp_detours
-                WHERE (start_date IS NULL OR start_date <= NOW())
-                AND (end_date IS NULL OR end_date >= NOW())
-                AND '" . ee()->db->escape_str($url) . "' LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
-                AND site_id = " . ee()->config->item('site_id');
-                $detour = ee()->db->query($sql)->row_array();
+
+        $sql = "SELECT
+                    detour_id,
+                    original_url,
+                    new_url,
+                    detour_method,
+                    start_date,
+                    end_date
+                FROM
+                    exp_detours
+                WHERE
+                    (start_date IS NULL OR start_date <= NOW())
+                    AND (end_date IS NULL OR end_date >= NOW())
+                    AND ? LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
+                    AND site_id = ?";
+        $detour = ee()->db->query($sql, [$url, ee()->config->item('site_id')])->row_array();
 
         if (empty($detour) && !empty($this->settings['allow_trailing_slash']) && $this->settings['allow_trailing_slash'] == 1) {
             $search = $url . "/";
-            $sql = "SELECT detour_id, original_url, new_url, detour_method, start_date, end_date
-            FROM exp_detours
-            WHERE (start_date IS NULL OR start_date <= NOW())
-            AND (end_date IS NULL OR end_date >= NOW())
-            AND '" . ee()->db->escape_str($search) . "' LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
-            AND site_id = " . ee()->config->item('site_id');
-            $detour = ee()->db->query($sql)->row_array();
+            $sql = "SELECT
+                        detour_id,
+                        original_url,
+                        new_url,
+                        detour_method,
+                        start_date,
+                        end_date
+                    FROM
+                        exp_detours
+                    WHERE
+                        (start_date IS NULL OR start_date <= NOW())
+                        AND (end_date IS NULL OR end_date >= NOW())
+                        AND ? LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
+                        AND site_id = ?";
+            $detour = ee()->db->query($sql, [$search, ee()->config->item('site_id')])->row_array();
         }
 
         if (empty($detour) && !empty($this->settings['allow_qs']) && $this->settings['allow_qs'] == 1) {
             $search = $url . "?" . http_build_query($_GET);
-            $sql = "SELECT detour_id, original_url, new_url, detour_method, start_date, end_date
-                FROM exp_detours
-                WHERE (start_date IS NULL OR start_date <= NOW())
-                AND (end_date IS NULL OR end_date >= NOW())
-                AND '" . ee()->db->escape_str($search) . "' LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
-                AND site_id = " . ee()->config->item('site_id');
-                $detour = ee()->db->query($sql)->row_array();
-                /*This is a detour set up like the following:  
-                old: resources/search/?color=red
-                new: resources/search/?color=blue
-                Where it doesn't make sense to pass the old filter paramater
-                since they want the param changed as well, flag the detour as a literal.*/
-                if (!empty($detour)) {
-                    $query_literal = true;
-                }            
-        }
+            $sql = "SELECT
+                        detour_id,
+                        original_url,
+                        new_url,
+                        detour_method,
+                        start_date,
+                        end_date
+                    FROM
+                        exp_detours
+                    WHERE
+                        (start_date IS NULL OR start_date <= NOW())
+                        AND (end_date IS NULL OR end_date >= NOW())
+                        AND ? LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
+                        AND site_id = ?";
+                $detour = ee()->db->query($sql, [$search, ee()->config->item('site_id')])->row_array();
 
+            // This is a detour set up like the following:
+            // old: resources/search/?color=red
+            // new: resources/search/?color=blue
+            // Where it doesn't make sense to pass the old filter parameter
+            // since they want the param changed as well, flag the detour as a literal.
+            if (!empty($detour)) {
+                $query_literal = true;
+            }
+        }
 
         if (!empty($detour)) {
             $newUrl = $this->segmentReplace($url, $detour['original_url'], $detour['new_url'], $query_literal);
-            $site_url   = (ee()->config->item('site_url')) ? rtrim(ee()->config->item('site_url'), '/') . '/' : '';
+            $site_url = (ee()->config->item('site_url')) ? rtrim(ee()->config->item('site_url'), '/') . '/' : '';
             $site_index = (ee()->config->item('site_index')) ? rtrim(ee()->config->item('site_index'), '/') . '/' : '';
             $site_index = $site_url . $site_index;
 
@@ -160,7 +185,6 @@ class Detour_pro_ext extends Ext
                     header('Location: ' . $newUrl, true, $detour['detour_method']);
                 } else {
                     header('Location: ' . $site_index . ltrim($newUrl, '/'), true, $detour['detour_method']);
-                    //header('Location: ' . $newUrl, true, $detour['detour_method']);
                 }
                 ee()->extensions->end_script = true;
                 exit;
@@ -204,7 +228,24 @@ class Detour_pro_ext extends Ext
         }
 
         if ($_SERVER['QUERY_STRING'] && !empty($this->settings['allow_qs']) && $this->settings['allow_qs'] == 1 && !$query_literal) {
-            $newUrl .= '?' . http_build_query($_GET);
+            // parse the URL to pull out the query and fragment to potentially reorder them (fragment needs to be last)
+            $path = parse_url($newUrl, PHP_URL_PATH);
+            $query = parse_url($newUrl, PHP_URL_QUERY);
+            $fragment = parse_url($newUrl, PHP_URL_FRAGMENT);
+
+            // parse foo=bar&keywords=test into an array
+            parse_str($query, $result);
+
+            // Combine the parameter arrays with the defined parameters overriding the GET params if relevant
+            // e.g. redirect from /page to /other-page?thing=test, but with ?foo=bar in the original request,
+            // the final URL should be /other-page?thing=test&foo=bar (append foo=bar)
+            // But that same redirect with ?thing=old&foo=bar should resolve to /other-page?thing=test&foo=bar
+            // (use the Detour defined `thing` value to overwrite the user-defined parameter, and append foo=bar)
+            $params = array_merge($_GET, $result);
+
+            $newUrl = $path
+                . (count($params) > 0 ? '?' . http_build_query($params) : '')
+                . ($fragment ? '#' . $fragment : '');
         }
 
         return $newUrl;

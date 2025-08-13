@@ -1,0 +1,77 @@
+{
+  "name": "scss-boilerplate",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "index.js",
+  "keywords": [],
+  "author": "Robert Hallatt",
+  "license": "ISC",
+  "description": "A simple boilerplate for developing with SCSS",
+  "config": {
+    "browsersync": {
+      "sslKey": "./src/assets/certs/master.key",
+      "sslCert": "./src/assets/certs/master.crt",
+      "proxyUrl": "https://leonescreamery.test",
+      "files": {
+        "watch": [
+          "./src/assets/scss/**/*.scss",
+          "./lcmin/user/templates/default_site/**/*.html"
+        ]
+      },
+      "port": "3000",
+      "uiPort": "3001"
+    },
+    "vars": {
+      "css": {
+        "fileFullPath": "./css/custom.css",
+        "file": "custom.css"
+      },
+      "html": {
+        "template": "./lcmin/user/templates/default_site/layouts.group/_layout_main.html"
+      },
+      "build": {
+        "css": "./src/assets/scss/main.scss",
+        "browsersync": "./src/build/browsersync-config.js",
+        "cssRemoveVersion": "./src/build/css-remove-version.js",
+        "cssAddVersion": "./src/build/css-add-version.js"
+      }
+    },
+    "paths": {
+      "src": {
+        "certs": "./src/assets/certs",
+        "assets": "./src/assets"
+      },
+      "dist": {
+        "css": "./css"
+      }
+    }
+  },
+  "scripts": {
+    "dev": "npm run dev:css-remove-version && npm run dev:sass & browser-sync start --config $npm_package_config_vars_build_browsersync",
+    "dev:css-remove-version": "node $npm_package_config_vars_build_cssRemoveVersion",
+    "dev:sass": "sass $npm_package_config_vars_build_css $npm_package_config_vars_css_fileFullPath -w",
+    "prod": "npm run prod:sass && npm run prod:prefix && npm run prod:css-add-version",
+    "prod:sass": "sass $npm_package_config_vars_build_css $npm_package_config_vars_css_fileFullPath --style compressed",
+    "prod:css-add-version": "node $npm_package_config_vars_build_cssAddVersion",
+    "prod:prefix": "postcss $npm_package_config_vars_css_fileFullPath -u autoprefixer -r --no-map",
+    "cert": "rm -rf $npm_package_config_paths_src_certs && mkdir -p $npm_package_config_paths_src_certs && docker cp ddev-router:/etc/nginx/certs $npm_package_config_paths_src_assets"
+  },
+  "devDependencies": {
+    "sass": "^1.77.6"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.19",
+    "browser-sync": "^3.0.2",
+    "browserslist": "^4.5.4",
+    "cheerio": "^1.0.0-rc.12",
+    "postcss": "^8.4.38",
+    "postcss-cli": "^11.0.0",
+    "validator": "^13.12.0"
+  },
+  "engines": {
+    "node": "21.x"
+  },
+  "browserslist": [
+    "last 4 version"
+  ]
+}

@@ -64,8 +64,8 @@ class Detour_pro_upd extends Upd
             // Create detour tables and keys
             $fields = array(
                 'detour_id'     => array('type' => 'int', 'constraint' => '10', 'unsigned' => true, 'auto_increment' => true),
-                'original_url'  => array('type' => 'varchar', 'constraint' => '250'),
-                'new_url'       => array('type' => 'varchar', 'constraint' => '250', 'null' => true, 'default' => null),
+                'original_url'  => array('type' => 'varchar', 'constraint' => '500'),
+                'new_url'       => array('type' => 'varchar', 'constraint' => '500', 'null' => true, 'default' => null),
                 'start_date'    => array('type' => 'date', 'null' => true),
                 'end_date'      => array('type' => 'date', 'null' => true),
                 'detour_method' => array('type' => 'int', 'constraint' => '3', 'unsigned' => true, 'default' => '301'),
@@ -150,7 +150,15 @@ class Detour_pro_upd extends Upd
 
         if (version_compare($current, '3.0.0', '<')) {
             $this->_update_to_3_0_0();
-        }		
+        }
+		
+        if (version_compare($current, '3.1.1', '<')) {
+            $this->_update_to_3_1_1();
+        }
+        if (version_compare($current, '3.1.2', '<')) {
+            $this->_update_to_3_1_2();
+        }					
+							
 
         // If you have updates, drop 'em in here.
         return true;
@@ -264,8 +272,24 @@ class Detour_pro_upd extends Upd
             ee()->dbforge->add_column('detour_pro_settings', $fields);
         }
     }
+
+    private function _update_to_3_1_1()
+    {
+		ee()->db->query("ALTER TABLE `exp_detours` CHANGE `original_url` `original_url` VARCHAR(500) NULL DEFAULT NULL");
+		ee()->db->query("ALTER TABLE `exp_detours` CHANGE `new_url` `new_url` VARCHAR(500) NULL DEFAULT NULL");		
+    }
 	
-	
+
+    private function _update_to_3_1_2()
+    {
+		$result = ee()->db->query("SHOW INDEX FROM `exp_detours_hits` WHERE key_name = 'detour_id'");
+		
+		if ($result->num_rows > 0) { 
+			return;
+		}
+		
+		ee()->db->query("ALTER TABLE `exp_detours_hits` add index detour_id (detour_id)");
+    }			
 
     /* Private Functions */
 
@@ -286,6 +310,10 @@ class Detour_pro_upd extends Upd
 
     private function _create_table_not_found()
     {
+		if (ee()->db->table_exists('detours_not_found')) {
+			 return TRUE; 
+		}
+		
         $fields = array(
             'notfound_id'     => array('type' => 'int', 'constraint' => '10', 'unsigned' => true, 'auto_increment' => true),
             'detour_id' => array('type' => 'int', 'constraint' => '10', 'unsigned' => true),
