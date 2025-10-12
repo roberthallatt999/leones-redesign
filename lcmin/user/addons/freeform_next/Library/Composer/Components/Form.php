@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -331,9 +331,10 @@ class Form implements \JsonSerializable, \Iterator, \ArrayAccess
     public function getAnchor()
     {
         $hash = $this->getHash();
-        $id   = substr(sha1($this->getId() . $this->getHandle()), 0, 6);
+        $id = $this->getCustomAttributes()->getId() ?? $this->getId();
+        $hashedId = substr(sha1($id . $this->getHandle()), 0, 6);
 
-        return "$id-form-$hash";
+        return "$hashedId-form-$hash";
     }
 
     /**

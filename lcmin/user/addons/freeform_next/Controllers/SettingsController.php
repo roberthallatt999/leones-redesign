@@ -497,17 +497,6 @@ class SettingsController extends Controller
                 ],
             ],
             [
-                'title'  => 'Access Resources',
-                'desc'   => 'Choose which member groups have access to Resources.',
-                'fields' => [
-                    'resourcesPermissions' => [
-                        'type'    => 'checkbox',
-                        'value'   => $permissionsModel->resourcesPermissions,
-                        'choices' => $memberRoleChoices,
-                    ],
-                ],
-            ],
-            [
                 'title'  => 'Access Logs',
                 'desc'   => 'Choose which member groups have access to Error logs.',
                 'fields' => [
@@ -698,11 +687,28 @@ class SettingsController extends Controller
             'sections'              => [
                 [
                     [
-                        'title'  => 'reCAPTCHA v2 Checkbox enabled?',
+                        'title'  => 'reCAPTCHA Enabled?',
                         'fields' => [
                             'recaptchaEnabled' => [
                                 'type'        => 'yes_no',
                                 'value'       => $settings->isRecaptchaEnabled() ? 'y' : 'n',
+                            ],
+                        ],
+                    ],
+                    [
+                        'title'  => 'reCAPTCHA Type',
+                        'desc' => 'Choose the reCAPTCHA type to use. The options below are compatible with the Enterprise API and the Classic legacy keys.',
+                        'fields' => [
+                            'recaptchaType' => [
+                                'type' => 'select',
+                                'value' => $settings->getRecaptchaType(),
+                                'choices' => [
+                                    'v2-checkbox' => 'Challenge - Checkbox (v2)',
+                                    'v3' => 'Score Based (v3)',
+                                ],
+                                'group_toggle' => [
+                                    'v3' => 'recaptchaScoreThresholdOptions',
+                                ],
                             ],
                         ],
                     ],
@@ -721,6 +727,30 @@ class SettingsController extends Controller
                             'recaptchaSecret' => [
                                 'type'        => 'text',
                                 'value'       => $settings->getRecaptchaSecret(),
+                            ],
+                        ],
+                    ],
+                    [
+                        'title' => 'reCAPTCHA Score Threshold',
+                        'desc' => 'The minimum score required for the Captcha to pass validation. The score is a number between 0 and 1. A score of 0.5 is generally recommended.',
+                        'group' => 'recaptchaScoreThresholdOptions',
+                        'fields' => [
+                            'recaptchaScoreThreshold' => [
+                                'type' => 'select',
+                                'value' => $settings->getRecaptchaScoreThreshold() ?: '0.5',
+                                'choices' => [
+                                    '0.0' => '0.0',
+                                    '0.1' => '0.1',
+                                    '0.2' => '0.2',
+                                    '0.3' => '0.3',
+                                    '0.4' => '0.4',
+                                    '0.5' => '0.5',
+                                    '0.6' => '0.6',
+                                    '0.7' => '0.7',
+                                    '0.8' => '0.8',
+                                    '0.9' => '0.9',
+                                    '1.0' => '1.0',
+                                ],
                             ],
                         ],
                     ],
