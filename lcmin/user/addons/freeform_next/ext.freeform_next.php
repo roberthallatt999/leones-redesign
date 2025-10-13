@@ -10,6 +10,7 @@ use Solspace\Addons\FreeformNext\Library\Pro\Fields\RecaptchaField;
 use Solspace\Addons\FreeformNext\Repositories\SettingsRepository;
 use Solspace\Addons\FreeformNext\Services\HoneypotService;
 use Solspace\Addons\FreeformNext\Services\PermissionsService;
+use Solspace\Addons\FreeformNext\Services\RecaptchaService;
 use Solspace\Addons\FreeformNext\Services\SettingsService;
 use Solspace\Addons\FreeformNext\Utilities\AddonInfo;
 
@@ -20,7 +21,7 @@ require_once version_compare(PHP_VERSION, '8.0.0') < 0 ? __DIR__ . '/php7/vendor
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -38,6 +39,29 @@ class Freeform_next_ext
      */
     public function validateRecaptchaFields(AbstractField $field)
     {
+        $settingsModel = $this->getSettingsService()->getSettingsModel();
+
+        $isRecaptchaEnabled = $settingsModel->isRecaptchaEnabled();
+        $isRecaptchaV3 = $settingsModel->getRecaptchaType() === 'v3';
+        $recaptchaKey = $settingsModel->getRecaptchaKey();
+        $recaptchaSecret = $settingsModel->getRecaptchaSecret();
+
+        if (!$isRecaptchaEnabled) {
+            return false;
+        }
+
+        if ($isRecaptchaV3) {
+            return false;
+        }
+
+        if (!$recaptchaKey) {
+            return false;
+        }
+
+        if (!$recaptchaSecret) {
+            return false;
+        }
+
         if ($field instanceof RecaptchaField) {
             $response = ee()->input->post('g-recaptcha-response');
             if (!$response) {
@@ -68,6 +92,32 @@ class Freeform_next_ext
                 }
             }
         }
+    }
+
+    /**
+     * @param Form $form
+     */
+    public function validateRecaptcha(Form $form)
+    {
+        $this->getRecaptchaService()->validateFormRecaptcha($form);
+    }
+
+    /**
+     * @param Form             $form
+     * @param FormRenderObject $renderObject
+     */
+    public function addRecaptchaInputToForm(Form $form, FormRenderObject $renderObject)
+    {
+        $this->getRecaptchaService()->addRecaptchaInputToForm($renderObject);
+    }
+
+    /**
+     * @param Form             $form
+     * @param FormRenderObject $renderObject
+     */
+    public function addRecaptchaJavascriptToForm(Form $form, FormRenderObject $renderObject)
+    {
+        $this->getRecaptchaService()->addRecaptchaJavascriptToForm($renderObject);
     }
 
     /**
@@ -227,6 +277,20 @@ class Freeform_next_ext
 			);
 		}
 	}
+
+    /**
+     * @return RecaptchaService
+     */
+    private function getRecaptchaService()
+    {
+        static $service;
+
+        if (null === $service) {
+            $service = new RecaptchaService();
+        }
+
+        return $service;
+    }
 
     /**
      * @return HoneypotService

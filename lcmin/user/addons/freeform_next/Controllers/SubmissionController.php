@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2023, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -352,8 +352,7 @@ class SubmissionController extends Controller
                                     $assetIds = [$assetIds];
                                 }
 
-                                $content = '';
-                                $content .= '<div class="file-previews">';
+                                $content = '<div class="file-previews">';
 
                                 foreach ($assetIds as $assetId) {
                                     /** @var File $asset */
@@ -362,33 +361,43 @@ class SubmissionController extends Controller
                                         ->filter('file_id', $assetId)
                                         ->first();
 
-                                    if ($asset) {
-                                        $content .= '<div class="' . ($asset->isImage() ? 'has-img' : '') . '">';
-                                        $content .= '<a class="button m-link" data-file-id="' . $asset->getId() . '" rel="modal-view-file">';
-                                        if ($asset->isImage()) {
-                                            $content .= '<img src="' . $asset->getAbsoluteURL() . '" />';
-                                        }
-                                        $content .= '<div>' . $asset->file_name . '</div>';
-                                        $content .= '</a>';
-                                        $content .= '</div>';
+                                    if (!$asset) {
+                                        continue;
                                     }
+
+                                    $content .= '    <div>';
+                                    $content .= '        <style>';
+                                    $content .= '        .asset_' . $assetId . '_modal {';
+                                    $content .= '           display: flex';
+                                    $content .= '           align-items: center;';
+                                    $content .= '           justify-content: center;';
+                                    $content .= '           max-width: 80vw !important;';
+                                    $content .= '           width: fit-content;';
+                                    $content .= '        }';
+                                    $content .= '        .asset_' . $assetId . '_modal .modal {';
+                                    $content .= '            width: fit-content;';
+                                    $content .= '        }';
+                                    $content .= '        </style>';
+
+                                    if ($asset->isImage()) {
+                                        $modal_vars = array(
+                                            'name' => 'asset_' . $assetId . '_modal',
+                                            'contents' => '<img src="' . $asset->getAbsoluteURL() . '" />'
+                                        );
+
+                                        $modal_html = ee('View')->make('ee:_shared/modal')->render($modal_vars);
+
+                                        ee('CP/Modal')->addModal('asset_' . $assetId . '_modal', $modal_html);
+
+                                        $content .= '        <a href="' . ee('CP/URL', 'files/file/view/' . $assetId)->compile() . '">' . $asset->file_name . '</a> (<a href="javascript:void(0);" class="m-link" rel="asset_' . $assetId . '_modal">Preview File</a>)';
+                                    } else {
+                                        $content .= '        <a href="' . ee('CP/URL', 'files/file/view/' . $assetId)->compile() . '">' . $asset->file_name . '</a>';
+                                    }
+
+                                    $content .= '    </div>';
                                 }
 
-                                $content .= '</div>';
-
-								ee()->cp->add_js_script(array(
-									'file' => array(
-										'cp/files/manager'
-									),
-								));
-
-								$modal_vars = array(
-									'name' => 'modal-view-file',
-									'contents' => '',
-								);
-
-								$modal = ee('View')->make('ee:_shared/modal')->render($modal_vars);
-								ee('CP/Modal')->addModal('modal-view-file', $modal);
+                                $content .= '</div>'; // END file-previews
 
                                 $data[] = [
                                     'content' => $content,
@@ -601,8 +610,6 @@ class SubmissionController extends Controller
 
             /** @var Row $row */
             foreach ($page as $row) {
-
-
                 /** @var AbstractField $field */
                 foreach ($row as $field) {
                     if ($field instanceof NoStorageInterface) {
@@ -691,43 +698,49 @@ class SubmissionController extends Controller
                                     continue;
                                 }
 
-                                $content .= '<div>';
-                                $content .= '<div style="margin: 5px 0;">' . $asset->file_name . '</div>';
-                                $content .= '<div class="toolbar-wrap"><div class="toolbar button-group">';
-                                $content .= '<a class="button button--secondary button--small fa fa-pencil-alt m-link" data-file-id="' . $assetId . '" rel="modal-view-file"></a>';
-                                $content .= '<a class="button button--secondary button--small fa fa-download" href="' . ee(
-                                        'CP/URL',
-                                        'files/file/download/' . $assetId
-                                    )->compile() . '"></a>';
-                                $content .= '</div></div>';
-                                $content .= '<a class="button button--secondary button--small m-link" style="margin-top: 10px" data-file-id="' . $asset->getId() . '" rel="modal-view-file">';
+                                $content .= '    <div>';
+                                $content .= '        <div style="margin: 5px 0;">' . $asset->file_name . '</div>';
+                                $content .= '        <div class="toolbar-wrap">';
+                                $content .= '            <div class="toolbar button-group">';
+                                $content .= '               <a class="button button--secondary button--small fa fa-pencil-alt" href="' . ee('CP/URL', 'files/file/view/' . $assetId)->compile() . '"></a>';
+                                $content .= '               <a class="button button--secondary button--small fa fa-download" href="' . ee('CP/URL', 'files/file/download/' . $assetId)->compile() . '"></a>';
+                                $content .= '            </div>';
+                                $content .= '        </div>'; // END toolbar-wrap
 
                                 if ($asset->isImage()) {
-                                    $content .= '<img style="margin-top: 10px; border: 1px solid black; padding: 1px;" width="100" src="'
-                                        . $asset->getAbsoluteURL() . '" />';
+                                    $content .= '        <style>';
+                                    $content .= '        .asset_' . $assetId . '_modal {';
+                                    $content .= '           display: flex';
+                                    $content .= '           align-items: center;';
+                                    $content .= '           justify-content: center;';
+                                    $content .= '           max-width: 80vw !important;';
+                                    $content .= '           width: fit-content;';
+                                    $content .= '        }';
+                                    $content .= '        .asset_' . $assetId . '_modal .modal {';
+                                    $content .= '           width: fit-content;';
+                                    $content .= '        }';
+                                    $content .= '        </style>';
+
+                                    $modal_vars = array(
+                                        'name' => 'asset_' . $assetId . '_modal',
+                                        'contents' => '<img src="' . $asset->getAbsoluteURL() . '" />'
+                                    );
+
+                                    $modal_html = ee('View')->make('ee:_shared/modal')->render($modal_vars);
+
+                                    ee('CP/Modal')->addModal('asset_' . $assetId . '_modal', $modal_html);
+
+                                    $content .= '        <a href="javascript:void(0);" class="m-link" rel="asset_' . $assetId . '_modal">';
+                                    $content .= '           <img style="margin-top: 20px; border: 1px solid black; padding: 5px;" width="100" src="' . $asset->getAbsoluteURL() . '" />';
+                                    $content .= '        </a>';
                                 }
-                                $content .= '</div>';
-                                $content .= '</a>';
+
+                                $content .= '    </div>';
                             }
 
-                            $content .= '</div>';
+                            $content .= '</div>'; // END file-previews
 
-							ee()->javascript->set_global('file_view_url', ee('CP/URL')->make('files/file/view/###')->compile());
-							ee()->cp->add_js_script(array(
-								'file' => array(
-									'cp/files/manager'
-								),
-							));
-
-							$modal_vars = array(
-								'name' => 'modal-view-file',
-								'contents' => '',
-							);
-
-							$modal = ee('View')->make('ee:_shared/modal')->render($modal_vars);
-							ee('CP/Modal')->addModal('modal-view-file', $modal);
-
-							$fields = [
+                            $fields = [
 								[
 									'type'    => 'html',
 									'content' => $content,
@@ -739,10 +752,9 @@ class SubmissionController extends Controller
 							$fields = [
 								($handle.'[]') => [
 									'type'    => 'file',
-									]
+								]
 							];
 						}
-
                     } else if ($field instanceof TableField) {
                         $field->setAddButtonMarkup('<ul class="toolbar"><li class="add"><a title="' . lang('add_row') . '" class="add button button--default button--small form-table-add-row"> ' . lang('add_row') . '</a></li></ul>');
                         $field->setRemoveButtonMarkup('<ul class="toolbar"><li class="remove"><a title="' . lang('remove_row') . '" class="remove button button--default button--small form-table-remove-row"> ' . lang('remove_row') . '</a></li></ul>');
