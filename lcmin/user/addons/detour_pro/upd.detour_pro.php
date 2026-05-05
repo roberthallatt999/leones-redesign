@@ -60,12 +60,20 @@ class Detour_pro_upd extends Upd
                 // Apply site id of 1 to all existing detours
                 ee()->db->update('detours', array('site_id' => 1), 'detour_id > 0');
             }
+
+            if (!ee()->db->field_exists('note', 'detours')) {
+                $fields = array(
+                    'note' => array('type' => 'varchar', 'constraint' => '255', 'null' => true, 'default' => null),
+                );
+                ee()->dbforge->add_column('detours', $fields);
+            }
         } else {
             // Create detour tables and keys
             $fields = array(
                 'detour_id'     => array('type' => 'int', 'constraint' => '10', 'unsigned' => true, 'auto_increment' => true),
                 'original_url'  => array('type' => 'varchar', 'constraint' => '500'),
                 'new_url'       => array('type' => 'varchar', 'constraint' => '500', 'null' => true, 'default' => null),
+                'note'          => array('type' => 'varchar', 'constraint' => '255', 'null' => true, 'default' => null),
                 'start_date'    => array('type' => 'date', 'null' => true),
                 'end_date'      => array('type' => 'date', 'null' => true),
                 'detour_method' => array('type' => 'int', 'constraint' => '3', 'unsigned' => true, 'default' => '301'),
@@ -95,6 +103,8 @@ class Detour_pro_upd extends Upd
 
         // Create 404s table
         $this->_create_table_not_found();
+        $this->_ensure_detours_indexes();
+        $this->_ensure_detours_hits_indexes();
 
         // Enable the extension to prevent redirect erros while installing.
         ee()->db->where('class', 'Detour_pro_ext');
@@ -158,7 +168,21 @@ class Detour_pro_upd extends Upd
         if (version_compare($current, '3.1.2', '<')) {
             $this->_update_to_3_1_2();
         }					
-							
+        if (version_compare($current, '3.2.1', '<')) {
+            $this->_update_to_3_2_1();
+        }
+
+        if (version_compare($current, '4.0.0', '<')) {
+            $this->_update_to_4_0_0();
+        }
+
+        if (version_compare($current, '4.0.1', '<')) {
+            $this->_update_to_4_0_1();
+        }
+      
+        if (version_compare($current, '4.1.0', '<')) {
+            $this->_update_to_4_1_0();
+        }
 
         // If you have updates, drop 'em in here.
         return true;
@@ -282,14 +306,67 @@ class Detour_pro_upd extends Upd
 
     private function _update_to_3_1_2()
     {
-		$result = ee()->db->query("SHOW INDEX FROM `exp_detours_hits` WHERE key_name = 'detour_id'");
+        $result = ee()->db->query("SHOW INDEX FROM `exp_detours_hits` WHERE key_name = 'detour_id'");
 		
-		if ($result->num_rows > 0) { 
-			return;
-		}
+        if ($result->num_rows > 0) { 
+            return;
+        }
 		
-		ee()->db->query("ALTER TABLE `exp_detours_hits` add index detour_id (detour_id)");
-    }			
+        ee()->db->query("ALTER TABLE `exp_detours_hits` add index detour_id (detour_id)");
+    }	
+	
+    private function _update_to_3_2_1()
+    {
+        $result = ee()->db->query("SHOW INDEX FROM `exp_detours_not_found` WHERE key_name = 'id_site_url_x'");
+		
+        if ($result->num_rows > 0) { 
+            return;
+        }
+		
+        ee()->db->query("ALTER TABLE `exp_detours_not_found` add index id_site_url_x (detour_id, site_id, original_url)");		
+    }
+
+    private function _update_to_4_0_0()
+    {
+        if (!ee()->db->table_exists('detours_not_found')) {
+            return true;
+        }
+
+        $this->_ensure_detours_indexes();
+        $this->_ensure_detours_hits_indexes();
+        $this->_ensure_not_found_daily_indexes();
+    }
+
+    private function _update_to_4_1_0()
+    {
+        if (!ee()->db->table_exists('detours')) {
+            return true;
+        }
+
+        if (ee()->db->field_exists('note', 'detours')) {
+            return true;
+        }
+
+        ee()->load->dbforge();
+        $fields = array(
+            'note' => array('type' => 'varchar', 'constraint' => '255', 'null' => true, 'default' => null),
+        );
+
+        ee()->dbforge->add_column('detours', $fields);
+
+        return true;
+    }
+  
+    private function _update_to_4_0_1()
+    {
+        if (!ee()->db->table_exists('detours_not_found')) {
+            return true;
+        }
+
+        $this->_ensure_detours_indexes();
+        $this->_ensure_detours_hits_indexes();
+        $this->_ensure_not_found_daily_indexes();
+    }
 
     /* Private Functions */
 
@@ -304,13 +381,14 @@ class Detour_pro_upd extends Upd
         ee()->dbforge->add_field($fields);
         ee()->dbforge->add_key('detour_id');		
         ee()->dbforge->add_key('hit_id', true);
-
+ 
         return (ee()->dbforge->create_table('detours_hits')) ? true : false;
     }
 
     private function _create_table_not_found()
     {
 		if (ee()->db->table_exists('detours_not_found')) {
+             $this->_ensure_not_found_daily_indexes();
 			 return TRUE; 
 		}
 		
@@ -327,7 +405,9 @@ class Detour_pro_upd extends Upd
         ee()->dbforge->add_key('notfound_id', true);
         ee()->dbforge->add_key('detour_id');
 
-        return (ee()->dbforge->create_table('detours_not_found')) ? true : false;
+        ee()->dbforge->create_table('detours_not_found');
+
+        $this->_ensure_not_found_daily_indexes();
     }
 
     private function _createSettingsTable()
@@ -351,6 +431,24 @@ class Detour_pro_upd extends Upd
         ee()->dbforge->create_table('detour_pro_settings');
     }
 
+    private function _create_temp_not_found_table($table_name)
+    {
+        ee()->load->dbforge();
+
+        $fields = array(
+            'notfound_id' => array('type' => 'int', 'constraint' => '10', 'unsigned' => true, 'auto_increment' => true),
+            'detour_id' => array('type' => 'int', 'constraint' => '10', 'unsigned' => true, 'null' => true),
+            'original_url' => array('type' => 'varchar', 'constraint' => '250', 'null' => true),
+            'hit_date' => array('type' => 'date', 'null' => true),
+            'hits' => array('type' => 'int', 'constraint' => '10', 'default' => 1, 'unsigned' => true),
+            'site_id' => array('type' => 'int', 'constraint' => '4', 'unsigned' => true, 'null' => true),
+        );
+
+        ee()->dbforge->add_field($fields);
+        ee()->dbforge->add_key('notfound_id', true);
+        ee()->dbforge->create_table($table_name);
+    }
+
 
     private function _isPreviousInstall()
     {
@@ -359,6 +457,109 @@ class Detour_pro_upd extends Upd
         $result = ee()->db->query($sql);
 
         return (bool) $result->num_rows;
+    }
+
+    private function _ensure_not_found_daily_indexes()
+    {
+        $table = ee()->db->dbprefix('detours_not_found');
+
+        if (!$this->_index_exists($table, 'uniq_site_url_hit_date')) {
+            $this->_consolidate_not_found_daily_rows($table);
+            $this->_apply_not_found_daily_indexes($table);
+
+            return;
+        }
+
+        $this->_apply_not_found_daily_indexes($table);
+    }
+
+    private function _consolidate_not_found_daily_rows($table)
+    {
+        $tmp_table = ee()->db->dbprefix('detours_not_found_tmp_daily_work');
+
+        ee()->db->query("UPDATE `{$table}` SET `hit_date` = CURDATE() WHERE `hit_date` IS NULL");
+        ee()->db->query("DROP TEMPORARY TABLE IF EXISTS `{$tmp_table}`");
+
+        try {
+            ee()->db->query("CREATE TEMPORARY TABLE `{$tmp_table}` LIKE `{$table}`");
+
+            ee()->db->query("INSERT INTO `{$tmp_table}` (`detour_id`, `original_url`, `hit_date`, `hits`, `site_id`)
+                SELECT MAX(`detour_id`) AS `detour_id`, `original_url`, `hit_date`, SUM(`hits`) AS `hits`, `site_id`
+                FROM `{$table}`
+                GROUP BY `site_id`, `original_url`, `hit_date`");
+
+            ee()->db->query("TRUNCATE TABLE `{$table}`");
+            ee()->db->query("INSERT INTO `{$table}` (`detour_id`, `original_url`, `hit_date`, `hits`, `site_id`)
+                SELECT `detour_id`, `original_url`, `hit_date`, `hits`, `site_id` FROM `{$tmp_table}`");
+        } catch (Exception $e) {
+            ee()->db->query("DROP TEMPORARY TABLE IF EXISTS `{$tmp_table}`");
+            throw $e;
+        }
+
+        ee()->db->query("DROP TEMPORARY TABLE IF EXISTS `{$tmp_table}`");
+    }
+
+    private function _apply_not_found_daily_indexes($table)
+    {
+        if ($this->_index_exists($table, 'id_site_url_x')) {
+            ee()->db->query("ALTER TABLE `{$table}` DROP INDEX `id_site_url_x`");
+        }
+
+        if (!$this->_index_exists($table, 'uniq_site_url_hit_date')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD UNIQUE INDEX `uniq_site_url_hit_date` (`site_id`, `original_url`, `hit_date`)");
+        }
+
+        if (!$this->_index_exists($table, 'idx_site_hit_date')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD INDEX `idx_site_hit_date` (`site_id`, `hit_date`)");
+        }
+
+        if (!$this->_index_exists($table, 'idx_site_detour_hit_date')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD INDEX `idx_site_detour_hit_date` (`site_id`, `detour_id`, `hit_date`)");
+        }
+    }
+
+    private function _ensure_detours_indexes()
+    {
+        if (!ee()->db->table_exists('detours')) {
+            return;
+        }
+
+        $table = ee()->db->dbprefix('detours');
+
+        if (!$this->_index_exists($table, 'idx_site_id')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD INDEX `idx_site_id` (`site_id`)");
+        }
+
+        if (!$this->_index_exists($table, 'idx_site_method')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD INDEX `idx_site_method` (`site_id`, `detour_method`)");
+        }
+
+        if (!$this->_index_exists($table, 'idx_site_original_url')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD INDEX `idx_site_original_url` (`site_id`, `original_url`(191))");
+        }
+    }
+
+    private function _ensure_detours_hits_indexes()
+    {
+        if (!ee()->db->table_exists('detours_hits')) {
+            return;
+        }
+
+        $table = ee()->db->dbprefix('detours_hits');
+
+        if (!$this->_index_exists($table, 'idx_detour_hit_date')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD INDEX `idx_detour_hit_date` (`detour_id`, `hit_date`)");
+        }
+
+        if (!$this->_index_exists($table, 'idx_hit_date_detour')) {
+            ee()->db->query("ALTER TABLE `{$table}` ADD INDEX `idx_hit_date_detour` (`hit_date`, `detour_id`)");
+        }
+    }
+
+    private function _index_exists($table, $index_name)
+    {
+        $query = ee()->db->query("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", array($index_name));
+        return $query->num_rows() > 0;
     }
 }
 /* End of file upd.detour_pro.php */
