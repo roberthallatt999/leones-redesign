@@ -192,3 +192,9 @@ yarn-debug.log*
 # Common Dependencies (never commit — install from lock file)
 # =============================================================================
 vendor/
+
+# Server migration playbook (per-operator local config + caches)
+scripts/migrate-server.yaml
+scripts/.migrate-logs/
+scripts/.migrate-cache/
+.github/secrets.yaml.pre-cutover-*
