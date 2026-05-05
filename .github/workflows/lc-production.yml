@@ -119,6 +119,12 @@ jobs:
             --exclude='LocalValetDriver.php' \
             --exclude='.db-backup.sql.gz' \
             --exclude='.release-info' \
+            --exclude='docs/' \
+            --exclude='CLAUDE.md' \
+            --exclude='AGENTS.md' \
+            --exclude='MEMORY.md' \
+            --exclude='MEMORY-ARCHIVE.md' \
+            --exclude='.claude/' \
             ./ "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}:${{ secrets.PROD_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}/"
 
       - name: Store release info
