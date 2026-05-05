@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -13,14 +13,11 @@ namespace Solspace\Addons\FreeformNext\Utilities\ControlPanel;
 
 class AjaxView extends View
 {
-    /** @var array */
-    private $variables;
+    private array $variables;
 
-    /** @var array */
-    private $errors;
+    private array $errors;
 
-    /** @var bool */
-    private $showErrorsIfEmpty;
+    private bool $showErrorsIfEmpty;
 
     /**
      * AjaxView constructor.
@@ -49,26 +46,22 @@ class AjaxView extends View
     /**
      * @return bool
      */
-    public function hasErrors()
+    public function hasErrors(): bool
     {
         return !empty($this->errors);
     }
 
-    /**
-     * @param array $variables
-     */
-    public function setVariables(array $variables)
+    public function setVariables(array $variables): void
     {
         $this->variables = $variables;
     }
 
     /**
      * @param string $key
-     * @param mixed  $value
      *
      * @return $this
      */
-    public function addVariable($key, $value)
+    public function addVariable($key, mixed $value)
     {
         $this->variables[$key] = $value;
 
@@ -76,8 +69,6 @@ class AjaxView extends View
     }
 
     /**
-     * @param array $variables
-     *
      * @return $this
      */
     public function addVariables(array $variables)
@@ -108,8 +99,6 @@ class AjaxView extends View
     }
 
     /**
-     * @param array $messages
-     *
      * @return $this
      */
     public function addErrors(array $messages)
@@ -124,7 +113,7 @@ class AjaxView extends View
     /**
      * @param bool $showErrorsIfEmpty
      */
-    public function setShowErrorsIfEmpty($showErrorsIfEmpty)
+    public function setShowErrorsIfEmpty($showErrorsIfEmpty): void
     {
         $this->showErrorsIfEmpty = (bool) $showErrorsIfEmpty;
     }

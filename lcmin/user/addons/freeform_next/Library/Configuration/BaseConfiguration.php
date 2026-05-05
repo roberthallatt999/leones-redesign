@@ -2,32 +2,35 @@
 
 namespace Solspace\Addons\FreeformNext\Library\Configuration;
 
+use Stringable;
+use ReflectionException;
+use ReflectionClass;
+use ReflectionProperty;
 use Solspace\Addons\FreeformNext\Library\Exceptions\FreeformException;
 
-abstract class BaseConfiguration
+abstract class BaseConfiguration implements Stringable
 {
     /**
      * BaseConfiguration constructor.
      * Passing an array config populates all of the configuration values for a given configuration
      *
-     * @param array $config
      *
      * @throws FreeformException
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
-    public function __construct(array $config = null)
+    public function __construct(?array $config = null)
     {
         if (null === $config) {
             return;
         }
 
         foreach ($config as $key => $value) {
-            if (property_exists(\get_class($this), $key)) {
+            if (property_exists(static::class, $key)) {
                 $this->$key = $value;
             } else {
-                $reflection = new \ReflectionClass($this);
+                $reflection = new ReflectionClass($this);
                 $properties = $reflection->getProperties(
-                    \ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED
+                    ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED
                 );
 
                 $availableProperties = [];
@@ -49,7 +52,7 @@ abstract class BaseConfiguration
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->getConfigHash();
     }
@@ -65,12 +68,10 @@ abstract class BaseConfiguration
     }
 
     /**
-     * @param mixed $value
      * @param bool  $nullable
-     *
      * @return int|null
      */
-    protected function castToInt($value, $nullable = true)
+    protected function castToInt(mixed $value, $nullable = true)
     {
         if (null === $value && $nullable) {
             return null;
@@ -80,12 +81,10 @@ abstract class BaseConfiguration
     }
 
     /**
-     * @param mixed $value
      * @param bool  $nullable
-     *
      * @return string|null
      */
-    protected function castToString($value, $nullable = true)
+    protected function castToString(mixed $value, $nullable = true)
     {
         if (null === $value && $nullable) {
             return null;
@@ -95,12 +94,10 @@ abstract class BaseConfiguration
     }
 
     /**
-     * @param mixed $value
      * @param bool  $nullable
-     *
      * @return bool|null
      */
-    protected function castToBool($value, $nullable = true)
+    protected function castToBool(mixed $value, $nullable = true)
     {
         if (null === $value && $nullable) {
             return null;
@@ -110,12 +107,10 @@ abstract class BaseConfiguration
     }
 
     /**
-     * @param mixed $value
      * @param bool  $nullable
-     *
      * @return array|null
      */
-    protected function castToArray($value, $nullable = true)
+    protected function castToArray(mixed $value, $nullable = true)
     {
         if (null === $value) {
             return $nullable ? null : [];

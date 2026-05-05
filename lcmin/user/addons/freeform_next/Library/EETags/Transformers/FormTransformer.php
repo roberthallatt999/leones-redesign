@@ -16,11 +16,12 @@ class FormTransformer implements Transformer
      *
      * @param Form $form
      * @param int  $submissionCount
+     * @param int  $spamCount
      * @param bool $skipHelperFields
      *
      * @return array
      */
-    public function transformForm(Form $form, $submissionCount = 0, $skipHelperFields = false)
+    public function transformForm(Form $form, $submissionCount = 0, $spamCount = 0, $skipHelperFields = false): array
     {
         return [
             'form:id'                        => $form->getId(),
@@ -39,6 +40,7 @@ class FormTransformer implements Transformer
             'form:row_class'                 => $form->getCustomAttributes()->getRowClass(),
             'form:column_class'              => $form->getCustomAttributes()->getColumnClass(),
             'form:submission_count'          => $submissionCount,
+            'form:spam_count'                => $spamCount,
             'form:field_id_prefix'           => $form->getCustomAttributes()->getFieldIdPrefix(),
             'form:fields'                    => $this->getFields($form, 'field:', $skipHelperFields),
             'form:current_page'              => [
@@ -51,11 +53,9 @@ class FormTransformer implements Transformer
     }
 
     /**
-     * @param Form $form
-     *
      * @return array
      */
-    private function getErrors(Form $form)
+    private function getErrors(Form $form): array
     {
         $data = [];
         foreach ($form->getErrors() as $error) {
@@ -66,13 +66,10 @@ class FormTransformer implements Transformer
     }
 
     /**
-     * @param Form   $form
-     * @param string $prefix
      * @param bool   $skipHelperFields
-     *
      * @return array
      */
-    private function getFields(Form $form, $prefix = 'field:', $skipHelperFields = false)
+    private function getFields(Form $form, string $prefix = 'field:', $skipHelperFields = false): array
     {
         $fieldTransformer = new FieldTransformer();
 

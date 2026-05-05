@@ -8,13 +8,10 @@ use Stringy\Stringy;
 
 class FormTagParamUtilities
 {
-    const PATTERN_ARRAY_ATTRIBUTES  = '/(override_values|input_attributes|form_attributes):([a-zA-Z_\-0-9]+)=(?:"|\')([^\'"]*)(?:"|\')?/';
-    const PATTERN_SINGLE_ATTRIBUTES = '/(input_attributes|form_attributes):([a-zA-Z_\-0-9]+)(?:\s|\})/';
+    public const PATTERN_ARRAY_ATTRIBUTES  = '/(override_values|input_attributes|form_attributes):([a-zA-Z_\-0-9]+)=(?:"|\')([^\'"]*)(?:"|\')?/';
+    public const PATTERN_SINGLE_ATTRIBUTES = '/(input_attributes|form_attributes):([a-zA-Z_\-0-9]+)(?:\s|\})/';
 
-    /**
-     * @param Form $form
-     */
-    public static function setFormCustomAttributes(Form $form)
+    public static function setFormCustomAttributes(Form $form): void
     {
         $new = [
             'overrideValues'  => [],
@@ -38,7 +35,7 @@ class FormTagParamUtilities
             /** @var array $keys */
             /** @var array $handles */
             /** @var array $values */
-            list ($_, $keys, $handles, $values) = $matches;
+            [$_, $keys, $handles, $values] = $matches;
 
             foreach ($handles as $index => $handle) {
                 $key          = $keys[$index];
@@ -66,7 +63,7 @@ class FormTagParamUtilities
         if (preg_match_all(self::PATTERN_SINGLE_ATTRIBUTES, $tagproper, $matches)) {
             /** @var array $keys */
             /** @var array $handles */
-            list ($_, $keys, $handles) = $matches;
+            [$_, $keys, $handles] = $matches;
 
             foreach ($handles as $index => $handle) {
                 $key          = $keys[$index];

@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -19,14 +19,12 @@ use Solspace\Addons\FreeformNext\Services\PermissionsService;
 class Navigation
 {
     /** @var NavigationLink[] */
-    private $stack;
+    private ?array $stack = null;
 
     /**
-     * @param NavigationLink $link
-     *
      * @return $this
      */
-    public function addLink(NavigationLink $link = null)
+    public function addLink(?NavigationLink $link = null)
     {
         if (null === $link) {
             return $this;
@@ -94,8 +92,14 @@ class Navigation
                 $header->isActive();
             }
 
-            if (strpos($this->getCurrentUrl(), 'addons/settings/freeform_next/submissions') === 0) {
-                if ($item->getMethod() && strpos($item->getMethod(), 'form') === 0) {
+            if (str_starts_with($this->getCurrentUrl(), 'addons/settings/freeform_next/submissions')) {
+                if ($item->getMethod() && str_starts_with($item->getMethod(), 'submissions')) {
+                    $header->isActive();
+                }
+            }
+
+            if (str_starts_with($this->getCurrentUrl(), 'addons/settings/freeform_next/spam')) {
+                if ($item->getMethod() && str_starts_with($item->getMethod(), 'spam')) {
                     $header->isActive();
                 }
             }
@@ -135,9 +139,9 @@ class Navigation
      *
      * @return bool
      */
-    private function isUrlActive($url)
+    private function isUrlActive($url): bool
     {
-        return strpos($this->getCurrentUrl(), $this->getTrimLink($url)) === 0;
+        return str_starts_with($this->getCurrentUrl(), $this->getTrimLink($url));
     }
 
     /**
@@ -145,7 +149,7 @@ class Navigation
      *
      * @return bool|string
      */
-    private function getTrimLink($url)
+    private function getTrimLink($url): string
     {
         if ($url instanceof URL) {
             $url = $url->compile();

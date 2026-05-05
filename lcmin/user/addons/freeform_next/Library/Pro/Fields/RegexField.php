@@ -18,7 +18,7 @@ class RegexField extends TextField
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_REGEX;
     }
@@ -42,7 +42,7 @@ class RegexField extends TextField
     /**
      * @inheritDoc
      */
-    public function getConstraints()
+    public function getConstraints(): array
     {
         return [
             new RegexConstraint(

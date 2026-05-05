@@ -4,13 +4,14 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Integrations\MailingLists;
 
+use stdClass;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
@@ -18,9 +19,9 @@ use Solspace\Addons\FreeformNext\Library\Integrations\SettingBlueprint;
 
 abstract class MailingListOAuthConnector extends AbstractMailingListIntegration
 {
-    const SETTING_CLIENT_ID     = "client_id";
-    const SETTING_CLIENT_SECRET = "client_secret";
-    const SETTING_RETURN_URI    = "return_uri";
+    public const SETTING_CLIENT_ID     = "client_id";
+    public const SETTING_CLIENT_SECRET = "client_secret";
+    public const SETTING_RETURN_URI    = "return_uri";
 
     /**
      * Returns a list of additional settings for this integration
@@ -30,13 +31,18 @@ abstract class MailingListOAuthConnector extends AbstractMailingListIntegration
      */
     public static function getSettingBlueprints()
     {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $cpUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'];
+
         return [
             new SettingBlueprint(
                 SettingBlueprint::TYPE_TEXT,
                 self::SETTING_RETURN_URI,
                 "OAuth 2.0 Return URI",
-                "You must specify this as the Return URI in your app settings to be able to authorize your credentials. DO NOT CHANGE THIS.",
-                true
+                "You must specify this Return URI in your OAuth2 app settings to be able to authorize your credentials.",
+                true,
+                null,
+                $cpUrl . '?/cp/addons/settings/freeform_next/integrations/mailing_lists/authorize',
             ),
             new SettingBlueprint(
                 SettingBlueprint::TYPE_TEXT,
@@ -58,7 +64,7 @@ abstract class MailingListOAuthConnector extends AbstractMailingListIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
         $data = [
             "response_type" => "code",
@@ -79,7 +85,7 @@ abstract class MailingListOAuthConnector extends AbstractMailingListIntegration
     {
         $client = new Client();
 
-        $code = isset($_GET["code"]) ? $_GET["code"] : null;
+        $code = $_GET["code"] ?? null;
         $this->onBeforeFetchAccessToken($code);
 
         if (is_null($code)) {
@@ -98,10 +104,10 @@ abstract class MailingListOAuthConnector extends AbstractMailingListIntegration
 
         try {
 			$response = $client->post($this->getAccessTokenUrl(), [
-				'headers' => [
-					'Content-Type' => 'application/x-www-form-urlencoded',
+				"headers" => [
+					"Content-Type" => "application/x-www-form-urlencoded",
 				],
-				'body'    => $body,
+				"body"    => $body,
 			]);
         } catch (BadResponseException $e) {
             throw new IntegrationException($e->getResponse()->getBody(true));
@@ -132,10 +138,7 @@ abstract class MailingListOAuthConnector extends AbstractMailingListIntegration
     {
     }
 
-    /**
-     * @param \stdClass $responseData
-     */
-    protected function onAfterFetchAccessToken(\stdClass $responseData)
+    protected function onAfterFetchAccessToken(stdClass $responseData)
     {
     }
 

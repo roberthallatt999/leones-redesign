@@ -2,29 +2,18 @@
 
 namespace Solspace\Addons\FreeformNext\Library\DataObjects;
 
+use JsonSerializable;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\AbstractField;
 
-class SubmissionPreferenceSetting implements \JsonSerializable
+class SubmissionPreferenceSetting implements JsonSerializable
 {
-    /** @var int */
-    private $id;
-
-    /** @var string */
-    private $handle;
-
-    /** @var string */
-    private $label;
-
-    /** @var bool */
-    private $checked;
+    private bool $checked;
 
     /**
-     * @param AbstractField $field
      * @param bool          $checked
-     *
      * @return SubmissionPreferenceSetting
      */
-    public static function createFromField(AbstractField $field, $checked)
+    public static function createFromField(AbstractField $field, $checked): \Solspace\Addons\FreeformNext\Library\DataObjects\SubmissionPreferenceSetting
     {
         return new SubmissionPreferenceSetting(
             $field->getId(),
@@ -35,11 +24,9 @@ class SubmissionPreferenceSetting implements \JsonSerializable
     }
 
     /**
-     * @param array $data
-     *
      * @return SubmissionPreferenceSetting
      */
-    public static function createFromArray(array $data)
+    public static function createFromArray(array $data): \Solspace\Addons\FreeformNext\Library\DataObjects\SubmissionPreferenceSetting
     {
         return new SubmissionPreferenceSetting(
             $data['id'],
@@ -57,11 +44,8 @@ class SubmissionPreferenceSetting implements \JsonSerializable
      * @param string $label
      * @param bool   $checked
      */
-    public function __construct($id, $handle, $label, $checked)
+    public function __construct(private $id, private $handle, private $label, $checked)
     {
-        $this->id      = $id;
-        $this->handle  = $handle;
-        $this->label   = $label;
         $this->checked = (bool) $checked;
     }
 
@@ -92,7 +76,7 @@ class SubmissionPreferenceSetting implements \JsonSerializable
     /**
      * @return bool
      */
-    public function isChecked()
+    public function isChecked(): bool
     {
         return $this->checked;
     }

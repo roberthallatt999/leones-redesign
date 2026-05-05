@@ -4,31 +4,28 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Composer\Components;
 
+use JsonSerializable;
+use Iterator;
+use ArrayAccess;
+use Countable;
+use ReturnTypeWillChange;
 use Solspace\Addons\FreeformNext\Library\Exceptions\FreeformException;
 
-class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
+class Row implements JsonSerializable, Iterator, ArrayAccess, Countable
 {
-    /** @var string */
-    private $id;
-
-    /** @var AbstractField[] */
-    private $fields;
-
     /**
      * @param string $id
-     * @param array  $fields
+     * @param AbstractField[] $fields
      */
-    public function __construct($id, array $fields)
+    public function __construct(private $id, private array $fields)
     {
-        $this->id     = $id;
-        $this->fields = $fields;
     }
 
     /**
@@ -49,8 +46,8 @@ class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
      *
      * @return mixed
      */
-	#[\ReturnTypeWillChange]
-	public function current()
+	#[ReturnTypeWillChange]
+	public function current(): mixed
     {
         return current($this->fields);
     }
@@ -60,8 +57,8 @@ class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
      *
      * @return void
      */
-	#[\ReturnTypeWillChange]
-    public function next()
+	#[ReturnTypeWillChange]
+    public function next(): void
     {
         next($this->fields);
     }
@@ -71,8 +68,8 @@ class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
 	 *
 	 * @return int|null
 	 */
-	#[\ReturnTypeWillChange]
-	public function key()
+	#[ReturnTypeWillChange]
+	public function key(): mixed
     {
         return key($this->fields);
     }
@@ -92,8 +89,8 @@ class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
      *
      * @return void
      */
-	#[\ReturnTypeWillChange]
-    public function rewind()
+	#[ReturnTypeWillChange]
+    public function rewind(): void
     {
         reset($this->fields);
     }
@@ -119,8 +116,8 @@ class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
     /**
      * @inheritDoc
      */
-	#[\ReturnTypeWillChange]
-    public function offsetGet($offset)
+	#[ReturnTypeWillChange]
+    public function offsetGet($offset): mixed
     {
         return $this->offsetExists($offset) ? $this->fields[$offset] : null;
     }
@@ -128,8 +125,8 @@ class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
     /**
      * @inheritDoc
      */
-	#[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+	#[ReturnTypeWillChange]
+    public function offsetSet($offset, $value): void
     {
         throw new FreeformException("Form Page Row ArrayAccess does not allow unsetting values");
     }
@@ -137,8 +134,8 @@ class Row implements \JsonSerializable, \Iterator, \ArrayAccess, \Countable
     /**
      * @inheritDoc
      */
-	#[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+	#[ReturnTypeWillChange]
+    public function offsetUnset($offset): void
     {
         throw new FreeformException("Form Page Row ArrayAccess does not allow unsetting values");
     }

@@ -4,11 +4,11 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
-
+use Stringy\Stringy;
 use Solspace\Addons\FreeformNext\Controllers\ApiController;
 use Solspace\Addons\FreeformNext\Controllers\CrmController;
 use Solspace\Addons\FreeformNext\Controllers\ExportController;
@@ -45,14 +45,14 @@ use Solspace\Addons\FreeformNext\Utilities\ControlPanelView;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
-require_once version_compare(PHP_VERSION, '8.0.0') < 0 ? __DIR__ . '/php7/vendor/autoload.php' : __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 class Freeform_next_mcp extends ControlPanelView
 {
     /**
      * @return array
      */
-    public function index()
+    public function index(): array
     {
         return $this->renderView(new RedirectView($this->getLink('forms')));
     }
@@ -61,10 +61,10 @@ class Freeform_next_mcp extends ControlPanelView
      * @param int|string|null $formId
      *
      * @return array
-     * @throws \Exception
+     * @throws Exception
      * @throws FreeformException
      */
-    public function forms($formId = null)
+    public function forms(null|string|int $formId = null): array
     {
         if (isset($_POST['composerState'])) {
             $this->renderView($this->getFormController()->save());
@@ -94,7 +94,7 @@ class Freeform_next_mcp extends ControlPanelView
      *
      * @return array
      */
-    public function api($type)
+    public function api($type): array
     {
         $apiController = new ApiController();
         $args          = func_get_args();
@@ -107,7 +107,7 @@ class Freeform_next_mcp extends ControlPanelView
      *
      * @return array
      */
-    public function fields($id = null)
+    public function fields(null|string|int $id = null): array
     {
         if (!($this->getPermissionsService()->canUserAccessSection(__FUNCTION__, ee()->session->userdata('group_id')))) {
             return $this->renderView(new RedirectView($this->getLink('denied')));
@@ -144,7 +144,7 @@ class Freeform_next_mcp extends ControlPanelView
      * @return array
      * @throws FreeformException
      */
-    public function notifications($notificationId = null)
+    public function notifications(null|string|int $notificationId = null): array
     {
         if (!($this->getPermissionsService()->canUserAccessSection(__FUNCTION__, ee()->session->userdata('group_id')))) {
             return $this->renderView(new RedirectView($this->getLink('denied')));
@@ -181,7 +181,7 @@ class Freeform_next_mcp extends ControlPanelView
      *
      * @return array
      */
-    public function export_profiles($seg1 = null, $seg2 = null)
+    public function export_profiles(null|string|int $seg1 = null, null|string|int $seg2 = null)
     {
         if (!($this->getPermissionsService()->canUserAccessSection(__FUNCTION__, ee()->session->userdata('group_id')))) {
             return $this->renderView(new RedirectView($this->getLink('denied')));
@@ -220,7 +220,7 @@ class Freeform_next_mcp extends ControlPanelView
      *
      * @return array
      */
-    public function export($id = null)
+    public function export(null|string|int $id = null): array
     {
         if (!($this->getPermissionsService()->canUserAccessSection(__FUNCTION__, ee()->session->userdata('group_id')))) {
             return $this->renderView(new RedirectView($this->getLink('denied')));
@@ -235,16 +235,31 @@ class Freeform_next_mcp extends ControlPanelView
     }
 
     /**
-     * @param string   $formHandle
-     * @param int|null $submissionId
+     * @param null|string       $formHandle
+     * @param null|int|string   $submissionId
      *
      * @return array
      * @throws FreeformException
      */
-    public function submissions($formHandle, $submissionId = null)
+    public function submissions(null|string|int $formHandle = null, null|string|int $submissionId = null): array
     {
-        $formModel = FormRepository::getInstance()->getFormByIdOrHandle($formHandle);
-        $form      = $formModel->getForm();
+        $form = NULL;
+        if ($formHandle) {
+            $formModel = FormRepository::getInstance()->getFormByIdOrHandle($formHandle);
+            if ($formModel) {
+                $form = $formModel->getForm();
+            }
+        } else {
+            $formModels = FormRepository::getInstance()->getAllForms();
+            $formModel = reset($formModels);
+            if ($formModel) {
+                $form = $formModel->getForm();
+            }
+        }
+
+        if (!$form) {
+            return $this->renderView(new RedirectView(UrlHelper::getLink('forms')));
+        }
 
         if (null !== $submissionId) {
             if (strtolower($submissionId) === 'delete') {
@@ -270,13 +285,71 @@ class Freeform_next_mcp extends ControlPanelView
             throw new FreeformException(lang('Submission not found'));
         }
 
-        return $this->renderView($this->getSubmissionController()->index($form));
+        return $this->renderView($this->getSubmissionController()->submissionsIndex($form));
+    }
+
+    /**
+     * @param null|string       $formHandle
+     * @param null|int|string   $submissionId
+     *
+     * @return array
+     * @throws FreeformException
+     */
+    public function spam(null|string|int $formHandle = null, null|string|int $submissionId = null): array
+    {
+        $form = FALSE;
+        if ($formHandle) {
+            $formModel = FormRepository::getInstance()->getFormByIdOrHandle($formHandle);
+            if ($formModel) {
+                $form = $formModel->getForm();
+            }
+        } else {
+            $formModels = FormRepository::getInstance()->getAllForms();
+            $formModel = reset($formModels);
+            if ($formModel) {
+                $form = $formModel->getForm();
+            }
+        }
+
+        if (!$form) {
+            return $this->renderView(new RedirectView(UrlHelper::getLink('forms')));
+        }
+
+        if (FreeformHelper::isFreeformAtLeast('3.3.5') && !$this->getSettingsService()->isSpamFolderEnabled()) {
+            return $this->renderView(new RedirectView(UrlHelper::getLink('submissions/' . $formHandle . '/')));
+        }
+
+        if (null !== $submissionId) {
+            if (strtolower($submissionId) === 'delete') {
+                return $this->renderView($this->getSubmissionController()->batchDelete($form));
+            }
+
+            $submission = SubmissionRepository::getInstance()->getSubmission($form, $submissionId);
+
+            if ($submission) {
+                if (isset($_POST['title'])) {
+                    $this->getSubmissionController()->save($form, $submission);
+
+                    return $this->renderView(
+                        new RedirectView(
+                            UrlHelper::getLink('spam/' . $formHandle . '/')
+                        )
+                    );
+                }
+
+                return $this->renderView($this->getSubmissionController()->edit($form, $submission));
+            }
+
+            throw new FreeformException(lang('Submission not found'));
+        }
+
+        return $this->renderView($this->getSubmissionController()->spamIndex($form));
     }
 
     /**
      * @return array
      */
-    public function templates()
+    public function templates(): array
     {
         $ajaxView = new AjaxView();
         $ajaxView->addVariable('success', true);
@@ -285,7 +358,7 @@ class Freeform_next_mcp extends ControlPanelView
             $settings = SettingsRepository::getInstance()->getOrCreate();
             if ($settings->getFormattingTemplatePath()) {
                 $templateName = ee()->input->post('templateName');
-                $templateName = (string) \Stringy\Stringy::create($templateName)->underscored()->toAscii();
+                $templateName = (string) Stringy::create($templateName)->underscored()->toAscii();
                 $templateName .= '.html';
 
                 $filePath = $settings->getAbsoluteFormTemplateDirectory() . '/' . $templateName;
@@ -318,7 +391,7 @@ class Freeform_next_mcp extends ControlPanelView
     /**
      * @return array
      */
-    public function formTemplates()
+    public function formTemplates(): array
     {
         $settings = new SettingsService();
         $ajaxView = new AjaxView();
@@ -330,7 +403,7 @@ class Freeform_next_mcp extends ControlPanelView
     /**
      * @return array
      */
-    public function optionsFromSource()
+    public function optionsFromSource(): array
     {
         $source        = ee()->input->post('source');
         $target        = ee()->input->post('target');
@@ -352,7 +425,7 @@ class Freeform_next_mcp extends ControlPanelView
     /**
      * @return array
      */
-    public function finish_tutorial()
+    public function finish_tutorial(): array
     {
         $service = new SettingsService();
         $service->finishTutorial();
@@ -364,12 +437,10 @@ class Freeform_next_mcp extends ControlPanelView
     }
 
     /**
-     * @param string          $type
      * @param null|string|int $id
-     *
      * @return array
      */
-    public function settings($type, $id = null)
+    public function settings(string $type, null|string|int $id = null): array
     {
         return $this->renderView($this->getSettingsController()->index($type, $id));
     }
@@ -377,7 +448,7 @@ class Freeform_next_mcp extends ControlPanelView
     /**
      * @return array
      */
-    public function updates()
+    public function updates(): array
     {
         $updateController = new UpdateController();
 
@@ -390,21 +461,16 @@ class Freeform_next_mcp extends ControlPanelView
      *
      * @return array
      */
-    public function integrations($type, $id = null)
+    public function integrations($type, null|string|int $id = null): ?array
     {
         if (!($this->getPermissionsService()->canUserAccessSection(__FUNCTION__, ee()->session->userdata('group_id')))) {
             return $this->renderView(new RedirectView($this->getLink('denied')));
         }
-
-        switch (strtolower($type)) {
-            case 'mailing_lists':
-                return $this->renderView($this->getMailingListsController()->handle($id));
-
-            case 'crm':
-                return $this->renderView($this->getCrmController()->handle($id));
-        }
-
-        return null;
+        return match (strtolower($type)) {
+            'mailing_lists' => $this->renderView($this->getMailingListsController()->handle($id)),
+            'crm' => $this->renderView($this->getCrmController()->handle($id)),
+            default => null,
+        };
     }
 
     /**
@@ -413,7 +479,7 @@ class Freeform_next_mcp extends ControlPanelView
      *
      * @return array
      */
-    public function migrations($type, $id = null)
+    public function migrations($type, null|string|int $id = null)
     {
         switch (strtolower($type)) {
             case 'ff_classic':
@@ -422,12 +488,10 @@ class Freeform_next_mcp extends ControlPanelView
     }
 
     /**
-     * @param string      $logName
      * @param string|null $action
-     *
      * @return array
      */
-    public function logs($logName, $action = null)
+    public function logs(string $logName, ?string $action = null): array
     {
         if (!($this->getPermissionsService()->canUserAccessSection(__FUNCTION__, ee()->session->userdata('group_id')))) {
             return $this->renderView(new RedirectView($this->getLink('denied')));
@@ -438,7 +502,7 @@ class Freeform_next_mcp extends ControlPanelView
         return $this->renderView($controller->view($logName, $action));
     }
 
-    public function denied()
+    public function denied(): array
     {
         return $this->renderView($this->getSettingsController()->permissionDenied());
     }
@@ -446,16 +510,49 @@ class Freeform_next_mcp extends ControlPanelView
     /**
      * @return Navigation
      */
-    protected function buildNavigation()
+    protected function buildNavigation(): Navigation
     {
-        $forms = new NavigationLink('Forms', 'forms');
-        FreeformHelper::get('navigation', $forms);
+        $allForms = FormRepository::getInstance()->getAllForms();
 
-        $notifications = new NavigationLink('Notifications', 'notifications');
-        $notifications->setButtonLink(new NavigationLink('New', 'notifications/new'));
+        $canManageForms = $this->getPermissionsService()->canManageForms(ee()->session->userdata('group_id'));
+        $canAccessSubmissions = $this->getPermissionsService()->canAccessSubmissions(ee()->session->userdata('group_id'));
+        $canAccessFields = $this->getPermissionsService()->canAccessFields(ee()->session->userdata('group_id'));
+        $canAccessNotifications = $this->getPermissionsService()->canAccessNotifications(ee()->session->userdata('group_id'));
+        $canAccessExports = $this->getPermissionsService()->canAccessExport(ee()->session->userdata('group_id'));
+        $canAccessSettings = $this->getPermissionsService()->canAccessSettings(ee()->session->userdata('group_id'));
 
-        $fields = new NavigationLink('Fields', 'fields');
-        FreeformHelper::get('navigation', $fields);
+        if ($canManageForms) {
+            $forms = new NavigationLink('Forms', 'forms');
+            FreeformHelper::get('navigation', $forms);
+        }
+
+        $submissions = null;
+        $spamSubmissions = null;
+        if ($canAccessSubmissions && count($allForms) > 0) {
+            $firstForm = reset($allForms);
+
+            $submissions = new NavigationLink('Submissions', "submissions/{$firstForm->handle}");
+
+            if (FreeformHelper::isFreeformAtLeast('3.3.5')) {
+                if ($this->getSettingsService()->isSpamFolderEnabled()) {
+                    $spamSubmissions = new NavigationLink('Spam', "spam/{$firstForm->handle}");
+                }
+            } else {
+                $spamSubmissions = new NavigationLink('Spam', "spam/{$firstForm->handle}");
+            }
+        }
+
+        $notifications = null;
+        if ($canAccessNotifications) {
+            $notifications = new NavigationLink('Notifications', 'notifications');
+            $notifications->setButtonLink(new NavigationLink('New', 'notifications/new'));
+        }
+
+        $fields = null;
+        if ($canAccessFields) {
+            $fields = new NavigationLink('Fields', 'fields');
+            FreeformHelper::get('navigation', $fields);
+        }
 
         $integrations = new NavigationLink('Integrations');
         $integrations
@@ -472,23 +569,26 @@ class Freeform_next_mcp extends ControlPanelView
                 ->addSubNavItem(new NavigationLink('Migrate Freeform Classic', 'migrations/ff_classic'));
         }
 
-
         $exportProfiles = null;
-        if (class_exists('Solspace\Addons\FreeformNext\Controllers\ExportProfilesController')) {
-            $exportProfiles = new NavigationLink('Export', 'export_profiles');
+        if ($canAccessExports && count($allForms) > 0) {
+            if (class_exists(ExportProfilesController::class)) {
+                $exportProfiles = new NavigationLink('Export', 'export_profiles');
+            }
         }
 
-        $settings = new NavigationLink('Settings');
-        $settings
-            ->addSubNavItem(new NavigationLink('License', 'settings/license'))
-            ->addSubNavItem(new NavigationLink('General', 'settings/general'))
-            ->addSubNavItem(new NavigationLink('Spam Protection', 'settings/spam_protection'))
-            ->addSubNavItem(new NavigationLink('reCAPTCHA', 'settings/recaptcha'))
-            ->addSubNavItem(new NavigationLink('Formatting Templates', 'settings/formatting_templates'))
-            ->addSubNavItem(new NavigationLink('Email Templates', 'settings/email_templates'))
-            ->addSubNavItem(new NavigationLink('Statuses', 'settings/statuses'))
-            ->addSubNavItem(new NavigationLink('Permissions', 'settings/permissions'))
-            ->addSubNavItem(new NavigationLink('Demo Templates', 'settings/demo_templates'));
+        $settings = null;
+        if ($canAccessSettings) {
+            $settings = new NavigationLink('Settings');
+            $settings
+                ->addSubNavItem(new NavigationLink('General', 'settings/general'))
+                ->addSubNavItem(new NavigationLink('Spam Protection', 'settings/spam_protection'))
+                ->addSubNavItem(new NavigationLink('reCAPTCHA', 'settings/recaptcha'))
+                ->addSubNavItem(new NavigationLink('Formatting Templates', 'settings/formatting_templates'))
+                ->addSubNavItem(new NavigationLink('Email Templates', 'settings/email_templates'))
+                ->addSubNavItem(new NavigationLink('Statuses', 'settings/statuses'))
+                ->addSubNavItem(new NavigationLink('Permissions', 'settings/permissions'))
+                ->addSubNavItem(new NavigationLink('Demo Templates', 'settings/demo_templates'));
+        }
 
         $logs   = null;
         $logdir = __DIR__ . '/logs/';
@@ -528,13 +628,24 @@ class Freeform_next_mcp extends ControlPanelView
         }
 
         $nav = new Navigation();
-        $nav
-            ->addLink($forms)
-            ->addLink($fields)
-            ->addLink($notifications)
-            ->addLink($exportProfiles)
-            ->addLink($settings)
-            ->addLink($integrations);
+        if ($canManageForms) {
+            $nav->addLink($forms);
+        }
+
+        if (count($allForms) > 0) {
+          $nav->addLink($submissions);
+          $nav->addLink($spamSubmissions);
+        }
+
+        $nav->addLink($fields);
+        $nav->addLink($notifications);
+
+        if (count($allForms) > 0) {
+          $nav->addLink($exportProfiles);
+        }
+
+        $nav->addLink($settings);
+        $nav->addLink($integrations);
 
         if ($isMigrationAvailable) {
             $nav->addLink($migrations);
@@ -694,6 +805,20 @@ class Freeform_next_mcp extends ControlPanelView
 
         if (null === $instance) {
             $instance = new PermissionsService();
+        }
+
+        return $instance;
+    }
+
+    /**
+     * @return SettingsService
+     */
+    private function getSettingsService()
+    {
+        static $instance;
+
+        if (null === $instance) {
+            $instance = new SettingsService();
         }
 
         return $instance;

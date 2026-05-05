@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -14,27 +14,22 @@ namespace Solspace\Addons\FreeformNext\Library\FileUploads;
 class FileUploadResponse
 {
     /** @var int[] */
-    private $assetIds;
-
-    /** @var array */
-    private $errors;
+    private array $assetIds;
 
     /**
      * FileUploadResponse constructor.
      *
      * @param int[] $assetIds
-     * @param array $errors
      */
-    public function __construct(array $assetIds = null, array $errors = [])
+    public function __construct(?array $assetIds = null, private array $errors = [])
     {
         $this->assetIds = $assetIds ?: [];
-        $this->errors   = $errors;
     }
 
     /**
      * @return int[]
      */
-    public function getAssetIds()
+    public function getAssetIds(): array
     {
         return $this->assetIds;
     }
@@ -42,7 +37,7 @@ class FileUploadResponse
     /**
      * @return array
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }

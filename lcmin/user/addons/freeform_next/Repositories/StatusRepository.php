@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -37,7 +37,7 @@ class StatusRepository extends Repository
     /**
      * @return array
      */
-    public function getStatusNamesById()
+    public function getStatusNamesById(): array
     {
         $names = [];
         foreach ($this->getAllStatuses() as $status) {
@@ -50,7 +50,7 @@ class StatusRepository extends Repository
     /**
      * @return array
      */
-    public function getColorsById()
+    public function getColorsById(): array
     {
         $colors = [];
         foreach ($this->getAllStatuses() as $status) {
@@ -122,8 +122,6 @@ class StatusRepository extends Repository
     }
 
     /**
-     * @param array $ids
-     *
      * @return StatusModel[]
      */
     public function getStatusesByIdList(array $ids)

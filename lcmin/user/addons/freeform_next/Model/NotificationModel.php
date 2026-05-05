@@ -4,13 +4,14 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Model;
 
+use JsonSerializable;
 use EllisLab\ExpressionEngine\Service\Model\Model;
 use Solspace\Addons\FreeformNext\Library\DataObjects\EmailTemplate;
 
@@ -30,12 +31,12 @@ use Solspace\Addons\FreeformNext\Library\DataObjects\EmailTemplate;
  * @property int    $sortOrder
  * @property int    $legacyId
  */
-class NotificationModel extends Model implements \JsonSerializable
+class NotificationModel extends Model implements JsonSerializable
 {
     use TimestampableTrait;
 
-    const MODEL = 'freeform_next:NotificationModel';
-    const TABLE = 'freeform_next_notifications';
+    public const MODEL = 'freeform_next:NotificationModel';
+    public const TABLE = 'freeform_next_notifications';
 
     protected static $_primary_key = 'id';
     protected static $_table_name  = self::TABLE;
@@ -58,7 +59,7 @@ class NotificationModel extends Model implements \JsonSerializable
     /**
      * @return array
      */
-    public static function createValidationRules()
+    public static function createValidationRules(): array
     {
         return [
             'name'      => 'required',
@@ -93,7 +94,7 @@ EOT;
                 'fromEmail' => ee()->config->item('webmaster_email'),
                 'subject'   => 'New submission from your {form:name} form',
                 'bodyHtml'  => $body,
-                'bodyText'  => $body,
+                'bodyText'  => strip_tags($body),
             ]
         );
 
@@ -121,7 +122,7 @@ EOT;
                 'subject'            => $template->getSubject(),
                 'replyToEmail'       => $template->getReplyToEmail(),
                 'bodyHtml'           => $template->getBody(),
-                'bodyText'           => $template->getBody(),
+                'bodyText'           => strip_tags($template->getBody()),
                 'includeAttachments' => $template->isIncludeAttachments(),
             ]
         );
@@ -132,7 +133,7 @@ EOT;
     /**
      * @return bool
      */
-    public function isFileTemplate()
+    public function isFileTemplate(): bool
     {
         return !is_numeric($this->id);
     }
@@ -140,7 +141,7 @@ EOT;
     /**
      * @param int $id
      */
-    public function setLegacyId($id)
+    public function setLegacyId($id): void
     {
         $this->set(['legacyId' => $id]);
     }

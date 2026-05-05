@@ -4,13 +4,16 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Services;
 
+use Exception;
+use Solspace\Addons\FreeformNext\Library\Integrations\CRM\CRMIntegrationInterface;
+use ReflectionClass;
 use GuzzleHttp\Exception\BadResponseException;
 use Psr\Http\Message\ResponseInterface;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Layout;
@@ -38,13 +41,12 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class CrmService implements CRMHandlerInterface
 {
-    /** @var array */
-    private static $integrations;
+    private static ?array $integrations = null;
 
     /**
      * @return IntegrationInterface[]
      */
-    public function getAllIntegrations()
+    public function getAllIntegrations(): array
     {
         return CrmRepository::getInstance()->getAllIntegrationObjects();
     }
@@ -76,7 +78,7 @@ class CrmService implements CRMHandlerInterface
      *
      * @return bool
      */
-    public function updateFields(AbstractCRMIntegration $integration, array $fields)
+    public function updateFields(AbstractCRMIntegration $integration, array $fields): bool
     {
         $handles = [];
         foreach ($fields as $field) {
@@ -158,10 +160,8 @@ class CrmService implements CRMHandlerInterface
 
     /**
      * Update the access token of an integration
-     *
-     * @param AbstractCRMIntegration $integration
      */
-    public function updateAccessToken(AbstractCRMIntegration $integration)
+    public function updateAccessToken(AbstractCRMIntegration $integration): void
     {
         $model              = CrmRepository::getInstance()->getIntegrationById($integration->getId());
         $model->accessToken = $integration->getAccessToken();
@@ -174,7 +174,7 @@ class CrmService implements CRMHandlerInterface
      *
      * @return FieldObject[]
      */
-    public function getFields(AbstractCRMIntegration $integration)
+    public function getFields(AbstractCRMIntegration $integration): array
     {
         /** @var array $fieldData */
         $fieldData = ee()
@@ -202,7 +202,7 @@ class CrmService implements CRMHandlerInterface
     /**
      * @param AbstractCRMIntegration $integration
      */
-    public function flagIntegrationForUpdating(AbstractCRMIntegration $integration)
+    public function flagIntegrationForUpdating(AbstractCRMIntegration $integration): void
     {
         ee()
             ->db
@@ -223,7 +223,7 @@ class CrmService implements CRMHandlerInterface
     {
         try {
             $integration = $this->getIntegrationById($properties->getIntegrationId());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
 
@@ -293,17 +293,17 @@ class CrmService implements CRMHandlerInterface
                                 ExtensionHelper::call(ExtensionHelper::HOOK_CRM_AFTER_PUSH, $integration, $objectValues);
 
                                 return $result;
-                            } catch (\Exception $e) {
+                            } catch (Exception $e) {
                                 $logger->log(LoggerInterface::LEVEL_ERROR, $e->getMessage());
                             }
-                        } catch (\Exception $e) {
+                        } catch (Exception $e) {
                             $logger->log(LoggerInterface::LEVEL_ERROR, $e->getMessage());
                         }
                     }
                 }
 
                 $logger->log(LoggerInterface::LEVEL_ERROR, $e->getMessage());
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $logger->log(LoggerInterface::LEVEL_ERROR, $e->getMessage());
             }
         }
@@ -317,7 +317,7 @@ class CrmService implements CRMHandlerInterface
     public function getAllCrmServiceProviders()
     {
         if (null === self::$integrations) {
-            $interface    = 'Solspace\Addons\FreeformNext\Library\Integrations\CRM\CRMIntegrationInterface';
+            $interface    = CRMIntegrationInterface::class;
             $integrations = $validIntegrations = [];
 
             $addonIntegrations = [];
@@ -351,7 +351,7 @@ class CrmService implements CRMHandlerInterface
 
             $validIntegrations = [];
             foreach ($integrations as $class => $name) {
-                $reflectionClass = new \ReflectionClass($class);
+                $reflectionClass = new ReflectionClass($class);
 
                 if ($reflectionClass->implementsInterface($interface)) {
                     $validIntegrations[$class] = $reflectionClass->getConstant('TITLE');
@@ -367,7 +367,7 @@ class CrmService implements CRMHandlerInterface
     /**
      * @return array
      */
-    public function getAllCrmSettingBlueprints()
+    public function getAllCrmSettingBlueprints(): array
     {
         $serviceProviderTypes = $this->getAllCrmServiceProviders();
 
@@ -410,7 +410,7 @@ class CrmService implements CRMHandlerInterface
         throw new IntegrationException('Could not get Crm settings');
     }
 
-    public function onAfterResponse(AbstractIntegration $integration, ResponseInterface $response)
+    public function onAfterResponse(AbstractIntegration $integration, ResponseInterface $response): void
     {
         //
     }

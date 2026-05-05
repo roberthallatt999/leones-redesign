@@ -2,6 +2,7 @@
 
 namespace Solspace\Addons\FreeformNext\Controllers;
 
+use Exception;
 use EllisLab\ExpressionEngine\Library\CP\Table;
 use GuzzleHttp\Exception\BadResponseException;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
@@ -27,7 +28,7 @@ class CrmController extends Controller
      *
      * @return View
      */
-    public function handle($id = null)
+    public function handle(null|string|int $id = null): CpView|AjaxView|RedirectView
     {
         if (null === $id) {
             return $this->index();
@@ -51,7 +52,7 @@ class CrmController extends Controller
     /**
      * @return CpView
      */
-    public function index()
+    public function index(): CpView
     {
         /** @var Table $table */
         $table = ee('CP/Table', ['sortable' => false, 'searchable' => false]);
@@ -93,7 +94,7 @@ class CrmController extends Controller
                     'data'  => [
                         'confirm' => lang('Integration') . ': <b>' . htmlentities(
                                 $integration->name,
-                                ENT_QUOTES
+                                ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8'
                             ) . '</b>',
                     ],
                 ],
@@ -144,7 +145,7 @@ class CrmController extends Controller
      * @return View
      * @throws IntegrationException
      */
-    public function edit($id)
+    public function edit($id): RedirectView|CpView
     {
         $serviceProviderTypes = $this->getCrmService()->getAllCrmServiceProviders();
 
@@ -207,7 +208,7 @@ class CrmController extends Controller
                         $hash . '-' . $item->getHandle() => [
                             'type'     => $item->getType() === SettingBlueprint::TYPE_BOOL ? 'yes_no' : 'text',
                             'required' => $item->isRequired(),
-                            'value'    => isset($settings[$item->getHandle()]) ? $settings[$item->getHandle()] : null,
+                            'value'    => $settings[$item->getHandle()] ?? null,
                         ],
                     ],
                 ];
@@ -312,8 +313,6 @@ class CrmController extends Controller
     }
 
     /**
-     * @param IntegrationModel $model
-     *
      * @return bool
      */
     public function save(IntegrationModel $model)
@@ -333,7 +332,7 @@ class CrmController extends Controller
 
         $postedSettings = [];
         foreach ($_POST as $key => $value) {
-            if (strpos($key, $hash) === 0) {
+            if (str_starts_with($key, $hash)) {
                 $postedSettings[str_replace($hash . '-', '', $key)] = $value;
             }
         }
@@ -397,7 +396,7 @@ class CrmController extends Controller
     /**
      * @return AjaxView
      */
-    public function getIntegrationsAjax()
+    public function getIntegrationsAjax(): AjaxView
     {
         $integrations = CrmRepository::getInstance()->getAllIntegrationObjects();
 
@@ -414,7 +413,7 @@ class CrmController extends Controller
     /**
      * @return RedirectView
      */
-    public function batchDelete()
+    public function batchDelete(): RedirectView
     {
         if (isset($_POST['id_list'])) {
             $ids = [];
@@ -440,10 +439,8 @@ class CrmController extends Controller
 
     /**
      * Handle OAuth2 authorization
-     *
-     * @param IntegrationModel $model
      */
-    private function handleAuthorization(IntegrationModel $model)
+    private function handleAuthorization(IntegrationModel $model): void
     {
         $integration = $model->getIntegrationObject();
         $code        = ee()->input->get('code');
@@ -463,7 +460,7 @@ class CrmController extends Controller
     /**
      * @return AjaxView
      */
-    private function check()
+    private function check(): AjaxView
     {
         $view = new AjaxView();
 
@@ -495,7 +492,7 @@ class CrmController extends Controller
                         $view->addVariable('success', false);
                         $view->addError($e->getResponse()->getBody(true));
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $view->addVariable('success', false);
                     $view->addError($e->getMessage());
                 }

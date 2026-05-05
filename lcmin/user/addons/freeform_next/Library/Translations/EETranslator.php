@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -26,9 +26,9 @@ class EETranslator implements TranslatorInterface
      * @param string $string
      * @param array  $variables
      *
-     * @return string
+     * @return ?string
      */
-    public function translate($string, array $variables = [])
+    public function translate($string, array $variables = []): ?string
     {
         $string = lang($string);
 

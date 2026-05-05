@@ -6,25 +6,21 @@ use Solspace\Addons\FreeformNext\Library\Composer\Components\Validation\Errors\C
 
 class WebsiteConstraint implements ConstraintInterface
 {
-    const PATTERN = '/^((((http(s)?)|(sftp)|(ftp)|(ssh)):\/\/)|(\/\/))?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)$/i';
-
-    /** @var string */
-    private $message;
+    public const PATTERN = '/^((((http(s)?)|(sftp)|(ftp)|(ssh)):\/\/)|(\/\/))?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)$/i';
 
     /**
      * WebsiteConstraint constructor.
      *
      * @param string $message
      */
-    public function __construct($message = 'Website not valid')
+    public function __construct(private $message = 'Website not valid')
     {
-        $this->message = $message;
     }
 
     /**
      * @inheritDoc
      */
-    public function validate($value)
+    public function validate($value): ConstraintViolationList
     {
         $violationList = new ConstraintViolationList();
 

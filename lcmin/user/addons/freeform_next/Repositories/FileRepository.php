@@ -15,8 +15,6 @@ class FileRepository extends Repository
     }
 
     /**
-     * @param FileUploadField $field
-     *
      * @return array|null
      */
     public function getAssetSourceSettingsFor(FileUploadField $field)
@@ -28,7 +26,7 @@ class FileRepository extends Repository
             ->get()
             ->result_array();
 
-        if (count($results) > 0) {
+        if ((is_countable($results) ? count($results) : 0) > 0) {
             $result = $results[0];
 
             $result['url']         = parse_config_variables($result['url']);

@@ -4,13 +4,14 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Composer;
 
+use stdClass;
 use Solspace\Addons\FreeformNext\Library\Composer\Attributes\FormAttributes;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Context;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Form;
@@ -31,105 +32,47 @@ use Solspace\Addons\FreeformNext\Services\SettingsService;
 
 class Composer
 {
-    const KEY_COMPOSER   = 'composer';
-    const KEY_FORM       = 'form';
-    const KEY_PROPERTIES = 'properties';
-    const KEY_LAYOUT     = 'layout';
-    const KEY_CONTEXT    = 'context';
+    public const KEY_COMPOSER   = 'composer';
+    public const KEY_FORM       = 'form';
+    public const KEY_PROPERTIES = 'properties';
+    public const KEY_LAYOUT     = 'layout';
+    public const KEY_CONTEXT    = 'context';
 
-    /** @var Form */
-    private $form;
+    private Form $form;
 
-    /** @var Context */
-    private $context;
+    private Context $context;
 
-    /** @var Properties */
-    private $properties;
-
-    /** @var array */
-    private $composerState;
-
-    /** @var FormHandlerInterface */
-    private $formHandler;
-
-    /** @var SubmissionHandlerInterface */
-    private $submissionHandler;
-
-    /** @var MailHandlerInterface */
-    private $mailHandler;
-
-    /** @var FileUploadHandlerInterface */
-    private $fileUploadHandler;
-
-    /** @var MailingListHandlerInterface */
-    private $mailingListHandler;
-
-    /** @var CRMHandlerInterface */
-    private $crmHandler;
-
-    /** @var TranslatorInterface */
-    private $translator;
-
-    /** @var StatusHandlerInterface */
-    private $statusHandler;
-
-    /** @var FieldHandlerInterface */
-    private $fieldHandler;
-
-    /** @var ComposerState */
-    private $customComposerState;
+    private Properties $properties;
 
     /**
      * Composer constructor.
      *
      * @param array                       $composerState
-     * @param FormAttributes              $formAttributes
-     * @param FormHandlerInterface        $formHandler
-     * @param FieldHandlerInterface       $fieldHandler
-     * @param SubmissionHandlerInterface  $submissionHandler
-     * @param MailHandlerInterface        $mailHandler
-     * @param FileUploadHandlerInterface  $fileUploadHandler
-     * @param MailingListHandlerInterface $mailingListHandler
-     * @param CRMHandlerInterface         $crmHandler
-     * @param StatusHandlerInterface      $statusHandler
-     * @param TranslatorInterface         $translator
      * @param ComposerState|null          $customComposerState
      *
      * @throws ComposerException
      */
     public function __construct(
-        array $composerState = null,
-        FormAttributes $formAttributes = null,
-        FormHandlerInterface $formHandler,
-        FieldHandlerInterface $fieldHandler,
-        SubmissionHandlerInterface $submissionHandler,
-        MailHandlerInterface $mailHandler,
-        FileUploadHandlerInterface $fileUploadHandler,
-        MailingListHandlerInterface $mailingListHandler,
-        CRMHandlerInterface $crmHandler,
-        StatusHandlerInterface $statusHandler,
-        TranslatorInterface $translator,
-        ComposerState $customComposerState = null
+        private FormHandlerInterface $formHandler,
+        private FieldHandlerInterface $fieldHandler,
+        private SubmissionHandlerInterface $submissionHandler,
+        private MailHandlerInterface $mailHandler,
+        private FileUploadHandlerInterface $fileUploadHandler,
+        private MailingListHandlerInterface $mailingListHandler,
+        private CRMHandlerInterface $crmHandler,
+        private StatusHandlerInterface $statusHandler,
+        private TranslatorInterface $translator,
+        private ?array $composerState = null,
+        ?FormAttributes $formAttributes = null,
+        private ?ComposerState $customComposerState = null
     ) {
-        $this->formHandler        = $formHandler;
-        $this->fieldHandler       = $fieldHandler;
-        $this->submissionHandler  = $submissionHandler;
-        $this->mailHandler        = $mailHandler;
-        $this->fileUploadHandler  = $fileUploadHandler;
-        $this->mailingListHandler = $mailingListHandler;
-        $this->crmHandler         = $crmHandler;
-        $this->statusHandler      = $statusHandler;
-        $this->translator         = $translator;
-
-        $this->composerState       = $composerState;
-        $this->customComposerState = $customComposerState;
         $this->validateComposerData($formAttributes);
     }
 
     /**
      * @return Form
      */
-    public function getForm()
+    public function getForm(): Form
     {
         return $this->form;
     }
@@ -139,8 +82,8 @@ class Composer
      */
     public function getComposerStateJSON()
     {
-        $jsonObject                       = new \stdClass();
-        $jsonObject->composer             = new \stdClass();
+        $jsonObject                       = new stdClass();
+        $jsonObject->composer             = new stdClass();
         $jsonObject->composer->layout     = $this->form->getLayout();
         $jsonObject->composer->properties = $this->properties;
         $jsonObject->context              = $this->context;
@@ -153,7 +96,7 @@ class Composer
      *
      * @param int $id
      */
-    public function removeFieldById($id)
+    public function removeFieldById($id): void
     {
         $field = $this->form->getLayout()->getFieldById($id);
 
@@ -164,7 +107,6 @@ class Composer
     /**
      * Validates all components and hydrates respective objects
      *
-     * @param FormAttributes $formAttributes
      *
      * @throws ComposerException
      */
@@ -241,7 +183,7 @@ class Composer
      * This method sets defaults for all composer items
      * It happens if a new Form Model is created
      */
-    private function setDefaults()
+    private function setDefaults(): void
     {
         $this->properties = new Properties(
             [
@@ -263,9 +205,10 @@ class Composer
                 Properties::INTEGRATION_HASH         => [
                     'type'          => Properties::INTEGRATION_HASH,
                     'integrationId' => 0,
-                    'mapping'       => new \stdClass(),
+                    'mapping'       => new stdClass(),
                 ],
                 Properties::ADMIN_NOTIFICATIONS_HASH => [
+                    'format'         => 'html',
                     'type'           => Properties::ADMIN_NOTIFICATIONS_HASH,
                     'notificationId' => 0,
                     'recipients'     => '',
@@ -294,7 +237,7 @@ class Composer
         );
     }
 
-    private function attachCustomComposerState()
+    private function attachCustomComposerState(): void
     {
         $properties = [
             Properties::PAGE_PREFIX . '0'        => [
@@ -315,9 +258,10 @@ class Composer
             Properties::INTEGRATION_HASH         => [
                 'type'          => Properties::INTEGRATION_HASH,
                 'integrationId' => 0,
-                'mapping'       => new \stdClass(),
+                'mapping'       => new stdClass(),
             ],
             Properties::ADMIN_NOTIFICATIONS_HASH => [
+                'format'         => 'html',
                 'type'           => Properties::ADMIN_NOTIFICATIONS_HASH,
                 'notificationId' => $this->customComposerState->notificationId,
                 'recipients'     => $this->customComposerState->notificationEmails,

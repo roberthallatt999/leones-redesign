@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -15,15 +15,12 @@ use Solspace\Addons\FreeformNext\Library\Codepack\Exceptions\FileObject\FileNotF
 
 class TemplatesFileComponent extends AbstractFileComponent
 {
-    private $modifiableFileExtensions = array(
-        'html',
-        'twig',
-    );
+    private array $modifiableFileExtensions = ['html', 'twig'];
 
     /**
      * @return string
      */
-    protected function getInstallDirectory()
+    protected function getInstallDirectory(): string
     {
         return '';
     }
@@ -31,7 +28,7 @@ class TemplatesFileComponent extends AbstractFileComponent
     /**
      * @return string
      */
-    protected function getTargetFilesDirectory()
+    protected function getTargetFilesDirectory(): string
     {
         return 'templates';
     }
@@ -43,17 +40,15 @@ class TemplatesFileComponent extends AbstractFileComponent
      * @param string      $content
      * @param string|null $prefix
      *
-     * @return string
+     * @return ?string
      */
-    public function fileContentModification($content, $prefix = null)
+    public function fileContentModification($content, ?string $prefix = null): ?string
     {
         $content = $this->updateSrcAndHref($content, $prefix);
         $content = $this->updateLinks($content, $prefix);
         $content = $this->updateTemplateCalls($content, $prefix);
         $content = $this->replaceCustomPrefixCalls($content, $prefix);
-        $content = $this->offsetSegments($content, $prefix);
-
-        return $content;
+        return $this->offsetSegments($content, $prefix);
     }
 
     /**
@@ -62,11 +57,10 @@ class TemplatesFileComponent extends AbstractFileComponent
      * And replaces it with the prefixed asset path
      *
      * @param string $content
-     * @param string $prefix
      *
      * @return string
      */
-    private function updateSrcAndHref($content, $prefix)
+    private function updateSrcAndHref($content, string $prefix): string|array|null
     {
         $pattern = '/(src|href)=([\'"](?:\{{2}\s*siteUrl\s*}{2})?(?:\/?assets\/))demo\//';
         $replace = '$1=$2' . $prefix . '/';
@@ -79,11 +73,10 @@ class TemplatesFileComponent extends AbstractFileComponent
      * Replaces all links that starts with "{{ siteUrl }}demo/" with the new path
      *
      * @param string $content
-     * @param string $prefix
      *
      * @return string
      */
-    private function updateLinks($content, $prefix)
+    private function updateLinks(string|array|null $content, string $prefix): string|array|null
     {
         $pattern = '/([\'"](?:\{{2}\s*siteUrl\s*}{2})?\/?)demo\//';
         $replace = '$1' . $prefix . '/';
@@ -96,11 +89,10 @@ class TemplatesFileComponent extends AbstractFileComponent
      * Updates all includes and extends with the new location
      *
      * @param string $content
-     * @param string $prefix
      *
      * @return string
      */
-    private function updateTemplateCalls($content, $prefix)
+    private function updateTemplateCalls(string|array|null $content, string $prefix): string|array|null
     {
         $pattern = '/(\{\%\s*(?:extends|include)) ([\'"])(\/?)demo\//';
         $replace = '$1 $2$3' . $prefix . '/';
@@ -118,7 +110,7 @@ class TemplatesFileComponent extends AbstractFileComponent
      *
      * @return string
      */
-    private function offsetSegments($content, $prefix)
+    private function offsetSegments(string|array|null $content, $prefix): string|array
     {
         $segmentCount = count(explode("/", $prefix));
 
@@ -137,7 +129,7 @@ class TemplatesFileComponent extends AbstractFileComponent
      *
      * @return mixed
      */
-    private function replaceCustomPrefixCalls($content, $prefix)
+    private function replaceCustomPrefixCalls(string|array|null $content, $prefix): string|array|null
     {
         $pattern = '#(%prefix%)#';
         $content = preg_replace($pattern, $prefix, $content);

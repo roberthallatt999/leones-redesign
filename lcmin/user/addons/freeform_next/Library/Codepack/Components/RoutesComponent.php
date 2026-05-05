@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -20,7 +20,7 @@ class RoutesComponent extends AbstractJsonComponent
      *
      * @param string $prefix
      */
-    public function install($prefix = null)
+    public function install(?string $prefix = null): void
     {
         $data       = $this->getData();
         $demoFolder = $prefix . "/";
@@ -29,7 +29,7 @@ class RoutesComponent extends AbstractJsonComponent
             if (isset($route->urlParts) && is_array($route->urlParts) && isset($route->template)) {
                 $urlParts = $route->urlParts;
 
-                array_walk_recursive($urlParts, function(&$value) {
+                array_walk_recursive($urlParts, function(&$value): void {
                     $value = stripslashes($value);
                 });
 

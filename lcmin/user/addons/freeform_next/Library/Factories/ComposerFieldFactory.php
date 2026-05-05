@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -21,13 +21,10 @@ use Stringy\Stringy;
 
 class ComposerFieldFactory
 {
-    private static $defaultFieldNamespace = 'Solspace\Addons\FreeformNext\Library\Composer\Components\Fields';
-    private static $proFieldNamespace     = 'Solspace\Addons\FreeformNext\Library\Pro\Fields';
+    private static string $defaultFieldNamespace = 'Solspace\Addons\FreeformNext\Library\Composer\Components\Fields';
+    private static string $proFieldNamespace     = 'Solspace\Addons\FreeformNext\Library\Pro\Fields';
 
     /**
-     * @param Form             $form
-     * @param FieldProperties  $properties
-     * @param FormValueContext $formValueContext
      * @param int              $pageIndex
      *
      * @return AbstractField

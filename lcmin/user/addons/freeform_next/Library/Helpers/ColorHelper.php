@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -18,9 +18,9 @@ class ColorHelper
      *
      * @return string
      */
-    public static function randomColor()
+    public static function randomColor(): string
     {
-        return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
+        return sprintf('#%06X', random_int(0, 0xFFFFFF));
     }
 
     /**
@@ -30,7 +30,7 @@ class ColorHelper
      *
      * @return string
      */
-    public static function getContrastYIQ($hexColor)
+    public static function getContrastYIQ($hexColor): string
     {
         $hexColor = str_replace('#', '', $hexColor);
 

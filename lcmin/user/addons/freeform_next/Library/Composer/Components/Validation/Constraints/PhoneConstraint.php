@@ -6,9 +6,6 @@ use Solspace\Addons\FreeformNext\Library\Composer\Components\Validation\Errors\C
 
 class PhoneConstraint implements ConstraintInterface
 {
-    /** @var string */
-    private $message;
-
     /**
      * The pattern is going to look like this:
      * (xxx) xxxx xxx
@@ -25,9 +22,8 @@ class PhoneConstraint implements ConstraintInterface
      * @param string $message
      * @param string $pattern
      */
-    public function __construct($message = 'Invalid phone number', $pattern = null)
+    public function __construct(private $message = 'Invalid phone number', ?string $pattern = null)
     {
-        $this->message = $message;
         $this->pattern = !empty($pattern) ? $pattern : null;
     }
 

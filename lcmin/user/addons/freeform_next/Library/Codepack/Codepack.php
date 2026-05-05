@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -20,16 +20,14 @@ use Solspace\Addons\FreeformNext\Library\Codepack\Components\AssetsFileComponent
 
 class Codepack
 {
-    const MANIFEST_NAME = 'manifest.json';
+    public const MANIFEST_NAME = 'manifest.json';
 
     /** @var string */
     private $location;
 
-    /** @var Manifest */
-    private $manifest;
+    private Manifest $manifest;
 
-    /** @var TemplatesFileComponent */
-    private $templates;
+    private TemplatesFileComponent $templates;
 
     /** @var AssetsFileComponent */
     private $assets;
@@ -39,7 +37,7 @@ class Codepack
      *
      * @return string
      */
-    public static function getCleanPrefix($prefix)
+    public static function getCleanPrefix($prefix): string
     {
         $prefix = preg_replace('/\/+/', '/', $prefix);
         $prefix = trim($prefix, '/');
@@ -79,7 +77,7 @@ class Codepack
      *
      * @throws FileObjectException
      */
-    public function install($prefix)
+    public function install($prefix): void
     {
         $prefix = self::getCleanPrefix($prefix);
 
@@ -91,7 +89,7 @@ class Codepack
     /**
      * @return Manifest
      */
-    public function getManifest()
+    public function getManifest(): Manifest
     {
         return $this->manifest;
     }
@@ -99,7 +97,7 @@ class Codepack
     /**
      * @return TemplatesFileComponent
      */
-    public function getTemplates()
+    public function getTemplates(): TemplatesFileComponent
     {
         return $this->templates;
     }
@@ -125,7 +123,7 @@ class Codepack
      *
      * @return Manifest
      */
-    private function assembleManifest()
+    private function assembleManifest(): Manifest
     {
         return new Manifest($this->location . '/' . self::MANIFEST_NAME);
     }
@@ -135,7 +133,7 @@ class Codepack
      *
      * @return TemplatesFileComponent
      */
-    private function assembleTemplates()
+    private function assembleTemplates(): TemplatesFileComponent
     {
         return new TemplatesFileComponent($this->location);
     }
@@ -145,7 +143,7 @@ class Codepack
      *
      * @return AssetsFileComponent
      */
-    private function assembleAssets()
+    private function assembleAssets(): AssetsFileComponent
     {
         return new AssetsFileComponent($this->location);
     }
@@ -155,7 +153,7 @@ class Codepack
      *
      * @return RoutesComponent
      */
-    private function assembleRoutes()
+    private function assembleRoutes(): RoutesComponent
     {
         return new RoutesComponent($this->location);
     }

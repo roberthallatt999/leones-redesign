@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -54,7 +54,7 @@ abstract class AbstractJsonComponent implements ComponentInterface
      *
      * @param string $prefix
      */
-    abstract public function install($prefix = null);
+    abstract public function install(?string $prefix = null);
 
     /**
      * This is the method that sets all vital properties
@@ -63,12 +63,11 @@ abstract class AbstractJsonComponent implements ComponentInterface
     abstract protected function setProperties();
 
     /**
-     * @param string $location
      *
      * @return bool
      * @throws CodepackException
      */
-    private final function parseJson($location)
+    private function parseJson(string $location): bool
     {
         $jsonFile = $location . '/' . $this->fileName;
         if (!file_exists($jsonFile)) {

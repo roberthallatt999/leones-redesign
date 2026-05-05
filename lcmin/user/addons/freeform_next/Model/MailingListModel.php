@@ -2,6 +2,7 @@
 
 namespace Solspace\Addons\FreeformNext\Model;
 
+use DateTime;
 use EllisLab\ExpressionEngine\Service\Model\Model;
 use Solspace\Addons\FreeformNext\Library\Integrations\DataObjects\FieldObject;
 
@@ -12,15 +13,15 @@ use Solspace\Addons\FreeformNext\Library\Integrations\DataObjects\FieldObject;
  * @property int       $resourceId
  * @property string    $name
  * @property int       $memberCount
- * @property \DateTime $dateCreated
- * @property \DateTime $dateUpdated
+ * @property DateTime $dateCreated
+ * @property DateTime $dateUpdated
  */
 class MailingListModel extends Model
 {
     use TimestampableTrait;
 
-    const MODEL = 'freeform_next:MailingListModel';
-    const TABLE = 'freeform_next_mailing_lists';
+    public const MODEL = 'freeform_next:MailingListModel';
+    public const TABLE = 'freeform_next_mailing_lists';
 
     protected static $_primary_key = 'id';
     protected static $_table_name  = self::TABLE;
@@ -49,7 +50,7 @@ class MailingListModel extends Model
     /**
      * @return FieldObject[]
      */
-    public function getFieldObjects()
+    public function getFieldObjects(): array
     {
         /** @var MailingListFieldModel[] $fields */
         $fields = ee('Model')

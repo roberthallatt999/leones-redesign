@@ -4,32 +4,29 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Session;
 
-class Honeypot implements \JsonSerializable
+use JsonSerializable;
+class Honeypot implements JsonSerializable
 {
-    const NAME_PREFIX = "freeform_form_handle";
+    public const NAME_PREFIX = "freeform_form_handle";
 
-    /** @var string */
-    private $name;
+    private string $name;
 
-    /** @var string */
-    private $hash;
+    private string $hash;
 
     /** @var int */
     private $timestamp;
 
     /**
-     * @param array $data
-     *
      * @return Honeypot
      */
-    public static function createFromUnserializedData(array $data)
+    public static function createFromUnserializedData(array $data): \Solspace\Addons\FreeformNext\Library\Session\Honeypot
     {
         $honeypot            = new Honeypot();
         $honeypot->name      = $data["name"];
@@ -52,7 +49,7 @@ class Honeypot implements \JsonSerializable
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -60,7 +57,7 @@ class Honeypot implements \JsonSerializable
     /**
      * @return string
      */
-    public function getHash()
+    public function getHash(): string
     {
         return $this->hash;
     }
@@ -90,7 +87,7 @@ class Honeypot implements \JsonSerializable
     /**
      * @return string
      */
-    private function generateUniqueName()
+    private function generateUniqueName(): string
     {
         $hash = $this->generateHash(6);
 
@@ -98,13 +95,11 @@ class Honeypot implements \JsonSerializable
     }
 
     /**
-     * @param int $length
-     *
      * @return string
      */
-    private function generateHash($length = 9)
+    private function generateHash(int $length = 9): string
     {
-        $random = time() . rand(111, 999) . (time() + 999);
+        $random = time() . random_int(111, 999) . (time() + 999);
         $hash   = sha1($random);
 
         return substr($hash, 0, $length);

@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -27,15 +27,14 @@ class FieldRepository extends Repository
     /** @var FieldModel[] */
     private static $fieldCache;
 
-    /** @var bool */
-    private static $allFieldsLoaded;
+    private static ?bool $allFieldsLoaded = null;
 
     /**
      * @param int|null $fieldId
      *
      * @return FieldModel
      */
-    public function getOrCreateField($fieldId = null)
+    public function getOrCreateField(null|string|int $fieldId = null)
     {
         $field = null;
         if ($fieldId) {
@@ -63,8 +62,6 @@ class FieldRepository extends Repository
     }
 
     /**
-     * @param array $ids
-     *
      * @return FieldModel[]
      */
     public function getFieldsByIdList(array $ids)

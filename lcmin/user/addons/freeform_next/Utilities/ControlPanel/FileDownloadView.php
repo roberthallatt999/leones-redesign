@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -13,28 +13,20 @@ namespace Solspace\Addons\FreeformNext\Utilities\ControlPanel;
 
 class FileDownloadView extends View implements RenderlessViewInterface
 {
-    /** @var string */
-    private $fileName;
-
-    /** @var string */
-    private $content;
-
     /**
      * AjaxView constructor.
      *
      * @param string $fileName
      * @param string $content
      */
-    public function __construct($fileName, $content)
+    public function __construct(private $fileName, private $content)
     {
-        $this->fileName = $fileName;
-        $this->content  = $content;
     }
 
     /**
      * @return array
      */
-    public function compile()
+    public function compile(): void
     {
         $fileName = sprintf('"%s"', addcslashes(($this->fileName), '"\\'));
         $size     = strlen($this->content);

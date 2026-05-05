@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -36,7 +36,7 @@ class MailingListField extends AbstractField implements NoStorageInterface, Sing
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return FieldInterface::TYPE_MAILING_LIST;
     }
@@ -62,7 +62,7 @@ class MailingListField extends AbstractField implements NoStorageInterface, Sing
     /**
      * @return bool
      */
-    public function isHidden()
+    public function isHidden(): bool
     {
         return (bool) $this->hidden;
     }
@@ -72,7 +72,7 @@ class MailingListField extends AbstractField implements NoStorageInterface, Sing
      *
      * @return string
      */
-    public function getInputHtml()
+    public function getInputHtml(): string
     {
         $attributes = $this->getCustomAttributes();
         $output     = '';

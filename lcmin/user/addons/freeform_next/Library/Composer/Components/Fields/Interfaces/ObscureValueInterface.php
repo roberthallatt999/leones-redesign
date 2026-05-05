@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -17,9 +17,8 @@ interface ObscureValueInterface
      * Return the real value of this field
      * Instead of the obscured one
      *
-     * @param mixed $obscuredValue
      *
      * @return mixed
      */
-    public function getActualValue($obscuredValue);
+    public function getActualValue(mixed $obscuredValue);
 }

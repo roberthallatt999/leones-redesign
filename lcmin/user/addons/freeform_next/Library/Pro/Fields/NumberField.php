@@ -33,6 +33,16 @@ class NumberField extends TextField
     protected $allowNegative;
 
     /**
+     * Return the field TYPE
+     *
+     * @return string
+     */
+    public function getType(): string
+    {
+        return self::TYPE_NUMBER;
+    }
+
+    /**
      * @return int
      */
     public function getMinLength()
@@ -99,7 +109,7 @@ class NumberField extends TextField
     /**
      * @inheritDoc
      */
-    public function getConstraints()
+    public function getConstraints(): array
     {
         return [
             new NumericConstraint(

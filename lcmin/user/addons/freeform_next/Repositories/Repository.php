@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -35,7 +35,7 @@ abstract class Repository
      */
     public static function getInstance()
     {
-        $class = get_called_class();
+        $class = static::class;
 
         if (!isset(self::$instances[$class])) {
             self::$instances[$class] = new $class;

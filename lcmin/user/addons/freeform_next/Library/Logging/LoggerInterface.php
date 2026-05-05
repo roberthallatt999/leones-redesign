@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -13,13 +13,13 @@ namespace Solspace\Addons\FreeformNext\Library\Logging;
 
 interface LoggerInterface
 {
-    const DEFAULT_LOGGER_CATEGORY = 'freeform_next';
+    public const DEFAULT_LOGGER_CATEGORY = 'freeform_next';
 
-    const LEVEL_DEBUG   = 'debug';
-    const LEVEL_INFO    = 'info';
-    const LEVEL_WARNING = 'warning';
-    const LEVEL_ERROR   = 'error';
-    const LEVEL_FATAL   = 'fatal';
+    public const LEVEL_DEBUG   = 'debug';
+    public const LEVEL_INFO    = 'info';
+    public const LEVEL_WARNING = 'warning';
+    public const LEVEL_ERROR   = 'error';
+    public const LEVEL_FATAL   = 'fatal';
 
     /**
      * @param string $level

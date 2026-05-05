@@ -38,6 +38,12 @@
     {if:else}
         {embed="demo/bootstrap_submission" submission_id="{segment_5}" form="{segment_3}"}
     {/if}
+{if:elseif segment_4 == "spam"}
+    {if segment_5 ^= "P" OR segment_5 == ""}
+        {embed="demo/bootstrap_spam_list" form="{segment_3}"}
+    {if:else}
+        {embed="demo/bootstrap_spam" submission_id="{segment_5}" form="{segment_3}"}
+    {/if}
 {if:else}
     {if segment_3}
         {embed="demo/bootstrap_form" form="{segment_3}"}

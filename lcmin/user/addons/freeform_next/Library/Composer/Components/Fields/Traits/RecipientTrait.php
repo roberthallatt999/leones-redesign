@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -16,12 +16,19 @@ trait RecipientTrait
     /** @var int */
     protected $notificationId;
 
+    protected string $format = 'html';
+
     /**
      * @return int|null
      */
     public function getNotificationId()
     {
         return $this->notificationId;
+    }
+
+    public function getFormat(): string
+    {
+        return $this->format;
     }
 
     /**

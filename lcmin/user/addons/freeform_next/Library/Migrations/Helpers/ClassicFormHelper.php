@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -27,9 +27,9 @@ class ClassicFormHelper extends AddonBuilder
             //	check for composer for each form
             // -------------------------------------
 
-            $form_ids = array();
+            $form_ids = [];
 
-            $potential_composer_ids = array();
+            $potential_composer_ids = [];
 
             foreach ($rows as $row)
             {
@@ -41,7 +41,7 @@ class ClassicFormHelper extends AddonBuilder
                 }
             }
 
-            $has_composer = array();
+            $has_composer = [];
 
             if (!empty($potential_composer_ids))
             {

@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -22,7 +22,7 @@ abstract class AbstractAttributes
      *
      * @throws FreeformException
      */
-    public function __construct(array $attributes = null)
+    public function __construct(?array $attributes = null)
     {
         if ($attributes) {
             foreach ($attributes as $key => $value) {
@@ -42,7 +42,7 @@ abstract class AbstractAttributes
      *
      * @throws FreeformException
      */
-    public function mergeAttributes(array $attributes = null)
+    public function mergeAttributes(?array $attributes = null)
     {
         if ($attributes) {
             foreach ($attributes as $key => $value) {
@@ -58,7 +58,6 @@ abstract class AbstractAttributes
     /**
      * Walk through the array and create an attribute string
      *
-     * @param array $array
      *
      * @return string
      */
@@ -96,22 +95,15 @@ abstract class AbstractAttributes
     }
 
     /**
-     * @param mixed $value
-     *
      * @return bool|null
      */
-    final protected function getBooleanValue($value = null)
+    final protected function getBooleanValue(?bool $value = null)
     {
         if ($value !== null) {
-            switch (strtolower($value)) {
-                case 'yes':
-                case '1':
-                case 'y':
-                    return true;
-
-                default:
-                    return false;
-            }
+            return match (strtolower($value)) {
+                'yes', '1', 'y' => true,
+                default => false,
+            };
         }
 
         return null;

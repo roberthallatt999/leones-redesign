@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -22,7 +22,7 @@ class IntegrationProperties extends AbstractProperties
     /**
      * @return int
      */
-    public function getIntegrationId()
+    public function getIntegrationId(): ?int
     {
         return (int)$this->integrationId ?: null;
     }
@@ -43,7 +43,7 @@ class IntegrationProperties extends AbstractProperties
      *
      * @return array
      */
-    protected function getPropertyManifest()
+    protected function getPropertyManifest(): array
     {
         return [
             'integrationId' => self::TYPE_INTEGER,
