@@ -48,33 +48,20 @@ echo "All symlinks created successfully ✅"
 # ---------------------------------------------------------------
 echo "Setting file permissions..."
 
-# EE core directories (lcmin/ee/)
-chmod 775 "${RELEASE_DIR}/lcmin/ee"
-chmod 775 "${RELEASE_DIR}/lcmin/ee/ExpressionEngine"
-chmod 775 "${RELEASE_DIR}/lcmin/ee/Mexitek"
-chmod 775 "${RELEASE_DIR}/lcmin/ee/language"
-chmod 775 "${RELEASE_DIR}/lcmin/ee/legacy"
-chmod 775 "${RELEASE_DIR}/lcmin/ee/templates"
-chmod 644 "${RELEASE_DIR}/lcmin/ee/index.html"
-chmod 644 "${RELEASE_DIR}/lcmin/ee/eecli.php"
-chmod 644 "${RELEASE_DIR}/lcmin/ee/eecms"
+# EE core directories (lcmin/ee/) — chmod the dir and its immediate
+# subdirs to 775; chmod top-level files to 644. Resilient to EE upgrades
+# adding/removing vendored dirs (e.g. vendor-build in EE 7).
+find "${RELEASE_DIR}/lcmin/ee" -maxdepth 1 -type d -exec chmod 775 {} \;
+find "${RELEASE_DIR}/lcmin/ee" -maxdepth 1 -type f -exec chmod 644 {} \;
 
 # User folder (cache is a symlink to shared; set writable)
 chmod 644 "${RELEASE_DIR}/lcmin/user/config/config.php"
 chmod -R 775 "${RELEASE_DIR}/lcmin/user/templates"
 
-# Themes (themes/ee/)
-chmod 775 "${RELEASE_DIR}/themes/ee"
-chmod 775 "${RELEASE_DIR}/themes/ee/asset"
-chmod 775 "${RELEASE_DIR}/themes/ee/cform"
-chmod 775 "${RELEASE_DIR}/themes/ee/cp"
-chmod 775 "${RELEASE_DIR}/themes/ee/debug"
-chmod 775 "${RELEASE_DIR}/themes/ee/forum"
-chmod 775 "${RELEASE_DIR}/themes/ee/member"
-chmod 775 "${RELEASE_DIR}/themes/ee/pro"
-chmod 775 "${RELEASE_DIR}/themes/ee/site"
-chmod 775 "${RELEASE_DIR}/themes/ee/webfonts"
-chmod 644 "${RELEASE_DIR}/themes/ee/index.html"
+# Themes (themes/ee/) — chmod the dir and its immediate subdirs to 775,
+# regardless of which theme modules ship in the current EE version.
+find "${RELEASE_DIR}/themes/ee" -maxdepth 1 -type d -exec chmod 775 {} \;
+[ -f "${RELEASE_DIR}/themes/ee/index.html" ] && chmod 644 "${RELEASE_DIR}/themes/ee/index.html"
 chmod -R 775 "${RELEASE_DIR}/themes/user"
 
 # ---------------------------------------------------------------
