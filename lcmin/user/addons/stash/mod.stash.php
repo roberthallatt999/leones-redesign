@@ -19,10 +19,18 @@ class Stash {
     public $file_sync;
     public $stash_cookie;
     public $stash_cookie_expire;
+    public $stash_cookie_enabled;
     public $default_scope;
+    public $default_refresh;
     public $limit_bots;
+    public $prune;
+    public $prune_probability;
+    public $invalidation_period;
+    public $file_extensions;
+    public $parse_if_in;
+    public $include_query_str;
     public static $context = NULL;
-    
+
     protected $xss_clean;
     protected $replace;
     protected $type;
@@ -34,6 +42,7 @@ class Stash {
     protected $bundle_id = 1;
     protected $process = 'inline';
     protected $priority = 1;
+    protected $nocache_id;
     protected static $bundles = array();
     
     private $_update = FALSE;
@@ -233,7 +242,7 @@ class Stash {
         }
         else
         {
-            $this->parse_vars = (bool) preg_match('/1|on|yes|y/i', $this->parse_vars);
+            $this->parse_vars = (bool) preg_match('/1|on|yes|y/i', (string) $this->parse_vars);
         }
         
         // parsing: how many passes of the template should we make? (more passes = more overhead). Default = 1
@@ -4409,8 +4418,8 @@ class Stash {
         {
             foreach (ee()->config->_global_vars as $key => $val)
             {
-                $template = str_replace(LD.$key.RD, $val, $template);
-            }   
+                $template = str_replace(LD.$key.RD, $val ?? '', $template);
+            }
         }
         
         // stash vars {stash:var} 
@@ -4431,7 +4440,7 @@ class Stash {
             {
                 if (isset($tag_vars['stash:'.$key]))
                 {
-                    $template = str_replace(LD.'stash:'.$key.RD, $val, $template);
+                    $template = str_replace(LD.'stash:'.$key.RD, $val ?? '', $template);
                 }
             }
         }
