@@ -193,6 +193,23 @@ yarn-debug.log*
 # =============================================================================
 vendor/
 
+# =============================================================================
+# Addon-bundled vendor libraries — DO commit (deploys rsync git-tracked files
+# only, so any addon-bundled dependency MUST be in git). Re-include the trees
+# that the broad rules above (vendor/, log/, logs/) would otherwise hide.
+# =============================================================================
+!lcmin/user/addons/*/vendor/
+!lcmin/user/addons/*/vendor/**
+!lcmin/user/addons/*/vendor-build/
+!lcmin/user/addons/*/vendor-build/**
+
+# ...except dev-only tools that should not ship to production servers
+lcmin/user/addons/*/vendor/bin/
+lcmin/user/addons/*/vendor/phpstan/
+lcmin/user/addons/*/vendor/phpunit/
+lcmin/user/addons/*/vendor/rector/
+lcmin/user/addons/**/*.phar
+
 # Server migration playbook (per-operator local config + caches)
 scripts/migrate-server.yaml
 scripts/.migrate-logs/
