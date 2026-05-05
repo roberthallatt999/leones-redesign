@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -324,7 +324,7 @@ class ThemeInstaller
         $img_url = "{base_url}themes/user/site/{$theme_name}/";
         $img_path = $this->theme_path . "user/site/{$theme_name}/";
 
-        ee('Filesystem')->copy($this->installer_path . 'site_themes/default/asset/', $this->theme_path . 'user/site/default/asset/');
+        ee('Filesystem')->forceCopy($this->installer_path . 'site_themes/default/asset/', $this->theme_path . 'user/site/default/asset/');
 
         foreach ($upload_locations as $upload_location_data) {
             $path = $img_path . $upload_location_data->path;

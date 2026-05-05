@@ -44,7 +44,7 @@
             ?>
             <button type="button" class="tab-bar__tab js-tab-button <?=$class?>" rel="t-<?=$index?>"><?=lang($tab->title)?></button>
             <?php endforeach; ?>
-            <?php if ($entry->getAutosaves()->count()): ?>
+            <?php if ($entry->getAutosaves()->filter('channel_id', $entry->channel_id)->count()): ?>
                 <button type="button" class="tab-bar__tab js-tab-button" rel="t-autosaves"><?=lang('autosaves')?></button>
             <?php endif; ?>
             </div>
@@ -87,6 +87,7 @@
             <?php if (! $field->isRequired() && ! $field->isVisible()) {
                 continue;
             } ?>
+            <?=$field->renderAlert()?>
             <?php
                 $field_class = '';
                 if ($field->getStatus() == 'warning') {
@@ -108,13 +109,14 @@
                 }
             ?>
             <?php if ($field->getType() == 'grid' || $field->getType() == 'file_grid'): ?>
-            <div class="fieldset-faux <?=$field_class?>"  data-field_id="<?=$field->getId()?>">
+            <div class="fieldset-faux <?=$field_class?>"  data-field_id="<?=$field->getId()?>" <?php if (!isset($pro_class)) : ?> style="width:<?php echo $field->getWidth()?>%" <?php endif; ?>>
             <?php else: ?>
-            <fieldset class="<?=$field_class?>" data-field_id="<?=$field->getId()?>">
+            <fieldset class="<?=$field_class?>" data-field_id="<?=$field->getId()?>" <?php if (!isset($pro_class)) : ?> style="width:<?php echo $field->getWidth()?>%" <?php endif; ?>>
             <?php endif; ?>
                 <div class="field-instruct">
                     <?php if (! $field->titleIsHidden()):?>
                         <label><?php if (!isset($pro_class)) : ?><span class="ico sub-arrow js-toggle-field"></span><?php endif; ?><?=$field->getLabel()?></label>
+                        <?=$field->getNameBadge()?>
                         <?php
                         $fieldInstructions = $field->getInstructions();
                         if (!empty($fieldInstructions)) :?>
@@ -124,7 +126,7 @@
                 </div>
                 <div class="field-control">
                     <?php if ($field->get('field_id') == 'revisions'): ?>
-                        <div class="panel">
+                        <div class="panel panel__with-border">
                             <?=$revisions?>
                         </div>
                     <?php elseif ($field->getSetting('string_override') !== null): ?>

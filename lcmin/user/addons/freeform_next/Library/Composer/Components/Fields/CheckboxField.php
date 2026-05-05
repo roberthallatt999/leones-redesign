@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -35,7 +35,7 @@ class CheckboxField extends AbstractField implements SingleValueInterface, Input
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_CHECKBOX;
     }
@@ -81,7 +81,7 @@ class CheckboxField extends AbstractField implements SingleValueInterface, Input
      *
      * @return string
      */
-    public function getInputHtml()
+    public function getInputHtml(): string
     {
         $attributes = $this->getCustomAttributes();
         $output     = '';
@@ -112,7 +112,7 @@ class CheckboxField extends AbstractField implements SingleValueInterface, Input
      *
      * @return string
      */
-    public function getValueAsString($optionsAsValues = true)
+    public function getValueAsString($optionsAsValues = true): string
     {
         if ($optionsAsValues) {
             $value = (int) $this->getValue() === 1 ? $this->getStaticValue() : $this->getValue();
@@ -128,7 +128,7 @@ class CheckboxField extends AbstractField implements SingleValueInterface, Input
      *
      * @return string
      */
-    protected function onBeforeInputHtml()
+    protected function onBeforeInputHtml(): string
     {
         $attributes = $this->getCustomAttributes();
 
@@ -142,7 +142,7 @@ class CheckboxField extends AbstractField implements SingleValueInterface, Input
      *
      * @return string
      */
-    protected function onAfterInputHtml()
+    protected function onAfterInputHtml(): string
     {
         $output = $this->getLabel();
         $output .= '</label>';

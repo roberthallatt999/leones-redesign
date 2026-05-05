@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -24,7 +24,7 @@ class Native extends SerializedType
      */
     public static function unserialize($db_data)
     {
-        return strlen($db_data) ? unserialize($db_data) : array();
+        return !is_null($db_data) && strlen($db_data) ? unserialize($db_data) : array();
     }
 
     /**

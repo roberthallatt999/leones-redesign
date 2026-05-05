@@ -16,7 +16,7 @@ class RecaptchaField extends AbstractField implements NoStorageInterface, Single
     /**
      * @inheritDoc
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_RECAPTCHA;
     }
@@ -24,7 +24,7 @@ class RecaptchaField extends AbstractField implements NoStorageInterface, Single
     /**
      * @inheritDoc
      */
-    public function getHandle()
+    public function getHandle(): string
     {
         return 'grecaptcha_' . $this->getHash();
     }
@@ -32,7 +32,7 @@ class RecaptchaField extends AbstractField implements NoStorageInterface, Single
     /**
      * @inheritDoc
      */
-    protected function getInputHtml()
+    protected function getInputHtml(): bool|string
     {
         static $key;
 

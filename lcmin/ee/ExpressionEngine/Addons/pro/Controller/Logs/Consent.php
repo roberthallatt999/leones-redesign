@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -19,10 +19,10 @@ class Consent extends Logs\Consent
 {
     public function __construct()
     {
-        if (!IS_PRO || !ee('pro:Access')->hasValidLicense()) {
+        if (!ee('pro:Access')->hasRequiredLicense()) {
             show_error(lang('unauthorized_access'), 403);
         }
-        ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
+        ee()->lang->load('pro');
     }
 
     /**

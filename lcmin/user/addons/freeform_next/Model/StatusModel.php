@@ -4,13 +4,15 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Model;
 
+use JsonSerializable;
+use DateTime;
 use EllisLab\ExpressionEngine\Service\Model\Model;
 use Solspace\Addons\FreeformNext\Library\Helpers\FreeformHelper;
 
@@ -23,10 +25,10 @@ use Solspace\Addons\FreeformNext\Library\Helpers\FreeformHelper;
  * @property string $color
  * @property int    $sortOrder
  */
-class StatusModel extends Model implements \JsonSerializable
+class StatusModel extends Model implements JsonSerializable
 {
-    const MODEL = 'freeform_next:StatusModel';
-    const TABLE = 'freeform_next_statuses';
+    public const MODEL = 'freeform_next:StatusModel';
+    public const TABLE = 'freeform_next_statuses';
 
     protected static $_primary_key = 'id';
     protected static $_table_name  = self::TABLE;
@@ -44,7 +46,7 @@ class StatusModel extends Model implements \JsonSerializable
     /**
      * @return array
      */
-    public static function createValidationRules()
+    public static function createValidationRules(): array
     {
         return [
             'name'      => 'required',
@@ -87,7 +89,7 @@ class StatusModel extends Model implements \JsonSerializable
     /**
      * Event beforeInsert sets the $dateCreated and $dateUpdated properties
      */
-    public function onBeforeInsert()
+    public function onBeforeInsert(): void
     {
         $this->set(
             [
@@ -100,15 +102,15 @@ class StatusModel extends Model implements \JsonSerializable
     /**
      * Event beforeUpdate sets the $dateUpdated property
      */
-    public function onBeforeUpdate()
+    public function onBeforeUpdate(): void
     {
         $this->set(['dateUpdated' => $this->getTimestampableDate()]);
     }
 
     /**
-     * @return \DateTime
+     * @return DateTime
      */
-    private function getTimestampableDate()
+    private function getTimestampableDate(): string
     {
         return date('Y-m-d H:i:s');
     }

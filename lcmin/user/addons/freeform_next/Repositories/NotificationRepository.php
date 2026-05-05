@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -18,8 +18,8 @@ use Solspace\Addons\FreeformNext\Model\NotificationModel;
 class NotificationRepository extends Repository
 {
     /** @var NotificationModel[] */
-    private static $notificationCache;
-    private static $allNotificationsLoaded;
+    private static ?array $notificationCache = null;
+    private static ?bool $allNotificationsLoaded = null;
 
     /**
      * @return NotificationRepository
@@ -163,8 +163,6 @@ class NotificationRepository extends Repository
     }
 
     /**
-     * @param array $ids
-     *
      * @return NotificationModel[]
      */
     public function getNotificationsByIdList(array $ids)

@@ -3,7 +3,7 @@
 /**
  * ExpressionEngine Pro
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
 */
 
 namespace ExpressionEngine\Addons\Pro\Model\Dashboard;
@@ -172,8 +172,7 @@ class DashboardWidget extends Model
                 }
                 include_once($file_path);
                 $widgetClass = trim($this->_addon->getProvider()->getNamespace(), '\\') . '\\Widgets\\' . ucfirst($this->widget_file);
-                $addon = $this->_addon;
-                if (!$addon::implementsDashboardWidgetInterface($widgetClass)) {
+                if (!$this->_addon::implementsDashboardWidgetInterface($widgetClass)) {
                     return $html;
                 }
                 try {

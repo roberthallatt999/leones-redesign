@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -91,6 +91,7 @@ abstract class AbstractPublish extends CP_Controller
         foreach ($entry->getCustomFields() as $field) {
             if ($field->getItem('field_is_conditional') === true) {
                 $usesConditionalFields = true;
+
                 break;
             }
         }
@@ -100,6 +101,7 @@ abstract class AbstractPublish extends CP_Controller
             'lang.close' => lang('close'),
             'lang.confirm_exit' => lang('confirm_exit'),
             'lang.loading' => lang('loading'),
+            'lang.extra_title' => lang('extra_title'),
             'lang.edit_element' => lang('edit_element'),
             'lang.remove_btn' => lang('remove_btn'),
             'publish.autosave.interval' => (int) $autosave_interval_seconds,
@@ -122,11 +124,11 @@ abstract class AbstractPublish extends CP_Controller
             'publish.word_separator' => ee()->config->item('word_separator') != "dash" ? '_' : '-',
             'publish.has_conditional_fields' => $usesConditionalFields,
             'user.can_edit_html_buttons' => ee('Permission')->can('edit_html_buttons'),
-            'user.foo' => false,
             'user_id' => ee()->session->userdata('member_id'),
+            'fileManager.fileDirectory.createUrl' => ee('CP/URL')->make('files/uploads/create')->compile(),
         ));
 
-        ee('Category')->addCategoryJS();
+        ee('Category')->addCategoryJS($channel_id);
 
         // -------------------------------------------
         //  Publish Page Title Focus - makes the title field gain focus when the page is loaded
@@ -241,7 +243,7 @@ abstract class AbstractPublish extends CP_Controller
         );
 
         $urlParams = [];
-        if (IS_PRO && ee('Request')->get('hide_closer') == 'y') {
+        if (ee('Request')->get('hide_closer') == 'y') {
             $urlParams = [
                 'entry_ids' => ee('Request')->get('entry_ids'),
                 'field_id' => ee('Request')->get('field_id'),
@@ -255,7 +257,7 @@ abstract class AbstractPublish extends CP_Controller
 
         $data = array();
         $authors = array();
-        $i = $entry->getAutosaves()->count();
+        $i = $entry->getAutosaves()->filter('channel_id', $entry->channel_id)->count();
 
         if (! $entry->isNew()) {
             $i++;
@@ -283,7 +285,7 @@ abstract class AbstractPublish extends CP_Controller
         }
 
         $currentAutosaveId = null;
-        foreach ($entry->getAutosaves()->sortBy('edit_date')->reverse() as $autosave) {
+        foreach ($entry->getAutosaves()->filter('channel_id', $entry->channel_id)->sortBy('edit_date')->reverse() as $autosave) {
             if (! isset($authors[$autosave->author_id]) && $autosave->Author) {
                 $authors[$autosave->author_id] = $autosave->Author->getMemberName();
             }
@@ -319,7 +321,7 @@ abstract class AbstractPublish extends CP_Controller
             $i--;
         }
 
-        if ($autosave_id && empty($currentAutosaveId)) {
+        if ($autosave_id && ! empty($data) && empty($currentAutosaveId)) {
             $data[0]['attrs'] = ['class' => 'selected'];
         }
 
@@ -383,8 +385,9 @@ abstract class AbstractPublish extends CP_Controller
 
         if (defined('CLONING_MODE') && CLONING_MODE === true && $this->entryCloningEnabled($entry)) {
             $entry->setId(null);
+            $word_separator = ee()->config->item('word_separator') != "dash" ? '_' : '-';
             while (true !== $entry->validateUniqueUrlTitle('url_title', $_POST['url_title'], ['channel_id'], null)) {
-                $_POST['url_title'] = 'copy_' . $_POST['url_title'];
+                $_POST['url_title'] = 'copy' . $word_separator . $_POST['url_title'];
             }
             if ($_POST['title'] == $entry->title) {
                 $_POST['title'] = lang('copy_of') . ' ' . $_POST['title'];
@@ -393,6 +396,17 @@ abstract class AbstractPublish extends CP_Controller
             $entry->set($_POST);
             $entry->markAsDirty();
         } else {
+            if ($entry->isNew() && $entry->Channel->enforce_auto_url_title) {
+                $_POST['url_title'] = ee('Format')->make('Text', $entry->Channel->url_title_prefix . ee()->input->post('title', true))->urlSlug()->compile();
+                $word_separator = ee()->config->item('word_separator') != "dash" ? '_' : '-';
+                // when title contains no ascii characters, url_title might get empty, so we'll need a workaround
+                if (empty($_POST['url_title'])) {
+                    $_POST['url_title'] = $entry->Channel->url_title_prefix . $entry->Channel->channel_name . $word_separator . uniqid();
+                }
+                while (true !== $entry->validateUniqueUrlTitle('url_title', $_POST['url_title'], ['channel_id'], null)) {
+                    $_POST['url_title'] = $_POST['url_title'] . $word_separator . uniqid();
+                }
+            }
             $entry->set($_POST);
         }
 
@@ -417,6 +431,13 @@ abstract class AbstractPublish extends CP_Controller
                 ->withTitle(lang($action . '_entry_error'))
                 ->addToBody(lang($action . '_entry_error_desc'))
                 ->now();
+            // IP Address is not a field, but we need to display the error if it fails
+            if ($result->hasErrors('ip_address')) {
+                ee('CP/Alert')->makeInline('ip_address-error')
+                    ->asIssue()
+                    ->addToBody('ip_address: ' . implode(BR, $result->getErrors('ip_address')))
+                    ->now();
+            }
         }
 
         return $result;
@@ -440,6 +461,8 @@ abstract class AbstractPublish extends CP_Controller
                 'view_count_four' => 0,
                 'entry_date' => ee()->localize->now,
             ]);
+            // Unset versions relationship so that entry revisions are not moved to the cloned entry
+            $entry->Versions = null;
         }
         $entry->save();
 
@@ -451,12 +474,20 @@ abstract class AbstractPublish extends CP_Controller
             ? ee('CP/Alert')->makeStandard()
             : ee('CP/Alert')->makeInline('entry-form');
 
-        $lang_string = sprintf(lang($action . '_entry_success_desc'), htmlentities($edit_entry_url, ENT_QUOTES, 'UTF-8'), htmlentities($entry->title, ENT_QUOTES, 'UTF-8'));
+        $lang_string = sprintf(lang($action . '_entry_success_desc'), htmlentities($edit_entry_url, ENT_QUOTES, 'UTF-8'), htmlentities($entry->title, ENT_QUOTES, 'UTF-8'), ee()->localize->human_time($entry->edit_date, true, true));
 
         $alert->asSuccess()
             ->withTitle(lang($action . '_entry_success'))
             ->addToBody($lang_string)
             ->defer();
+
+        $qs = $_GET;
+        unset($qs['S'], $qs['D'], $qs['C'], $qs['M'], $qs['version']);
+
+        // Loop through and clean GET values
+        foreach ($qs as $key => $value) {
+            $qs[$key] = ee('Security/XSS')->clean($value);
+        }
 
         if (ee('Request')->get('modal_form') == 'y') {
             $next_entry_id = ee('Request')->get('next_entry_id');
@@ -466,7 +497,9 @@ abstract class AbstractPublish extends CP_Controller
                 'item' => [
                     'value' => $entry->getId(),
                     'label' => $entry->title,
-                    'instructions' => $entry->Channel->channel_title
+                    'instructions' => $entry->Channel->channel_title,
+                    'can_edit' => ($entry->author_id == ee()->session->userdata('member_id')) ? ee('Permission')->has('can_edit_self_entries_channel_id_' . $entry->channel_id) : ee('Permission')->has('can_edit_other_entries_channel_id_' . $entry->channel_id),
+                    'editable' => (ee('Permission')->isSuperAdmin() || array_key_exists($entry->Channel->getId(), ee()->session->userdata('assigned_channels'))),
                 ]
             ];
 
@@ -485,9 +518,9 @@ abstract class AbstractPublish extends CP_Controller
                     : ee('CP/Alert')->makeInline('entry-form-clone');
 
                 $cloneAlert->asWarning()
-                ->canClose()
-                ->addToBody(sprintf(lang('status_changed_desc'), lang('closed')))
-                ->defer();
+                    ->canClose()
+                    ->addToBody(sprintf(lang('status_changed_desc'), lang('closed')))
+                    ->defer();
             }
 
             if (ee()->input->get('return') != '') {
@@ -495,11 +528,15 @@ abstract class AbstractPublish extends CP_Controller
             } elseif (ee()->input->post('return') != '') {
                 $redirect_url = ee()->input->post('return');
             } else {
-                $redirect_url = ee('CP/URL')->make('publish/edit/entry/' . $entry->getId());
+                $redirect_url = ee('CP/URL')->make('publish/edit/entry/' . $entry->getId(), $qs);
             }
             ee()->functions->redirect($redirect_url);
         } elseif (ee()->input->post('submit') == 'save_and_close') {
-            $redirect_url = ee('CP/URL')->make('publish/edit/', array('filter_by_channel' => $entry->channel_id));
+            if (! empty($qs)) {
+                $redirect_url = ee('CP/URL')->make('publish/edit/', $qs);
+            } else {
+                $redirect_url = ee('CP/URL')->make('publish/edit/', array('filter_by_channel' => $entry->channel_id));
+            }
 
             /* -------------------------------------
             /*  'entry_save_and_close_redirect' hook.
@@ -507,7 +544,7 @@ abstract class AbstractPublish extends CP_Controller
             /*  - Added 4.0.0
             */
             if (ee()->extensions->active_hook('entry_save_and_close_redirect')) {
-                $redirect_url = ee()->extensions->call('entry_save_and_close_redirect', $entry);
+                $redirect_url = ee()->extensions->call('entry_save_and_close_redirect', $entry, $redirect_url);
             }
             /*
             /* -------------------------------------*/
@@ -614,13 +651,14 @@ abstract class AbstractPublish extends CP_Controller
 
     protected function entryCloningEnabled(ChannelEntry $entry)
     {
-        if (IS_PRO && ee('pro:Access')->hasValidLicense()) {
+        if (ee('pro:Access')->hasRequiredLicense()) {
             if (ee()->config->item('enable_entry_cloning') === false || ee()->config->item('enable_entry_cloning') === 'y') {
                 if ($entry->Channel->enable_entry_cloning) {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -631,9 +669,9 @@ abstract class AbstractPublish extends CP_Controller
             if (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
                 $lp_domain_mismatch = true;
                 $configuredUrls = ee('Model')->get('Config')
-                        ->filter('key', 'IN', ['base_url', 'site_url', 'cp_url'])
-                        ->all()
-                        ->pluck('parsed_value');
+                    ->filter('key', 'IN', ['base_url', 'site_url', 'cp_url'])
+                    ->all()
+                    ->pluck('parsed_value');
                 $extraDomains = ee('Config')->getFile()->get('allowed_preview_domains');
                 if (!empty($extraDomains)) {
                     if (!is_array($extraDomains)) {
@@ -644,6 +682,7 @@ abstract class AbstractPublish extends CP_Controller
                 foreach ($configuredUrls as $configuredUrl) {
                     if (strpos($configuredUrl, $_SERVER['HTTP_HOST']) !== false) {
                         $lp_domain_mismatch = false;
+
                         break;
                     }
                 }
@@ -656,32 +695,62 @@ abstract class AbstractPublish extends CP_Controller
                     ->withTitle(lang('preview_cannot_display'))
                     ->addToBody(lang('preview_domain_error_instructions'));
                 ee()->javascript->set_global('alert.lp_setup', $lp_setup_alert->render());
+
                 return false;
             } else {
                 $action_id = ee()->db->select('action_id')
                     ->where('class', 'Channel')
                     ->where('method', 'live_preview')
                     ->get('actions');
+
                 $preview_url = ee()->functions->fetch_site_index() . QUERY_MARKER . 'ACT=' . $action_id->row('action_id') . AMP . 'channel_id=' . $entry->channel_id;
+
                 if (!empty($entry->entry_id)) {
                     $preview_url .= AMP . 'entry_id=' . $entry->entry_id;
                 }
+
+                $preview_token_url = ee('CP/URL')->make(
+                    'publish/live-preview-token/' . $entry->channel_id . '/' . ($entry->entry_id ?: 0)
+                )->compile();
+
+                $return = null;
                 if (ee()->input->get('return') != '') {
-                    $preview_url .= AMP . 'return=' . rawurlencode(base64_encode(urldecode(ee()->input->get('return', true))));
+                    $return = urldecode(ee()->input->get('return', true));
+                    $preview_url .= AMP . 'return=' . rawurlencode(base64_encode($return));
                 }
+
+                $from_origin = null;
+                //cross-domain live previews are only possible if $_SERVER['HTTP_HOST'] is set
+                if (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
+                    $from_origin = (ee('Request')->isEncrypted() ? 'https://' : 'http://') . strtolower($_SERVER['HTTP_HOST']);
+                    $preview_url .= AMP . 'from=' . rawurlencode(base64_encode($from_origin));
+                }
+
+                $preview_token = ee('LivePreviewToken')->issueFromRequest(
+                    (int) ee()->session->userdata('member_id'),
+                    (int) $entry->channel_id,
+                    !empty($entry->entry_id) ? (int) $entry->entry_id : null,
+                    $from_origin,
+                    $return,
+                    null,
+                    (int) ee()->config->item('site_id'),
+                    false
+                );
+
                 if (ee()->input->get('prefer_system_preview') == 'y') {
                     $preview_url .= AMP . 'prefer_system_preview=y';
                 }
-                //cross-domain live previews are only possible if $_SERVER['HTTP_HOST'] is set
-                if (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
-                    $preview_url .= AMP . 'from=' . rawurlencode(base64_encode((ee('Request')->isEncrypted() ? 'https://' : 'http://') . strtolower($_SERVER['HTTP_HOST'])));
-                }
+
                 $modal_vars = [
                     'preview_url' => $preview_url,
+                    'preview_token' => $preview_token,
+                    'preview_token_url' => $preview_token_url,
                     'hide_closer' => ee()->input->get('hide_closer') === 'y' ? true : false
                 ];
+
                 $modal = ee('View')->make('publish/live-preview-modal')->render($modal_vars);
                 ee('CP/Modal')->addModal('live-preview', $modal);
+
                 return true;
             }
         } elseif (!$entry->livePreviewAllowed()) {

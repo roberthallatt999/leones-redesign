@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -36,11 +36,11 @@ class Factory
      * @param Array $channels Array/collection of channels
      * @return String Path to the zip file
      */
-    public function export($channels)
+    public function export($channels, $file_name = null)
     {
         $export = new Export();
 
-        return $export->zip($channels);
+        return $export->zip($channels, $file_name);
     }
 
     /**

@@ -5,12 +5,13 @@ return array(
     'author_url'     => 'https://packettide.com/',
     'name'           => 'ExpressionEngine Pro',
     'description'    => 'Super charge EE with more power, features, and flexibility!',
-    'version'        => '1.2.1',
+    'version'        => '2.1.0',
     'namespace'      => 'ExpressionEngine\Addons\Pro',
     'settings_exist' => true,
+    'built_in' => true,
     'requires'       => [
-        'php'   => '7.0',
-        'ee'    => '6.2.0'
+        'php'   => '7.2.5',
+        'ee'    => '7.0.0-rc.1'
     ],
     'cookies.functionality' => [
         'frontedit',

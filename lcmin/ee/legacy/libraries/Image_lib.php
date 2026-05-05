@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -68,8 +68,8 @@ class EE_Image_lib
     /**
      * Constructor
      *
-     * @param	string
-     * @return	void
+     * @param   string
+     * @return  void
      */
     public function __construct($props = array())
     {
@@ -85,8 +85,8 @@ class EE_Image_lib
      *
      * Resets values in case this class is used in a loop
      *
-     * @access	public
-     * @return	void
+     * @access  public
+     * @return  void
      */
     public function clear()
     {
@@ -103,9 +103,9 @@ class EE_Image_lib
     /**
      * initialize image preferences
      *
-     * @access	public
-     * @param	array
-     * @return	bool
+     * @access  public
+     * @param   array
+     * @return  bool
      */
     public function initialize($props = array())
     {
@@ -113,9 +113,13 @@ class EE_Image_lib
          * Convert array elements into class variables
          */
         if (count($props) > 0) {
-            $intProps = ['width', 'height', 'quality', 'orig_width', 'orig_height'];
+            $intProps = [
+                'width', 'height', 'quality', 'orig_width', 'orig_height', 'x_axis', 'y_axis',
+                'wm_opacity', 'wm_x_transp', 'wm_y_transp', 'wm_font_size', 'wm_padding',
+                'wm_hor_offset', 'wm_vrt_offset', 'wm_shadow_distance'
+            ];
             foreach ($props as $key => $val) {
-                if(in_array($key, $intProps) && $val > 0) {
+                if (in_array($key, $intProps)) {
                     $this->$key = (int) $val;
                 } else {
                     $this->$key = $val;
@@ -149,7 +153,7 @@ class EE_Image_lib
             return false;
         }
 
-        $this->image_library = strtolower($this->image_library);
+        $this->image_library = ($this->image_library) ? strtolower($this->image_library) : 'gd2';
 
         /*
          * Set the full server path
@@ -159,11 +163,7 @@ class EE_Image_lib
          * full server path in order to more reliably read it.
          *
          */
-        if (function_exists('realpath') and @realpath($this->source_image) !== false) {
-            $full_source_path = str_replace("\\", "/", realpath($this->source_image));
-        } else {
-            $full_source_path = $this->source_image;
-        }
+        $full_source_path = str_replace("\\", "/", $this->realpath($this->source_image));
 
         $x = explode('/', $full_source_path);
         $this->source_image = end($x);
@@ -187,18 +187,20 @@ class EE_Image_lib
             $this->dest_image = $this->source_image;
             $this->dest_folder = $this->source_folder;
         } else {
-            if (strpos($this->new_image, DIRECTORY_SEPARATOR) === false) {
+            if (strpos($this->new_image, DIRECTORY_SEPARATOR) === false && strpos($this->new_image, '/') === false) {
                 $this->dest_folder = $this->source_folder;
                 $this->dest_image = $this->new_image;
             } else {
-                if (function_exists('realpath') and @realpath($this->new_image) !== false) {
-                    $full_dest_path = str_replace("\\", "/", realpath($this->new_image));
-                } else {
-                    $full_dest_path = $this->new_image;
-                }
+                $full_dest_path = str_replace("\\", "/", $this->realpath($this->new_image));
 
+                // Are we writing to a temp file
+                if (stripos($full_dest_path, '/tmp') === 0
+                    || stripos($full_dest_path, str_replace(DIRECTORY_SEPARATOR, '/', sys_get_temp_dir())) !== false
+                ) {
+                    $this->dest_folder = dirname($full_dest_path) . '/';
+                    $this->dest_image = basename($full_dest_path);
                 // Is there a file name?
-                if (! preg_match("#\.(jpg|jpeg|gif|png|webp)$#i", $full_dest_path)) {
+                } elseif (! preg_match("#\.(jpg|jpeg|gif|png|webp)$#i", $full_dest_path)) {
                     $filenameInPathPosition = strrpos($full_dest_path, $this->source_image);
                     if ($filenameInPathPosition == (strlen($full_dest_path) - strlen($this->source_image))) {
                         $this->dest_folder = substr($full_dest_path, 0, $filenameInPathPosition);
@@ -289,7 +291,7 @@ class EE_Image_lib
         }
 
         if ($this->wm_overlay_path != '') {
-            $this->wm_overlay_path = str_replace("\\", "/", realpath($this->wm_overlay_path));
+            $this->wm_overlay_path = str_replace("\\", "/", $this->realpath(parse_config_variables($this->wm_overlay_path)));
         }
 
         if (isset($props['wm_opacity']) and $props['wm_opacity'] != 100) {
@@ -313,8 +315,8 @@ class EE_Image_lib
      * This is a wrapper function that chooses the proper
      * resize function based on the protocol specified
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function resize()
     {
@@ -338,14 +340,25 @@ class EE_Image_lib
         return $this->$protocol('webp');
     }
 
+    public function avif()
+    {
+        $protocol = 'image_process_' . $this->image_library;
+
+        if (preg_match('/gd2$/i', $protocol)) {
+            $protocol = 'image_process_gd';
+        }
+
+        return $this->$protocol('avif');
+    }
+
     /**
      * Image Crop
      *
      * This is a wrapper function that chooses the proper
      * cropping function based on the protocol specified
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function crop()
     {
@@ -364,8 +377,8 @@ class EE_Image_lib
      * This is a wrapper function that chooses the proper
      * rotation function based on the protocol specified
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function rotate()
     {
@@ -406,9 +419,9 @@ class EE_Image_lib
      *
      * This function will resize or crop
      *
-     * @access	public
-     * @param	string
-     * @return	bool
+     * @access  public
+     * @param   string
+     * @return  bool
      */
     public function image_process_gd($action = 'resize')
     {
@@ -470,11 +483,14 @@ class EE_Image_lib
         // Preserve alpha
         $this->image_preserve_alpha($dst_img, $src_img);
 
-        $copy($dst_img, $src_img, 0, 0, $this->x_axis, $this->y_axis, $this->width, $this->height, $this->orig_width, $this->orig_height);
+        $copy($dst_img, $src_img, 0, 0, (int) $this->x_axis, (int) $this->y_axis, (int) $this->width, (int) $this->height, (int) $this->orig_width, (int) $this->orig_height);
 
         //if we are converting, change image type
         if ($action == 'webp') {
             $this->image_type = 18; //IMAGETYPE_WEBP
+        }
+        if ($action == 'avif') {
+            $this->image_type = 19; //IMAGETYPE_AVIF
         }
 
         //  Show the image
@@ -502,9 +518,9 @@ class EE_Image_lib
      *
      * This function will resize, crop or rotate
      *
-     * @access	public
-     * @param	string
-     * @return	bool
+     * @access  public
+     * @param   string
+     * @return  bool
      */
     public function image_process_imagemagick($action = 'resize')
     {
@@ -526,10 +542,10 @@ class EE_Image_lib
         }
 
         // Execute the command
-        $cmd = $this->library_path . " -quality " . $this->quality;
+        $cmd = $this->library_path . " -quality " . (int) $this->quality;
 
         if ($action == 'crop') {
-            $cmd .= " -crop " . $this->width . "x" . $this->height . "+" . $this->x_axis . "+" . $this->y_axis . " " . escapeshellarg($this->full_src_path) . " " . escapeshellarg($this->full_dst_path) . " 2>&1";
+            $cmd .= " -crop " . (int) $this->width . "x" . (int) $this->height . "+" . (int) $this->x_axis . "+" . (int) $this->y_axis . " " . escapeshellarg($this->full_src_path) . " " . escapeshellarg($this->full_dst_path) . " 2>&1";
         } elseif ($action == 'rotate') {
             switch ($this->rotation_angle) {
                 case 'hor': $angle = '-flop';
@@ -538,21 +554,21 @@ class EE_Image_lib
                 case 'vrt': $angle = '-flip';
 
                     break;
-                default: $angle = '-rotate ' . $this->rotation_angle;
+                default: $angle = '-rotate ' . (float) $this->rotation_angle;
 
                     break;
             }
 
             $cmd .= " " . $angle . " " . escapeshellarg($this->full_src_path) . " " . escapeshellarg($this->full_dst_path) . " 2>&1";
         } else {  // Resize
-            $cmd .= " -resize " . $this->width . "x" . $this->height . " " . escapeshellarg($this->full_src_path) . " " . escapeshellarg($this->full_dst_path) . " 2>&1";
+            $cmd .= " -resize " . (int) $this->width . "x" . (int) $this->height . " " . escapeshellarg($this->full_src_path) . " " . escapeshellarg($this->full_dst_path) . " 2>&1";
         }
 
         $retval = 1;
 
         @exec($cmd, $output, $retval);
 
-        //	Did it work?
+        //  Did it work?
         if ($retval > 0) {
             $this->set_error('imglib_image_process_failed');
 
@@ -570,9 +586,9 @@ class EE_Image_lib
      *
      * This function will resize, crop or rotate
      *
-     * @access	public
-     * @param	string
-     * @return	bool
+     * @access  public
+     * @param   string
+     * @return  bool
      */
     public function image_process_netpbm($action = 'resize')
     {
@@ -589,46 +605,46 @@ class EE_Image_lib
         //  Build the resizing command
         switch ($this->image_type) {
             case IMAGETYPE_GIF:
-                        $cmd_in = 'giftopnm';
-                        $cmd_out = 'ppmtogif';
+                $cmd_in = 'giftopnm';
+                $cmd_out = 'ppmtogif';
 
                 break;
             case IMAGETYPE_JPEG:
-                        $cmd_in = 'jpegtopnm';
-                        $cmd_out = 'ppmtojpeg';
+                $cmd_in = 'jpegtopnm';
+                $cmd_out = 'ppmtojpeg';
 
                 break;
             case IMAGETYPE_PNG:
-                        $cmd_in = 'pngtopnm';
-                        $cmd_out = 'ppmtopng';
+                $cmd_in = 'pngtopnm';
+                $cmd_out = 'ppmtopng';
 
                 break;
         }
 
         if ($action == 'crop') {
-            $cmd_inner = 'pnmcut -left ' . $this->x_axis . ' -top ' . $this->y_axis . ' -width ' . $this->width . ' -height ' . $this->height;
+            $cmd_inner = 'pnmcut -left ' . (int) $this->x_axis . ' -top ' . (int) $this->y_axis . ' -width ' . (int) $this->width . ' -height ' . (int) $this->height;
         } elseif ($action == 'rotate') {
             switch ($this->rotation_angle) {
-                case 90:	$angle = 'r270';
+                case 90:    $angle = 'r270';
 
                     break;
-                case 180:	$angle = 'r180';
+                case 180:   $angle = 'r180';
 
                     break;
-                case 270:	$angle = 'r90';
+                case 270:   $angle = 'r90';
 
                     break;
-                case 'vrt':	$angle = 'tb';
+                case 'vrt': $angle = 'tb';
 
                     break;
-                case 'hor':	$angle = 'lr';
+                case 'hor': $angle = 'lr';
 
                     break;
             }
 
             $cmd_inner = 'pnmflip -' . $angle . ' ';
         } else { // Resize
-            $cmd_inner = 'pnmscale -xysize ' . $this->width . ' ' . $this->height;
+            $cmd_inner = 'pnmscale -xysize ' . (int) $this->width . ' ' . (int) $this->height;
         }
 
         $cmd = $this->library_path . $cmd_in . ' ' . escapeshellarg($this->full_src_path) . ' | ' . $cmd_inner . ' | ' . $cmd_out . ' > ' . escapeshellarg($this->dest_folder . 'netpbm.tmp');
@@ -658,7 +674,7 @@ class EE_Image_lib
      * Checks path instance variables to make sure they have been properly
      * sanitized before passing to shell functions
      *
-     * @return	bool
+     * @return  bool
      */
     private function arePathsSafe()
     {
@@ -680,8 +696,8 @@ class EE_Image_lib
     /**
      * Image Rotate Using GD
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function image_rotate_gd()
     {
@@ -728,8 +744,8 @@ class EE_Image_lib
      *
      * This function will flip horizontal or vertical
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function image_mirror_gd()
     {
@@ -785,9 +801,9 @@ class EE_Image_lib
      * Provided a new image and source image resource, it works with those
      * already-allocated resources, so it returns void
      *
-     * @access	public
-     * @param	resource $new_img Destination image resource, will have alpha applied to this
-     * @param	resource $src_img Source image resource for reference
+     * @access  public
+     * @param   resource $new_img Destination image resource, will have alpha applied to this
+     * @param   resource $src_img Source image resource for reference
      */
     public function image_preserve_alpha($new_img, $src_img)
     {
@@ -830,9 +846,9 @@ class EE_Image_lib
      * This is a wrapper function that chooses the type
      * of watermarking based on the specified preference.
      *
-     * @access	public
-     * @param	string
-     * @return	bool
+     * @access  public
+     * @param   string
+     * @return  bool
      */
     public function watermark()
     {
@@ -846,8 +862,8 @@ class EE_Image_lib
     /**
      * Watermark - Graphic Version
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function overlay_watermark()
     {
@@ -967,8 +983,8 @@ class EE_Image_lib
     /**
      * Watermark - Text Version
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function text_watermark()
     {
@@ -1120,9 +1136,9 @@ class EE_Image_lib
      * This simply creates an image resource handle
      * based on the type of image being processed
      *
-     * @access	public
-     * @param	string
-     * @return	resource
+     * @access  public
+     * @param   string
+     * @return  resource
      */
     public function image_create_gd($path = '', $image_type = '')
     {
@@ -1175,6 +1191,16 @@ class EE_Image_lib
                 return imagecreatefromwebp($path);
 
                 break;
+            case 19: //IMAGETYPE_AVIF
+                if (! function_exists('imagecreatefromavif')) {
+                    $this->set_error(array('imglib_unsupported_imagecreate', 'imglib_avif_not_supported'));
+
+                    return false;
+                }
+
+                return imagecreatefromavif($path);
+
+                break;
         }
 
         $this->set_error(array('imglib_unsupported_imagecreate'));
@@ -1188,9 +1214,9 @@ class EE_Image_lib
      * Takes an image resource as input and writes the file
      * to the specified destination
      *
-     * @access	public
-     * @param	resource
-     * @return	bool
+     * @access  public
+     * @param   resource
+     * @return  bool
      */
     public function image_save_gd($resource)
     {
@@ -1259,6 +1285,19 @@ class EE_Image_lib
                 }
 
                 break;
+            case 19://IMAGETYPE_AVIF
+                if (! function_exists('imageavif')) {
+                    $this->set_error(array('imglib_unsupported_imagecreate', 'imglib_avif_not_supported'));
+
+                    return false;
+                }
+                if (! @imageavif($resource, $this->full_dst_path, $this->quality)) {
+                    $this->set_error('imglib_save_failed');
+
+                    return false;
+                }
+
+                break;
             default:
                 $this->set_error(array('imglib_unsupported_imagecreate'));
 
@@ -1273,9 +1312,9 @@ class EE_Image_lib
     /**
      * Dynamically outputs an image
      *
-     * @access	public
-     * @param	resource
-     * @return	void
+     * @access  public
+     * @param   resource
+     * @return  void
      */
     public function image_display_gd($resource)
     {
@@ -1301,6 +1340,10 @@ class EE_Image_lib
                 imagewebp($resource);
 
                 break;
+            case 19: //IMAGETYPE_AVIF
+                imageavif($resource);
+
+                break;
             default:
                 echo 'Unable to display the image';
 
@@ -1318,8 +1361,8 @@ class EE_Image_lib
      * This function lets us re-proportion the width/height
      * if users choose to maintain the aspect ratio when resizing.
      *
-     * @access	public
-     * @return	void
+     * @access  public
+     * @return  void
      */
     public function image_reproportion()
     {
@@ -1354,9 +1397,9 @@ class EE_Image_lib
      *
      * A helper function that gets info about the file
      *
-     * @access	public
-     * @param	string
-     * @return	mixed
+     * @access  public
+     * @param   string
+     * @return  mixed
      */
     public function get_image_properties($path = '', $return = false)
     {
@@ -1375,7 +1418,13 @@ class EE_Image_lib
 
         $vals = @getimagesize($path);
 
-        $types = array(IMAGETYPE_GIF => 'gif', IMAGETYPE_JPEG => 'jpeg', IMAGETYPE_PNG => 'png', '18' => 'webp');
+        if (! $vals) {
+            $this->set_error('imglib_properties_failed');
+
+            return false;
+        }
+
+        $types = array(IMAGETYPE_GIF => 'gif', IMAGETYPE_JPEG => 'jpeg', IMAGETYPE_PNG => 'png', '18' => 'webp', '19' => 'avif');
 
         $mime = (isset($types[$vals['2']])) ? 'image/' . $types[$vals['2']] : 'image/jpg';
 
@@ -1405,16 +1454,16 @@ class EE_Image_lib
      * recalculates it to a new size.  Only one
      * new variable needs to be known
      *
-     *	$props = array(
-     *					'width'			=> $width,
-     *					'height'		=> $height,
-     *					'new_width'		=> 40,
-     *					'new_height'	=> ''
-     *				  );
+     *  $props = array(
+     *                  'width'         => $width,
+     *                  'height'        => $height,
+     *                  'new_width'     => 40,
+     *                  'new_height'    => ''
+     *                );
      *
-     * @access	public
-     * @param	array
-     * @return	array
+     * @access  public
+     * @param   array
+     * @return  array
      */
     public function size_calculator($vals)
     {
@@ -1453,9 +1502,9 @@ class EE_Image_lib
      * $array['ext']  = '.jpg';
      * $array['name'] = 'my.cool';
      *
-     * @access	public
-     * @param	array
-     * @return	array
+     * @access  public
+     * @param   array
+     * @return  array
      */
     public function explode_name($source_image)
     {
@@ -1468,8 +1517,8 @@ class EE_Image_lib
     /**
      * Is GD Installed?
      *
-     * @access	public
-     * @return	bool
+     * @access  public
+     * @return  bool
      */
     public function gd_loaded()
     {
@@ -1479,8 +1528,8 @@ class EE_Image_lib
     /**
      * Get GD version
      *
-     * @access	public
-     * @return	mixed
+     * @access  public
+     * @return  mixed
      */
     public function gd_version()
     {
@@ -1497,9 +1546,9 @@ class EE_Image_lib
     /**
      * Set error message
      *
-     * @access	public
-     * @param	string
-     * @return	void
+     * @access  public
+     * @param   string
+     * @return  void
      */
     public function set_error($msg)
     {
@@ -1521,9 +1570,9 @@ class EE_Image_lib
     /**
      * Show error messages
      *
-     * @access	public
-     * @param	string
-     * @return	string
+     * @access  public
+     * @param   string
+     * @return  string
      */
     public function display_errors($open = '<p>', $close = '</p>')
     {
@@ -1533,6 +1582,51 @@ class EE_Image_lib
         }
 
         return $str;
+    }
+
+    /**
+     * A fail-safe wrapper for php's realpath() method
+     *
+     * @param string $path
+     * @return string
+     */
+    protected function realpath($path)
+    {
+        if (function_exists('realpath') and @realpath($path) !== false) {
+            return realpath($path);
+        }
+
+        return $path;
+    }
+
+    /**
+     * Strip Image Tags
+     *
+     * Strips exif data from image files
+     * Requires Imagick extension
+     *
+     * @access  public
+     * @return  void
+     */
+    public function strip_metadata()
+    {
+        // If we dont have imagick installed, we can't strip metadata
+        if ($this->image_library != 'imagemagick' || ! extension_loaded('imagick') || ! class_exists('Imagick')) {
+            return false;
+        }
+
+        try {
+            $img = new Imagick($this->full_src_path);
+            $img->stripImage();
+            $img->writeImage($this->full_src_path);
+            $img->clear();
+            $img->destroy();
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        return true;
+
     }
 }
 // END Image_lib Class

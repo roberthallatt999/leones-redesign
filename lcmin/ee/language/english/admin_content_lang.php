@@ -236,24 +236,6 @@ $lang = array(
 
     'enable_versioning' => 'Enable Entry Versioning',
 
-    'field_conditions_sync_success' => 'Conditional Field Logic Updated',
-
-    'field_conditions_sync_success_desc' => 'All related channel entries have been updated to use the most recent conditional logic.',
-
-    'field_conditions_sync_existing_entries' => 'Existing entries',
-
-    'field_conditions_sync_desc' => '<b>%d</b> entries',
-
-    'field_conditions_syncing_conditional_logic' => 'Syncing Conditional Logic',
-
-    'field_conditions_sync_conditional_logic' => 'Sync Conditional Logic',
-
-    'field_conditions_sync_in_progress_message' => 'Do not navigate away from this screen while syncing is in progress.',
-
-    'btn_sync_conditional_logic' => 'Sync Conditional Logic',
-
-    'btn_sync_conditional_logic_working' => 'Syncing conditional logic...',
-
     'field' => 'Field',
 
     'fields_assign_to_group' => 'Assign one or more fields to this group.',
@@ -263,6 +245,8 @@ $lang = array(
     'field_content_text_desc' => 'Type of content this field can contain.',
 
     'field_groups_uc' => 'Field Groups',
+
+    'field_group_short_name_desc' => 'Used when operating with field group inside template, e.g. in Fluid field',
 
     'field_groups_desc' => 'Used to group together related custom fields.',
 
@@ -352,7 +336,7 @@ $lang = array(
 
     'limit' => 'limit',
 
-    'list_edit_warning' => 'If you have unsaved changes in this page they will be lost when you are transfered to the formatting editor.',
+    'list_edit_warning' => 'If you have unsaved changes in this page they will be lost when you are transferred to the formatting editor.',
 
     'localize_date' => 'Localize date?',
 
@@ -506,6 +490,20 @@ $lang = array(
 
     'versioning' => 'Versioning Preferences',
 
+    /* field channels */
+
+    'field_channels' => 'Channels',
+
+    'field_channels_desc' => 'This field is assigned to following channels',
+
+    'assigned' => 'Assigned',
+
+    'via' => 'via',
+
+    'directly' => 'directly',
+
+    'fluid_field' => 'Fluid Field',
+
     /* Generic Phrases */
     'delete' => 'Delete',
 
@@ -607,10 +605,6 @@ $lang = array(
     'formatting' => 'Formatting:',
 
     'manage_custom_fields' => 'Manage Category Fields',
-
-    'member_group' => 'Member Group',
-
-    'member_groups' => 'Member Groups',
 
     'missing_required_fields' => 'You Are Missing Required Field(s):',
 
@@ -722,6 +716,8 @@ $lang = array(
     'multi_list_items' => 'Multi Select Options',
 
     'new_field_group' => 'New Field Group',
+
+    'ungrouped' => 'Ungrouped',
 
     'no_field_group_message' => 'There are currently no channel fields',
 
@@ -870,7 +866,7 @@ $lang = array(
 
     'toggle_default_value_desc' => 'The default position of the toggle switch for this field when publishing new entries.',
 
-    'toggle_default_value_desc_cont' => '<b>Note</b>: To assign default value to existing entries, search reindex will need to be run after associating this field to channels.',
+    'toggle_default_value_desc_cont' => '<b>Note</b>: To assign default value to existing entries, content reindex will need to be run after associating this field to channels.',
 
     'unauthorized_for_this_channel' => 'You are not authorized to post in this channel',
 

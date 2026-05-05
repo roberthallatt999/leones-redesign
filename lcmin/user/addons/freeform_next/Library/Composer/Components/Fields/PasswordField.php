@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -20,7 +20,7 @@ class PasswordField extends TextField implements NoStorageInterface
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_PASSWORD;
     }
@@ -30,11 +30,9 @@ class PasswordField extends TextField implements NoStorageInterface
      *
      * @return string
      */
-    public function getInputHtml()
+    public function getInputHtml(): string
     {
         $output = parent::getInputHtml();
-        $output = str_replace('type="text"', 'type="password"', $output);
-
-        return $output;
+        return str_replace('type="text"', 'type="password"', $output);
     }
 }

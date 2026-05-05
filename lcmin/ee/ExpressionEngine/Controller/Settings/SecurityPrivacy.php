@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -233,6 +233,16 @@ class SecurityPrivacy extends Settings
                     'desc' => 'xss_clean_uploads_desc',
                     'fields' => array(
                         'xss_clean_uploads' => array('type' => 'yes_no')
+                    )
+                ),
+                array(
+                    'title' => 'strip_image_metadata',
+                    'desc' => sprintf(lang('strip_image_metadata_desc'), 'https://www.php.net/manual/en/book.imagick.php', extension_loaded('imagick') ? 'enabled' : 'disabled'),
+                    'fields' => array(
+                        'strip_image_metadata' => [
+                            'type' => 'yes_no',
+                            'disabled' => ! extension_loaded('imagick'),
+                        ]
                     )
                 ),
                 array(

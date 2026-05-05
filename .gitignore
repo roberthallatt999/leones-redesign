@@ -39,12 +39,13 @@ node_modules/
 package-lock.json
 custom.css.map
 src/assets/certs
-# AI Configuration
+# AI Configuration & local-only docs (never deployed)
 CLAUDE.md
 AGENTS.md
 MEMORY.md
 MEMORY-ARCHIVE.md
 .claude/
+docs/
 
 # =============================================================================
 # Security: Common
@@ -191,3 +192,9 @@ yarn-debug.log*
 # Common Dependencies (never commit — install from lock file)
 # =============================================================================
 vendor/
+
+# Server migration playbook (per-operator local config + caches)
+scripts/migrate-server.yaml
+scripts/.migrate-logs/
+scripts/.migrate-cache/
+.github/secrets.yaml.pre-cutover-*

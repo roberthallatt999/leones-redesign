@@ -4,31 +4,25 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Composer\Components;
 
+use JsonSerializable;
+use Iterator;
+use ArrayAccess;
+use ReturnTypeWillChange;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Fields\Interfaces\NoStorageInterface;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Fields\Interfaces\RememberPostedValueInterface;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Fields\Interfaces\StaticValueInterface;
 use Solspace\Addons\FreeformNext\Library\Exceptions\FreeformException;
 
-class Page implements \JsonSerializable, \Iterator, \ArrayAccess
+class Page implements JsonSerializable, Iterator, ArrayAccess
 {
-    /** @var int */
-    private $index;
-
-    /** @var string */
-    private $label;
-
-    /** @var Row[] */
-    private $rows;
-
-    /** @var FieldInterface[] */
-    private $fields;
+    private int $index;
 
     /**
      * Page constructor.
@@ -38,12 +32,9 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
      * @param Row[]            $rows
      * @param FieldInterface[] $fields
      */
-    public function __construct($index, $label, array $rows, array $fields)
+    public function __construct($index, private $label, private array $rows, private array $fields)
     {
         $this->index  = (int)$index;
-        $this->label  = $label;
-        $this->rows   = $rows;
-        $this->fields = $fields;
     }
 
     /**
@@ -57,7 +48,7 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * @return int
      */
-    public function getIndex()
+    public function getIndex(): int
     {
         return $this->index;
     }
@@ -65,7 +56,7 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * @return Row[]
      */
-    public function getRows()
+    public function getRows(): array
     {
         return $this->rows;
     }
@@ -73,7 +64,7 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * @return FieldInterface[]
      */
-    public function getFields()
+    public function getFields(): array
     {
         return $this->fields;
     }
@@ -81,7 +72,7 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * @return array
      */
-    public function getStorableFieldValues()
+    public function getStorableFieldValues(): array
     {
         $submittedValues = [];
 
@@ -116,8 +107,8 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return mixed
      */
-	#[\ReturnTypeWillChange]
-    public function current()
+	#[ReturnTypeWillChange]
+    public function current(): mixed
     {
         return current($this->rows);
     }
@@ -127,8 +118,8 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return void
      */
-	#[\ReturnTypeWillChange]
-    public function next()
+	#[ReturnTypeWillChange]
+    public function next(): void
     {
         next($this->rows);
     }
@@ -138,8 +129,8 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return mixed
      */
-	#[\ReturnTypeWillChange]
-    public function key()
+	#[ReturnTypeWillChange]
+    public function key(): mixed
     {
         return key($this->rows);
     }
@@ -159,8 +150,8 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
      *
      * @return void
      */
-	#[\ReturnTypeWillChange]
-    public function rewind()
+	#[ReturnTypeWillChange]
+    public function rewind(): void
     {
         reset($this->rows);
     }
@@ -176,8 +167,8 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * @inheritDoc
      */
-	#[\ReturnTypeWillChange]
-    public function offsetGet($offset)
+	#[ReturnTypeWillChange]
+    public function offsetGet($offset): mixed
     {
         return $this->offsetExists($offset) ? $this->rows[$offset] : null;
     }
@@ -185,8 +176,8 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * @inheritDoc
      */
-	#[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+	#[ReturnTypeWillChange]
+    public function offsetSet($offset, $value): void
     {
         throw new FreeformException("Form Page ArrayAccess does not allow for setting values");
     }
@@ -194,8 +185,8 @@ class Page implements \JsonSerializable, \Iterator, \ArrayAccess
     /**
      * @inheritDoc
      */
-	#[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+	#[ReturnTypeWillChange]
+    public function offsetUnset($offset): void
     {
         throw new FreeformException("Form Page ArrayAccess does not allow unsetting values");
     }

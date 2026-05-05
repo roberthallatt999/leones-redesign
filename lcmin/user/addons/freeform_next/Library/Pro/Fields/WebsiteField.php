@@ -12,7 +12,7 @@ class WebsiteField extends TextField
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_WEBSITE;
     }
@@ -20,7 +20,7 @@ class WebsiteField extends TextField
     /**
      * @inheritDoc
      */
-    public function getConstraints()
+    public function getConstraints(): array
     {
         return [
             new WebsiteConstraint($this->translate('Website not valid')),

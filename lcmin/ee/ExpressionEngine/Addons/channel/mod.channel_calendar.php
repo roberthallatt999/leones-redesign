@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -62,13 +62,13 @@ class Channel_calendar extends Channel
         /** ----------------------------------------
         /**  Set Unix timestamp for the given month/year
         /** ----------------------------------------*/
-        $date = gmmktime(12, 0, 0, $month, 1, $year);
+        $date = gmmktime(12, 0, 0, (int)$month, 1, (int)$year);
 
         /** ----------------------------------------
         /**  Determine the total days in the month
         /** ----------------------------------------*/
         ee()->load->library('calendar');
-        $adjusted_date = ee()->calendar->adjust_date($month, $year);
+        $adjusted_date = ee()->calendar->adjust_date((int)$month, (int)$year);
 
         $month = $adjusted_date['month'];
         $year = $adjusted_date['year'];
@@ -339,7 +339,7 @@ class Channel_calendar extends Channel
             $this->fetch_custom_channel_fields();
         }
 
-        $this->build_sql_query('/' . $year . '/' . $month . '/');
+        $this->build_sql_query('/' . $year . '/' . str_pad($month, 2, 0, STR_PAD_LEFT) . '/');
 
         if ($this->sql != '') {
             $query = ee()->db->query($this->sql);

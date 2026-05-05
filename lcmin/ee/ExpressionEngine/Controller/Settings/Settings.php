@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -45,6 +45,7 @@ class Settings extends CP_Controller
     protected function generateSidebar($active = null)
     {
         $sidebar = ee('CP/Sidebar')->make();
+        ee()->lang->load('pro');
 
         $list = $sidebar->addHeader(lang('general'))
             ->addBasicList();
@@ -85,6 +86,9 @@ class Settings extends CP_Controller
             $list->addItem(lang('template_settings'), ee('CP/URL')->make('settings/template'));
         }
 
+        $sidebar->addItem(lang('frontedit'), ee('CP/URL')->make('settings/pro/frontedit'));
+        $sidebar->addItem(lang('branding_settings'), ee('CP/URL')->make('settings/pro/branding'));
+
         $list->addItem(lang('tracking'), ee('CP/URL')->make('settings/tracking'));
 
         $list->addItem(lang('word_censoring'), ee('CP/URL')->make('settings/word-censor'));
@@ -100,6 +104,12 @@ class Settings extends CP_Controller
                 ->addBasicList();
 
             $list->addItem(lang('member_settings'), ee('CP/URL')->make('settings/members'));
+            $link = ee('CP/URL')->make('settings/member-fields');
+            $item = $list->addItem(lang('custom_member_fields'), $link);
+            if ($link->matchesTheRequestedURI()) {
+                $item->isActive();
+            }
+            $list->addItem(lang('manage_bans'), ee('CP/URL')->make('settings/ban'));
             $list->addItem(lang('messages'), ee('CP/URL')->make('settings/messages'));
             $list->addItem(lang('avatars'), ee('CP/URL')->make('settings/avatars'));
         }
@@ -123,14 +133,7 @@ class Settings extends CP_Controller
             }
         }
 
-        if (IS_PRO && ee('pro:Access')->hasValidLicense() && ee('Permission')->canUsePro()) {
-            ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
-            $list = $sidebar->addHeader(lang('pro_settings'))
-                ->addBasicList();
-
-            $sidebar->addItem(lang('cookie_settings'), ee('CP/URL')->make('settings/pro/cookies'));
-        }
-
+        $sidebar->addItem(lang('cookie_settings'), ee('CP/URL')->make('settings/pro/cookies'));
     }
 
     /**
@@ -164,8 +167,8 @@ class Settings extends CP_Controller
      * view, check POST for their values, and then save the values in site
      * preferences
      *
-     * @param	array	$sections	Array of sections passed to form view
-     * @return	bool	Success or failure of saving the settings
+     * @param   array   $sections   Array of sections passed to form view
+     * @return  bool    Success or failure of saving the settings
      */
     protected function saveSettings($sections)
     {

@@ -1,0 +1,51 @@
+# Server migration: NEW-host configuration.
+#
+# USAGE:
+#   1. Copy this file: cp scripts/migrate-server.yaml.example scripts/migrate-server.yaml
+#   2. Fill in real values for the new servers below.
+#   3. Run scripts/migrate-server-preflight.sh staging to verify.
+#
+# OLD-host configuration is NOT in this file — it is read from
+# .github/secrets.yaml (already populated by the deploy-secrets workflow).
+
+new_servers:
+  staging:
+    SERVER_HOST: change-me-new-staging.example.com
+    SERVER_USER: forge
+    # PHP CLI on the new host. Verify on the server with: which php8.2
+    SERVER_PHP_PATH: /usr/bin/php8.2
+
+    # MySQL credentials on the NEW host. Forge → site → Database.
+    DB_HOST: 127.0.0.1
+    DB_USER: forge
+    DB_PASS: change-me
+    DB_NAME: leones_dev
+
+    # Atomic-deploy root on the new host. Forge nginx webroot will point at
+    # ${BASE_PATH}/current AFTER the first deploy succeeds.
+    BASE_PATH: /home/forge/lc.digitaldesigns.dev
+
+    # Path on YOUR LAPTOP to the SSH deploy key for this host.
+    # bootstrap-new.sh generates the key here on first run.
+    DEPLOY_KEY_PATH: ~/.ssh/leones-newdev-deploy
+
+    # Additional shared/ subdirectories to sync, beyond shared/images/.
+    # preflight.sh lists shared/ on the old host and prompts you to
+    # populate this list. Paths are relative to shared/ on both hosts.
+    EXTRA_SHARED_DIRS: []
+
+  production:
+    SERVER_HOST: change-me-new-prod.example.com
+    SERVER_USER: forge
+    SERVER_PHP_PATH: /usr/bin/php8.2
+
+    DB_HOST: 127.0.0.1
+    DB_USER: forge
+    DB_PASS: change-me
+    DB_NAME: leonescreamery_prod
+
+    BASE_PATH: /home/forge/leonescreamery.com
+
+    DEPLOY_KEY_PATH: ~/.ssh/leones-newprod-deploy
+
+    EXTRA_SHARED_DIRS: []

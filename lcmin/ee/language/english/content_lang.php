@@ -70,6 +70,14 @@ $lang = array(
 
     'column_title' => 'Title',
 
+    'column_view_count_one' => 'View Count 1',
+
+    'column_view_count_two' => 'View Count 2',
+
+    'column_view_count_three' => 'View Count 3',
+
+    'column_view_count_four' => 'View Count 4',
+
     'comment_content' => 'Comment content',
 
     'comment_content_desc' => 'Content of this comment.',
@@ -90,8 +98,6 @@ $lang = array(
 
     'create_entry_error' => 'Cannot Create Entry',
 
-    'copy_of' => 'Copy of',
-
     'create_entry_error_desc' => 'We were unable to create this entry, please review and fix errors below.',
 
     'create_entry_success' => 'Entry Created',
@@ -99,10 +105,6 @@ $lang = array(
     'create_entry_success_desc' => 'The entry <a href=\'%1$s\'><b>%2$s</b></a> has been created.',
 
     'create_entry_with_channel_name' => 'New Entry: %s',
-
-    'custom_date' => 'custom date',
-
-    'custom_limit' => 'custom limit',
 
     'edit_channel_entries' => 'Edit Channel Entries',
 
@@ -120,7 +122,7 @@ $lang = array(
 
     'edit_entry_success' => 'Entry Updated',
 
-    'edit_entry_success_desc' => 'The entry <a href=\'%1$s\'><b>%2$s</b></a> has been updated.',
+    'edit_entry_success_desc' => 'The entry <a href=\'%1$s\'><b>%2$s</b></a> has been updated at %3$s.',
 
     'edit_entry_with_title' => 'Edit Entry: %s',
 
@@ -247,6 +249,10 @@ $lang = array(
 
     'calendar' => 'Calendar',
 
+    'cat_selection_is_multiple_categories_assigned' => 'The selection should be limited to one category, but the entry already has multiple categories assigned.',
+
+    'cat_selection_is_multiple_auto_select_parent' => 'The selection should be limited to one category, but category group contains child categories and <code>Assign category parents</code> setting is on.',
+
     'close_preview' => 'Close Preview',
 
     'cancel_preview' => 'Cancel Preview',
@@ -361,6 +367,8 @@ $lang = array(
 
     'edit_entry' => 'Edit Entry',
 
+    'edit_member' => 'Edit Member',
+
     'edit_selected' => 'Edit Selected',
 
     'edit_this_entry' => 'Edit This Entry',
@@ -383,6 +391,8 @@ $lang = array(
 
     'exact_match' => 'Exact Match',
 
+    'extra_title' => 'List of selected categories:',
+
     'field_blank' => 'You left a field blank.',
 
     'fields' => 'Fields',
@@ -394,8 +404,6 @@ $lang = array(
     'file_exists' => 'A file already exists with this name',
 
     'file_exists_warning' => 'File Exists Warning',
-
-    'file_manager' => 'File Manager',
 
     'file_saved' => 'File Saved',
 
@@ -556,6 +564,8 @@ $lang = array(
     'no_entries_exist' => 'No <b>Entries</b> found.',
 
     'no_entries_matching_that_criteria' => 'There are no entries matching the criteria you selected.',
+
+    'no_entries_on_this_site' => 'The entry belongs to different site.',
 
     'no_glossary' => 'A glossary does not exist',
 
@@ -853,6 +863,8 @@ $lang = array(
 
     'creating_new_in_rel' => 'Creating new entry in <b>#to_channel#</b> for a relationship with <b>#from_channel#</b>',
 
+    'creating_member_in_rel' => 'Creating new member for a relationship with <b>#from_channel#</b>',
+
     'hide' => 'Hide',
 
     'item_to_relate_with' => 'Item to <strong>relate with</strong> this entry.',
@@ -921,8 +933,6 @@ $lang = array(
     'layout_success' => 'Layout successfully saved.',
 
     'maintain_ratio' => 'Maintain Aspect Ratio',
-
-    'member_group' => 'Member Group',
 
     'no_entry_to_update' => 'You have tried to update an entry that does not exist.',
 

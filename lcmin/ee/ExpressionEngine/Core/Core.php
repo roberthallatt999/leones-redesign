@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -13,6 +13,7 @@ namespace ExpressionEngine\Core;
 use ExpressionEngine\Legacy\App as LegacyApp;
 use ExpressionEngine\Service\Dependency\InjectionContainer;
 use ExpressionEngine\Error\FileNotFound;
+use ExpressionEngine\Error\CPException;
 use ExpressionEngine\Cli\Cli;
 
 /**
@@ -99,6 +100,11 @@ abstract class Core
 
         $application = $this->loadApplicationCore();
 
+        if (defined('REQ') && REQ === 'CLI') {
+            // Set a fake request for CLI
+            $application->setRequest($request);
+        }
+
         if (defined('BOOT_ONLY')) {
             return $this->bootOnly($request);
         }
@@ -106,9 +112,6 @@ abstract class Core
         $routing = $this->getRouting($request);
 
         if (defined('REQ') && REQ === 'CLI') {
-            // Set a fake request and then allow CLI to boot
-            $application->setRequest($request);
-
             // Keep off the CLI. Note: CLI requests die at the end of bootCli()
             $this->bootCli();
         }
@@ -264,6 +267,9 @@ abstract class Core
             }
 
             $result = call_user_func_array(array($controller, $method), $params);
+        } catch (CPException $ex) {
+            $controller = new \ExpressionEngine\Controller\Error\CPException();
+            $result = call_user_func_array(array($controller, 'index'), ['message' => $ex->getMessage(), 'code' => $ex->getCode()]);
         } catch (FileNotFound $ex) {
             $error_routing = $this->getErrorRouting();
 

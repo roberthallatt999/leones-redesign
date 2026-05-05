@@ -3,9 +3,9 @@
 		<div class="live-preview__form">
 			<div class="live-preview__form-header">
 				<?php if (!isset($hide_closer) || !$hide_closer): ?>
-				<h1><a href class="js-close-live-preview"><i class="fas fa-times"></i> <?=lang('close_preview')?></a></h1>
+				<h1><a href class="js-close-live-preview"><i class="fal fa-times"></i> <?=lang('close_preview')?></a></h1>
 				<?php elseif (ee()->input->get('hide_closer') === 'y' && ee()->input->get('return', true) != '') : ?>
-				<h1><a href="<?=urldecode(ee()->input->get('return', true))?>"><i class="fas fa-times"></i> <?=lang('close')?></a></h1>
+				<h1><a href="<?=urldecode(ee()->input->get('return', true))?>"><i class="fal fa-times"></i> <?=lang('close')?></a></h1>
 				<?php endif; ?>
 				<div class="button-group">
 					<button href="" class="button button--primary js-live-preview-save-button"><?=lang('save')?></button>
@@ -23,7 +23,13 @@
 				<span class="pulse-loader"></span>
 			</div>
 
-			<iframe src="" data-url="<?=$preview_url?>" class="live-preview__frame"></iframe>
+			<iframe
+				src=""
+				data-url="<?=$preview_url?>"
+				data-token="<?=isset($preview_token) ? $preview_token : ''?>"
+				data-token-url="<?=isset($preview_token_url) ? $preview_token_url : ''?>"
+				class="live-preview__frame"
+			></iframe>
 		</div>
 	</div>
 </div>

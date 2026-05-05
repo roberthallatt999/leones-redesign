@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -78,7 +78,7 @@ class SubmissionsService implements SubmissionHandlerInterface
     /**
      * @param Form $form
      */
-    public function finalizeFormFiles(Form $form)
+    public function finalizeFormFiles(Form $form): void
     {
         $assetIds = [];
 
@@ -106,7 +106,7 @@ class SubmissionsService implements SubmissionHandlerInterface
      *
      * @param Form $form
      */
-    public function markFormAsSubmitted(Form $form)
+    public function markFormAsSubmitted(Form $form): void
     {
         ee()->session->set_flashdata(Form::SUBMISSION_FLASH_KEY . $form->getId(), true);
     }
@@ -118,7 +118,7 @@ class SubmissionsService implements SubmissionHandlerInterface
      *
      * @return bool
      */
-    public function wasFormFlashSubmitted(Form $form)
+    public function wasFormFlashSubmitted(Form $form): bool
     {
         return ee()->session->flashdata(Form::SUBMISSION_FLASH_KEY . $form->getId()) === true;
     }

@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -40,7 +40,7 @@ class File extends FileObject
      * @return void
      * @throws FileObjectException
      */
-    public function copy($target, $prefix = null, $callable = null, $filePrefix = null)
+    public function copy($target, ?string $prefix = null, null|callable|array $callable = null, ?string $filePrefix = null)
     {
         $fs = $this->getFilesystem();
 

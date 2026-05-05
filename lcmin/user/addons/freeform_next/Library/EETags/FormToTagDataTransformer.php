@@ -19,36 +19,23 @@ use Stringy\Stringy;
 
 class FormToTagDataTransformer
 {
-    const PATTERN_FIELD_RENDER           = '/{field:([a-zA-Z0-9\-_]+):(render(?:_?[a-zA-Z]+)?)?\s+([^}]+)}/i';
-    const PATTERN_FIELD_RENDER_VARIABLES = '/\b([a-zA-Z0-9_\-:]+)=(?:\'|")([^"\']+)(?:\'|")/';
-
-    /** @var Form */
-    private $form;
-
-    /** @var string */
-    private $content;
-
-    /** @var bool */
-    private $skipHelperFields;
+    public const PATTERN_FIELD_RENDER           = '/{field:([a-zA-Z0-9\-_]+):(render(?:_?[a-zA-Z]+)?)?\s+([^}]+)}/i';
+    public const PATTERN_FIELD_RENDER_VARIABLES = '/\b([a-zA-Z0-9_\-:]+)=(?:\'|")([^"\']+)(?:\'|")/';
 
     /**
      * FormToTagDataTransformer constructor.
      *
-     * @param Form   $form
      * @param string $content
      * @param bool   $skipHelperFields
      */
-    public function __construct(Form $form, $content, $skipHelperFields = false)
+    public function __construct(private Form $form, private $content, private $skipHelperFields = false)
     {
-        $this->form             = $form;
-        $this->content          = $content;
-        $this->skipHelperFields = $skipHelperFields;
     }
 
     /**
      * @return string
      */
-    public function getOutput()
+    public function getOutput(): string
     {
         $output = $this->form->renderTag()
             . $this->getOutputWithoutWrappingFormTags()
@@ -60,7 +47,7 @@ class FormToTagDataTransformer
     /**
      * @return string
      */
-    public function getOutputWithoutWrappingFormTags()
+    public function getOutputWithoutWrappingFormTags(): string|array|null
     {
         $output = $this->content;
 
@@ -90,10 +77,17 @@ class FormToTagDataTransformer
             $submissionCount = 0;
         }
 
+        $spamCount = FormRepository::getInstance()->getFormSpamCount([$this->form->getId()]);
+        if (!empty($spamCount)) {
+            $spamCount = reset($spamCount);
+        } else {
+            $spamCount = 0;
+        }
+
         $data = array_merge($data, $this->pageData($this->form->getCurrentPage(), 'current_page:'));
         $data = array_merge(
             $data,
-            $formTransformer->transformForm($this->form, $submissionCount, $this->skipHelperFields)
+            $formTransformer->transformForm($this->form, $submissionCount, $spamCount, $this->skipHelperFields)
         );
         $data = array_merge($data, $this->getFields());
 
@@ -123,10 +117,10 @@ class FormToTagDataTransformer
      *
      * @return string
      */
-    private function parseFieldTags($content)
+    private function parseFieldTags($content): string|array|null
     {
         if (preg_match_all('/##FFN:([a-zA-Z_\-0-9]+):FFN##{field:render/', $content, $matches)) {
-            list ($matchedStrings, $hashes) = $matches;
+            [$matchedStrings, $hashes] = $matches;
             foreach ($hashes as $index => $hash) {
                 $content = str_replace($matchedStrings[$index], '{field:' . $hash . ':render', $content);
             }
@@ -138,14 +132,14 @@ class FormToTagDataTransformer
              * @var array $strings
              * @var array $handles
              */
-            list ($strings, $handles, $actions) = $fieldMatches;
+            [$strings, $handles, $actions] = $fieldMatches;
 
             foreach ($handles as $index => $handle) {
                 $field = $this->form->get($handle);
                 if (!$field) {
                     try {
                         $field = $this->form->getLayout()->getFieldByHash($handle);
-                    } catch (FreeformException $e) {
+                    } catch (FreeformException) {
                         continue;
                     }
                 }
@@ -154,14 +148,14 @@ class FormToTagDataTransformer
                 $attributes = [];
 
                 if ($field && preg_match_all(self::PATTERN_FIELD_RENDER_VARIABLES, $string, $varMatches)) {
-                    list ($_, $keys, $values) = $varMatches;
+                    [$_, $keys, $values] = $varMatches;
 
                     foreach ($values as $varIndex => $value) {
                         $key    = $keys[$varIndex];
                         $subKey = null;
 
-                        if (strpos($key, ':') !== false) {
-                            list($key, $subKey) = explode(':', $key);
+                        if (str_contains($key, ':')) {
+                            [$key, $subKey] = explode(':', $key);
                         }
 
                         $key = (string) Stringy::create($key)->camelize();
@@ -180,28 +174,13 @@ class FormToTagDataTransformer
                 $field->setAttributes($attributes);
 
                 $action = $actions[$index];
-                switch ($action) {
-                    case 'render_label':
-                        $replacement = $field->renderLabel();
-                        break;
-
-                    case 'render_instructions':
-                        $replacement = $field->renderInstructions();
-                        break;
-
-                    case 'render_errors':
-                        $replacement = $field->renderErrors();
-                        break;
-
-                    case 'render_input':
-                        $replacement = $field->renderInput();
-                        break;
-
-                    case 'render':
-                    default:
-                        $replacement = $field->render();
-                        break;
-                }
+                $replacement = match ($action) {
+                    'render_label' => $field->renderLabel(),
+                    'render_instructions' => $field->renderInstructions(),
+                    'render_errors' => $field->renderErrors(),
+                    'render_input' => $field->renderInput(),
+                    default => $field->render(),
+                };
 
                 $content = str_replace($string, $replacement, $content);
             }
@@ -215,7 +194,7 @@ class FormToTagDataTransformer
     /**
      * @return array
      */
-    private function rowData()
+    private function rowData(): array
     {
         $form = $this->form;
 
@@ -270,14 +249,11 @@ class FormToTagDataTransformer
     }
 
     /**
-     * @param AbstractField $field
-     * @param string        $prefix
      * @param int|null      $columnIndex
      * @param int|null      $columnCount
-     *
      * @return array
      */
-    private function getFieldData(AbstractField $field, $prefix = 'field:', $columnIndex = null, $columnCount = null)
+    private function getFieldData(AbstractField $field, string $prefix = 'field:', ?int $columnIndex = null, ?int $columnCount = null)
     {
         static $transformer;
 
@@ -303,7 +279,7 @@ class FormToTagDataTransformer
     /**
      * @return array
      */
-    private function pages()
+    private function pages(): array
     {
         $form = $this->form;
 
@@ -316,12 +292,9 @@ class FormToTagDataTransformer
     }
 
     /**
-     * @param Page   $page
-     * @param string $prefix
-     *
      * @return array
      */
-    private function pageData(Page $page, $prefix = 'page:')
+    private function pageData(Page $page, string $prefix = 'page:'): array
     {
         return [
             $prefix . 'label' => $page->getLabel(),

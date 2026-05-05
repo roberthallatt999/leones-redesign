@@ -58,7 +58,19 @@ $lang = array(
 
     'required' => 'This field is required.',
 
+    'multiple_selection_not_allowed' => 'Only one selection is allowed',
+
+    'starts_with' => 'This field should start with <code>%s</code>.',
+
+    'not_starts_with' => 'This field should not start with <code>%s</code>.',
+
     'unique' => 'This field must be unique.',
+
+    'unique_among_channel_fields' => 'This field must be unique and can not match a channel field short name.',
+
+    'unique_among_member_fields' => 'This field must be unique and can not match a member field short name.',
+
+    'unique_among_field_groups' => 'This field must be unique and can not match a field group short name.',
 
     'unique_email' => 'This field must contain a unique email address.',
 
@@ -71,6 +83,8 @@ $lang = array(
     'valid_ip' => 'This field must contain a valid IP.',
 
     'valid_url' => 'This field must contain a valid URL.',
+
+    'not_base_path' => 'This path cannot be the same as your base path.',
 
     /* Legacy form validation lib */
     'file_exists' => 'This path is either invalid or not writable.',

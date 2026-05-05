@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -13,31 +13,18 @@ namespace Solspace\Addons\FreeformNext\Library\Integrations;
 
 class SettingBlueprint
 {
-    const TYPE_INTERNAL = 'internal';
-    const TYPE_CONFIG   = 'config';
-    const TYPE_TEXT     = 'text';
-    const TYPE_PASSWORD = 'password';
-    const TYPE_BOOL     = 'bool';
+    public const TYPE_INTERNAL = 'internal';
+    public const TYPE_CONFIG   = 'config';
+    public const TYPE_TEXT     = 'text';
+    public const TYPE_PASSWORD = 'password';
+    public const TYPE_BOOL     = 'bool';
 
-    /** @var string */
-    private $type;
-
-    /** @var string */
-    private $handle;
-
-    /** @var string */
-    private $label;
-
-    /** @var string */
-    private $instructions;
-
-    /** @var bool */
-    private $required;
+    private bool $required;
 
     /**
      * @return array
      */
-    public static function getEditableTypes()
+    public static function getEditableTypes(): array
     {
         return [
             self::TYPE_TEXT,
@@ -54,18 +41,18 @@ class SettingBlueprint
      * @param string $label
      * @param string $instructions
      * @param bool   $required
+     * @param string $attributes
+     * @param string $value
      */
     public function __construct(
-        $type,
-        $handle,
-        $label,
-        $instructions,
-        $required = false
+        private $type,
+        private $handle,
+        private $label,
+        private $instructions,
+        $required = false,
+        private $attributes = "",
+        private $value = ""
     ) {
-        $this->type         = $type;
-        $this->handle       = $handle;
-        $this->label        = $label;
-        $this->instructions = $instructions;
         $this->required     = (bool)$required;
     }
 
@@ -104,15 +91,31 @@ class SettingBlueprint
     /**
      * @return boolean
      */
-    public function isRequired()
+    public function isRequired(): bool
     {
         return $this->required;
     }
 
     /**
+     * @return string
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    /**
      * @return bool
      */
-    public function isEditable()
+    public function isEditable(): bool
     {
         return in_array($this->getType(), self::getEditableTypes(), true);
     }

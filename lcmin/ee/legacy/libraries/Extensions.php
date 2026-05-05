@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -14,10 +14,10 @@
 class EE_Extensions
 {
     public $extensions = array();
-    public $end_script = false;	// To return or not to return
-    public $last_call = false;	// The data returned from the last called method for this hook
-    public $in_progress = '';		// Last hook called.  Prevents loops.
-    public $s_cache = array();	// Array of previously unserialized settings
+    public $end_script = false; // To return or not to return
+    public $last_call = false;  // The data returned from the last called method for this hook
+    public $in_progress = '';       // Last hook called.  Prevents loops.
+    public $s_cache = array();  // Array of previously unserialized settings
     public $version_numbers = array(); // To track the version of an extension
 
     /**
@@ -70,10 +70,10 @@ class EE_Extensions
      * Used in ExpressionEngine to call an extension based on whichever
      * hook is being triggered
      *
-     * @access	public
-     * @param	string	Name of the  extension hook
-     * @param	mixed
-     * @return	mixed
+     * @access  public
+     * @param   string  Name of the  extension hook
+     * @param   mixed
+     * @return  mixed
      */
     public function call($which)
     {
@@ -96,7 +96,9 @@ class EE_Extensions
 
         $this->in_progress = $which;
 
-        ee()->load->library('addons');
+        if (!isset(ee()->addons)) {
+            ee()->load->library('addons');
+        }
         ee()->addons->is_package('');
 
         // Retrieve arguments for function
@@ -135,14 +137,16 @@ class EE_Extensions
      */
     public function call_class($class, $which, $metadata, $args = array())
     {
-        ee()->load->library('addons');
+        if (!isset(ee()->addons)) {
+            ee()->load->library('addons');
+        }
         ee()->addons->is_package('');
 
         // Determine Path of Extension
         $class_name = ucfirst($class);
         $name = ee()->security->sanitize_filename(strtolower(substr($class, 0, -4))); // remove '_ext' suffix
 
-        $path = isset(ee()->addons->_packages[$name]) ? ee()->addons->_packages[$name]['extension']['path'] : '';
+        $path = isset(ee()->addons->_packages[$name]) && isset(ee()->addons->_packages[$name]['extension']) ? ee()->addons->_packages[$name]['extension']['path'] : '';
         $extension_path = reduce_double_slashes($path . '/ext.' . $name . '.php');
 
         // Check to see if we need to automatically load the path
@@ -151,6 +155,31 @@ class EE_Extensions
         if ($automatically_load_path) {
             if (! file_exists($extension_path)) {
                 $error = 'Unable to load the following extension file:<br /><br />' . 'ext.' . $name . '.php';
+
+                //if this is early loaded extension, and the session is not set yet
+                //we have no other solution that just show the error
+                if (!isset(ee()->session)) {
+                    return ee()->output->fatal_error($error);
+                }
+
+                $can_view_system = false;
+                if (
+                    ee()->config->item('is_system_on') == 'y' &&
+                    (ee()->config->item('multiple_sites_enabled') != 'y' or ee()->config->item('is_site_on') == 'y')
+                ) {
+                    if (ee()->session->userdata('can_view_online_system') == 'y') {
+                        $can_view_system = true;
+                    }
+                } else {
+                    if (ee()->session->userdata('can_view_offline_system') == 'y') {
+                        $can_view_system = true;
+                    }
+                }
+                $can_view_system = (ee('Permission')->isSuperAdmin()) ? true : $can_view_system;
+
+                if (REQ != 'ACTION' && $can_view_system !== true) {
+                    return ee()->output->system_off_msg();
+                }
 
                 return ee()->output->fatal_error($error);
             }
@@ -212,8 +241,8 @@ class EE_Extensions
      *
      * Getter for the $extensions property
      *
-     * @param	string		name of the extension hook
-     * @return	array|bool	Hook details array or FALSE if not active
+     * @param   string      name of the extension hook
+     * @return  array|bool  Hook details array or FALSE if not active
      **/
     public function get_active_hook_info($hook)
     {
@@ -229,9 +258,9 @@ class EE_Extensions
      *
      * Check If Hook Has Activated Extension
      *
-     * @access	public
-     * @param	string	Name of the  extension hook
-     * @return	bool
+     * @access  public
+     * @param   string  Name of the  extension hook
+     * @return  bool
      */
     public function active_hook($which)
     {

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -139,9 +139,10 @@ class Member_images extends Member
         $tagdata = trim(ee()->TMPL->tagdata);
 
         // If there is tag data, it's a tag pair, otherwise it's a single tag which means it's a legacy speciality template.
+        $template = '';
         if (! empty($tagdata)) {
             $template = ee()->TMPL->tagdata;
-        } else {
+        } elseif (ee('Config')->getFile()->getBoolean('legacy_member_templates')) {
             $template = $this->_load_element('edit_avatar');
         }
 
@@ -150,7 +151,7 @@ class Member_images extends Member
             ->where('member_id', (int) ee()->session->userdata('member_id'))
             ->get('members');
 
-        if ($query->row('avatar_filename') == '') {
+        if (empty($query->row('avatar_filename'))) {
             $template = $this->_deny_if('avatar', $template);
             $template = $this->_allow_if('no_avatar', $template);
 
@@ -211,19 +212,30 @@ class Member_images extends Member
 
         //if we run EE template parser, do some things differently
         if (! empty($tagdata)) {
+            $data = [];
             if (ee()->TMPL->fetch_param('form_name', '') != "") {
-	            $data['name'] = ee()->TMPL->fetch_param('form_name');
-	        }
+                $data['name'] = ee()->TMPL->fetch_param('form_name');
+            }
 
-	        $data['id'] = ee()->TMPL->form_id;
-	        $data['class'] = ee()->TMPL->form_class;
-			$data['enctype'] = 'multi';
+            $data['id'] = ee()->TMPL->form_id;
+            $data['class'] = ee()->TMPL->form_class;
+            $data['enctype'] = 'multi';
 
             $data['hidden_fields'] = array(
                 'RET' => (ee()->TMPL->fetch_param('return', '') != "") ? ee()->functions->create_url(ee()->TMPL->fetch_param('return')) : ee()->functions->fetch_current_uri(),
                 'ACT' => ee()->functions->fetch_action_id('Member', 'upload_avatar'));
 
-            return ee()->functions->form_declaration($data) . $template . '</form>';
+            $open = ee()->functions->form_declaration($data);
+
+            ee()->TMPL->set_data([
+                'open' => $open,
+                'avatar_url' => $cur_avatar_url,
+                'avatar_filename' => $avatar_filename,
+                'avatar_width' => $avatar_width,
+                'avatar_height' => $avatar_height,
+            ]);
+
+            return $open . $template . '</form>';
         }
 
         // Finalize the template
@@ -342,7 +354,9 @@ class Member_images extends Member
     {
         if (ee()->input->get_post('avatar') === false or
             ee()->input->get_post('folder') === false) {
-            return ee()->functions->redirect(ee()->input->get_post('referrer'));
+            return ee()->functions->redirect(
+                $this->_get_referrer_redirect(ee()->input->get_post('referrer'))
+            );
         }
 
         $folder = ee()->security->sanitize_filename(ee()->input->get_post('folder'));
@@ -385,6 +399,64 @@ class Member_images extends Member
                 'lang:message' => lang('avatar_updated')
             )
         );
+    }
+
+    /**
+     * Resolve redirect target for member image actions.
+     *
+     * Allows internal paths and same-origin absolute URLs only.
+     * Falls back to edit_avatar when input is missing or invalid.
+     *
+     * @param string|null $referrer
+     * @return string
+     */
+    private function _get_referrer_redirect($referrer = null)
+    {
+        $fallback = $this->_member_path('edit_avatar');
+
+        if (! is_string($referrer)) {
+            return $fallback;
+        }
+
+        $referrer = trim($referrer);
+
+        if ($referrer === '' || strpos($referrer, '//') === 0) {
+            return $fallback;
+        }
+
+        if (! preg_match('#^https?://#i', $referrer)) {
+            return ee()->functions->create_url(ltrim($referrer, '/'));
+        }
+
+        $site_url = ee()->config->item('site_url');
+
+        if (! (is_string($site_url) && $site_url !== '')) {
+            $site_url = ee()->functions->create_url('');
+        }
+
+        $site_parts = @parse_url($site_url);
+        $referrer_parts = @parse_url($referrer);
+
+        if (! is_array($site_parts) || ! is_array($referrer_parts)) {
+            return $fallback;
+        }
+
+        if (! isset($site_parts['host']) || ! isset($referrer_parts['host'])) {
+            return $fallback;
+        }
+
+        if (strtolower($site_parts['host']) !== strtolower($referrer_parts['host'])) {
+            return $fallback;
+        }
+
+        $site_port = isset($site_parts['port']) ? (int) $site_parts['port'] : null;
+        $referrer_port = isset($referrer_parts['port']) ? (int) $referrer_parts['port'] : null;
+
+        if (! is_null($site_port) && $site_port !== $referrer_port) {
+            return $fallback;
+        }
+
+        return $referrer;
     }
 
     /**

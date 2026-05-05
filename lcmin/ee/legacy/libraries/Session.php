@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -79,6 +79,10 @@ class EE_Session
     public $cookies_exist = false;
     public $session_exists = false;
 
+    public $mfa_flag = 'skip';
+
+    public $validation;
+
     // Garbage collection probability. Used to kill expired sessions.
     public $gc_probability = 5;
 
@@ -91,7 +95,6 @@ class EE_Session
     private $session_model = null;
     private $member_model = null;
 
-    public $validation;
     /**
      * Session Class Constructor
      */
@@ -101,6 +104,14 @@ class EE_Session
         // dependencies are all here. This can happen in the cp_js_end hook.
         ee()->load->library('remember');
         ee()->load->library('localize');
+
+        if (ee()->config->item('website_session_length')) {
+            $this->user_session_len = ee()->config->item('website_session_length');
+        }
+
+        if (ee()->config->item('cp_session_length')) {
+            $this->cpan_session_len = ee()->config->item('cp_session_length');
+        }
 
         $this->session_length = $this->_setup_session_length();
 
@@ -384,14 +395,14 @@ class EE_Session
         $this->sdata['sess_start'] = $this->sdata['last_activity'];
         $this->sdata['fingerprint'] = $this->_create_fingerprint((string) $crypt_key);
         $this->sdata['can_debug'] = ($can_debug) ? 'y' : 'n';
-        $this->sdata['mfa_flag'] = ($this->member_model->enable_mfa === true) ? 'show' : 'skip';
+        $this->sdata['mfa_flag'] = ((ee()->config->item('enable_mfa') === false || ee()->config->item('enable_mfa') === 'y') && $this->member_model->enable_mfa === true) ? 'show' : 'skip';
 
         $this->userdata['member_id'] = (int) $member_id;
         $this->userdata['role_id'] = (int) $this->member_model->role_id;
         $this->userdata['session_id'] = $this->sdata['session_id'];
         $this->userdata['fingerprint'] = $this->sdata['fingerprint'];
         $this->userdata['site_id'] = ee()->config->item('site_id');
-        $this->userdata['mfa_enabled'] = $this->member_model->enable_mfa;
+        $this->userdata['mfa_enabled'] = (ee()->config->item('enable_mfa') === false || ee()->config->item('enable_mfa') === 'y') ? $this->member_model->enable_mfa : false;
 
         // Set the session cookie, ONLY if this method is not called from the context of the constructor, i.e. a login action
         if (isset(ee()->session)) {
@@ -534,6 +545,7 @@ class EE_Session
         $this->userdata['primary_role_id'] = $this->userdata['group_id'] = $role->getId();
         $this->userdata['primary_role_name'] = $this->userdata['group_title'] = $role->name;
         $this->userdata['primary_role_description'] = $this->userdata['group_description'] = $role->description;
+        $this->userdata['primary_role_short_name'] = $role->short_name;
         $this->userdata['total_comments'] = 0;
         $this->userdata['total_entries'] = 0;
         $this->userdata['private_messages'] = 0;
@@ -586,7 +598,7 @@ class EE_Session
 
         // Turn the query rows into array values
         foreach ($member_query->row_array() as $key => $val) {
-            if (in_array($key, ['timezone', 'date_format', 'time_format', 'include_seconds']) && $val === '') {
+            if (in_array($key, ['timezone', 'date_format', 'time_format', 'week_start', 'include_seconds']) && $val === '') {
                 $val = null;
             }
 
@@ -601,6 +613,7 @@ class EE_Session
         // Add in Primary Role data
         $this->userdata['primary_role_id'] = $this->member_model->PrimaryRole->getId();
         $this->userdata['primary_role_name'] = $this->member_model->PrimaryRole->name;
+        $this->userdata['primary_role_short_name'] = $this->member_model->PrimaryRole->short_name;
         $this->userdata['primary_role_description'] = $this->member_model->PrimaryRole->description;
 
         // Member Group backwards compatibility
@@ -648,6 +661,7 @@ class EE_Session
             $this->userdata['timezone'] = ee()->config->item('default_site_timezone');
             $this->userdata['date_format'] = ee()->config->item('date_format') ? ee()->config->item('date_format') : '%n/%j/%Y';
             $this->userdata['time_format'] = ee()->config->item('time_format') ? ee()->config->item('time_format') : '12';
+            $this->userdata['week_start'] = ee()->config->item('week_start') ? ee()->config->item('week_start') : 'sunday';
             $this->userdata['include_seconds'] = ee()->config->item('include_seconds') ? ee()->config->item('include_seconds') : 'n';
         }
 
@@ -932,7 +946,8 @@ class EE_Session
 
             if (! isset($tracker['0'])) {
                 $tracker[] = $uri;
-            } else {
+            // Do not track requests inside the themes folder
+            } else if(strpos($uri, 'themes/') !== 0) {
                 if (count($tracker) == 5) {
                     array_pop($tracker);
                 }
@@ -1251,10 +1266,14 @@ class EE_Session
             'email' => ee('Cookie')->getSignedCookie('my_email', true),
             'url' => ee('Cookie')->getSignedCookie('my_url', true),
             'location' => ee('Cookie')->getSignedCookie('my_location', true),
+            'avatar_filename' => '',
+            'avatar_width' => '',
+            'avatar_height' => '',
             'language' => '',
             'timezone' => ee()->config->item('default_site_timezone'),
             'date_format' => ee()->config->item('date_format') ? ee()->config->item('date_format') : '%n/%j/%Y',
             'time_format' => ee()->config->item('time_format') ? ee()->config->item('time_format') : '12',
+            'week_start' => ee()->config->item('week_start') ? ee()->config->item('week_start') : 'sunday',
             'include_seconds' => ee()->config->item('include_seconds') ? ee()->config->item('include_seconds') : 'n',
             'role_id' => '3',
             'access_cp' => 0,

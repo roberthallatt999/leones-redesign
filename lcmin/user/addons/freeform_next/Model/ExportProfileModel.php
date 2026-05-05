@@ -2,6 +2,8 @@
 
 namespace Solspace\Addons\FreeformNext\Model;
 
+use Exception;
+use DateTime;
 use EllisLab\ExpressionEngine\Service\Database\Query;
 use EllisLab\ExpressionEngine\Service\Model\Model;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Fields\Interfaces\NoStorageInterface;
@@ -26,8 +28,8 @@ class ExportProfileModel extends Model
 {
     use TimestampableTrait;
 
-    const MODEL = 'freeform_next:ExportProfileModel';
-    const TABLE = 'freeform_next_export_profiles';
+    public const MODEL = 'freeform_next:ExportProfileModel';
+    public const TABLE = 'freeform_next_export_profiles';
 
     protected static $_primary_key = 'id';
     protected static $_table_name  = self::TABLE;
@@ -51,7 +53,7 @@ class ExportProfileModel extends Model
     /**
      * @return array
      */
-    public static function createValidationRules()
+    public static function createValidationRules(): array
     {
         return [
             'name' => 'required',
@@ -59,8 +61,6 @@ class ExportProfileModel extends Model
     }
 
     /**
-     * @param Form $form
-     *
      * @return ExportProfileModel
      */
     public static function create(Form $form)
@@ -85,7 +85,7 @@ class ExportProfileModel extends Model
     /**
      * @return int
      */
-    public function getSubmissionCount()
+    public function getSubmissionCount(): int|string
     {
         $command = $this->buildCommand();
 
@@ -100,7 +100,7 @@ class ExportProfileModel extends Model
             }
 
             return 0;
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return 'Invalid Query';
         }
     }
@@ -114,13 +114,13 @@ class ExportProfileModel extends Model
 
         try {
             return $command->get()->result_array();
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return [];
         }
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
     public function getDateRangeEnd()
     {
@@ -129,22 +129,17 @@ class ExportProfileModel extends Model
         }
 
         if (is_numeric($this->dateRange)) {
-            $time = new \DateTime("-{$this->dateRange} days");
+            $time = new DateTime("-{$this->dateRange} days");
             $time->setTime(0, 0, 0);
 
             return $time;
         }
 
-        switch ($this->dateRange) {
-            case 'today':
-                return (new \DateTime('now'))->setTime(0, 0, 0);
-
-            case 'yesterday':
-                return (new \DateTime('-1 day'))->setTime(0, 0, 0);
-
-            default:
-                return new \DateTime('now');
-        }
+        return match ($this->dateRange) {
+            'today' => (new DateTime('now'))->setTime(0, 0, 0),
+            'yesterday' => (new DateTime('-1 day'))->setTime(0, 0, 0),
+            default => new DateTime('now'),
+        };
     }
 
     /**
@@ -166,7 +161,7 @@ class ExportProfileModel extends Model
                         $label = $field->getLabel();
 
                         $storedFieldIds[] = $field->getId();
-                    } catch (FreeformException $e) {
+                    } catch (FreeformException) {
                         continue;
                     }
                 }
@@ -231,17 +226,11 @@ class ExportProfileModel extends Model
             }
 
             $fieldName = is_numeric($fieldId) ? SubmissionModel::getFieldColumnName($fieldId) : $fieldId;
-            switch ($fieldName) {
-                case 'title':
-                    $fieldName = 's.' . $fieldName;
-                    break;
-                case 'status':
-                    $fieldName = 'stat.name AS status';
-                    break;
-                default:
-                    $fieldName = 's.' . $fieldName;
-                    break;
-            }
+            $fieldName = match ($fieldName) {
+                'title' => 's.' . $fieldName,
+                'status' => 'stat.name AS status',
+                default => 's.' . $fieldName,
+            };
 
             $searchableFields[] = $fieldName;
         }

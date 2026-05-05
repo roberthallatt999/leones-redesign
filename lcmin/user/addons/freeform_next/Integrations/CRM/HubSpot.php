@@ -4,13 +4,14 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Integrations\CRM;
 
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
@@ -22,9 +23,9 @@ use Solspace\Addons\FreeformNext\Library\Logging\LoggerInterface;
 
 class HubSpot extends AbstractCRMIntegration
 {
-    const TITLE           = 'HubSpot (legacy)';
-    const SETTING_API_KEY = 'api_key';
-    const LOG_CATEGORY    = 'HubSpot_legacy';
+    public const TITLE           = 'HubSpot (legacy)';
+    public const SETTING_API_KEY = 'api_key';
+    public const LOG_CATEGORY    = 'HubSpot_legacy';
 
     /**
      * Returns a list of additional settings for this integration
@@ -32,7 +33,7 @@ class HubSpot extends AbstractCRMIntegration
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -52,7 +53,7 @@ class HubSpot extends AbstractCRMIntegration
      *
      * @return bool
      */
-    public function pushObject(array $keyValueList, $formFields = NULL)
+    public function pushObject(array $keyValueList, ?array $formFields = NULL): bool
     {
         $client = new Client();
 
@@ -65,7 +66,7 @@ class HubSpot extends AbstractCRMIntegration
         foreach ($keyValueList as $key => $value) {
             preg_match('/^(\w+)___(.+)$/', $key, $matches);
 
-            list ($all, $target, $propName) = $matches;
+            [$all, $target, $propName] = $matches;
 
             switch ($target) {
                 case 'contact':
@@ -108,7 +109,7 @@ class HubSpot extends AbstractCRMIntegration
                         $this->getLogger()->error($e->getMessage(), self::LOG_CATEGORY);
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->getLogger()->error($e->getMessage(), self::LOG_CATEGORY);
             }
         }
@@ -130,9 +131,7 @@ class HubSpot extends AbstractCRMIntegration
                 if (isset($json->companyId)) {
                     $companyId = $json->companyId;
                 }
-            } catch (BadResponseException $e) {
-                $this->getLogger()->error($e->getMessage(), self::LOG_CATEGORY);
-            } catch (\Exception $e) {
+            } catch (BadResponseException|Exception $e) {
                 $this->getLogger()->error($e->getMessage(), self::LOG_CATEGORY);
             }
         }
@@ -166,7 +165,7 @@ class HubSpot extends AbstractCRMIntegration
      *
      * @return bool
      */
-    public function checkConnection()
+    public function checkConnection(): bool
     {
         $client = new Client();
 
@@ -227,7 +226,7 @@ class HubSpot extends AbstractCRMIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -236,7 +235,7 @@ class HubSpot extends AbstractCRMIntegration
      *
      * @param IntegrationStorageInterface $model
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         $model->updateAccessToken($this->getSetting(self::SETTING_API_KEY));
     }
@@ -244,17 +243,12 @@ class HubSpot extends AbstractCRMIntegration
     /**
      * @return string
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         return 'https://api.hubapi.com/';
     }
 
-    /**
-     * @param string $endpoint
-     * @param string $dataType
-     * @param array  $fieldList
-     */
-    private function extractCustomFields($endpoint, $dataType, &$fieldList)
+    private function extractCustomFields(string $endpoint, string $dataType, array &$fieldList): void
     {
         $client = new Client();
 

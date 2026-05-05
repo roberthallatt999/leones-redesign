@@ -37,24 +37,16 @@ class Detour_pro extends Mod
             return;
         }
 
-        $not_found = array(
-            'original_url'  => trim(ee()->uri->uri_string),
-            'site_id'       => ee()->config->item('site_id'),
-            'detour_id' => null
-        );
+        $original_url = trim(ee()->uri->uri_string);
+        $site_id = ee()->config->item('site_id');
+        $today = date('Y-m-d');
 
-        //is it already there?
-        $check_q = ee()->db->select('notfound_id, hits')
-            ->from('detours_not_found')
-            ->where($not_found)
-            ->get();
-        if ($check_q->num_rows()==0) {
-            $not_found['hit_date'] = date("Y-m-d");
-            ee()->db->insert('detours_not_found', $not_found);
-        } else {
-            ee()->db->where('notfound_id', $check_q->row('notfound_id'))
-                ->update('detours_not_found', ['hits' => ((int)$check_q->row('hits') + 1)]);
-        }
+        $table = ee()->db->dbprefix('detours_not_found');
+        $sql = "INSERT INTO {$table} (detour_id, original_url, hit_date, hits, site_id)
+            VALUES (NULL, ?, ?, 1, ?)
+            ON DUPLICATE KEY UPDATE hits = hits + 1";
+
+        ee()->db->query($sql, array($original_url, $today, $site_id));
     }
 }
 /* End of file mod.detour_pro.php */

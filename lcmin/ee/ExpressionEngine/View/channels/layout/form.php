@@ -2,7 +2,7 @@
 
 <div class="panel">
 <div class="form-standard has-tabs publish" data-publish>
-	<?=form_open($form_url, 'class="ajax-validate"')?>
+	<?=form_open($form_url, 'class="ajax-validate" id="layout-form"')?>
   <div class="panel-heading">
     <div class="form-btns form-btns-top">
 		<div class="title-bar title-bar--large">
@@ -30,7 +30,7 @@
 				<?php
                 $icon = '';
                 if (strpos($tab->id, 'custom_') !== false) {
-                    $icon = '<i class="tab-remove">';
+                    $icon = '<i class="tab-edit"></i><i class="tab-remove">';
                 } else {
                     if ($tab->isVisible()) {
                         $icon = '<i class="tab-on">';
@@ -39,7 +39,7 @@
                     }
                 }
                 ?>
-				<button type="button" class="tab-bar__tab js-tab-button <?php if ($index == 0): ?>active<?php endif; ?>" rel="t-<?=$index?>"><?=lang($tab->title)?> <?php if ($tab->title != 'publish'): ?><?=$icon?></i><?php endif; ?></button>
+				<button type="button" class="tab-bar__tab js-tab-button <?php if ($index == 0): ?>active<?php endif; ?>" rel="t-<?=$index?>"><span class="tab-name"><?=lang($tab->title)?></span> <?php if ($tab->title != 'publish'): ?><?=$icon?></i><?php endif; ?></button>
 			<?php endforeach; ?>
 			</div>
 
@@ -66,6 +66,19 @@
                                         <?php if (!$field->publishLayoutCollapseIsHidden()): ?>
 										<label class="field-option-collapse"><input class="checkbox checkbox--small" type="checkbox"<?php if ($field->isCollapsed()):?> checked="checked"<?php endif ?>><?=lang('collapse')?></label>
                                         <?php endif; ?>
+										<div class="layout-item__field-width">
+										<div class="field-control field-option-width">
+											<i class="fal fa-arrows-h"></i>
+											<select class="select-popup button--xsmall">
+											<option value="100" <?php echo ($field->getWidth() == 100) ? 'selected="selected"' : ''; ?>>100%</option>
+											<option value="75" <?php echo ($field->getWidth() == 75) ? 'selected="selected"' : ''; ?>>75%</option>
+											<option value="66.66" <?php echo ($field->getWidth() == 66.66) ? 'selected="selected"' : ''; ?>>66%</option>
+											<option value="50" <?php echo ($field->getWidth() == 50) ? 'selected="selected"' : ''; ?>>50%</option>
+											<option value="33.33" <?php echo ($field->getWidth() == 33.33) ? 'selected="selected"' : ''; ?>>33%</option>
+											<option value="25" <?php echo ($field->getWidth() == 25) ? 'selected="selected"' : ''; ?>>25%</option>
+											</select>
+										</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -94,7 +107,7 @@
 
           <div class="dialog__header">
             <h2 class="dialog__title"><?=lang('add_tab')?> <span class="req-title"><?=lang('required_fields')?></h2>
-            <div class="dialog__close js-modal-close"><i class="fas fa-times"></i></div>
+            <div class="dialog__close js-modal-close"><i class="fal fa-times"></i></div>
           </div>
           <div class="dialog__body">
 					<form class="settings">
@@ -114,6 +127,39 @@
 						</div>
           </div>
 					</form>
+	</div>
+</div>
+<?php ee('CP/Modal')->endModal(); ?>
+
+<?php ee('CP/Modal')->startModal('rename-tab'); ?>
+<div class="modal-wrap modal-rename-tab hidden">
+	<div class="modal modal--no-padding dialog">
+
+		<div class="dialog__header">
+			<h2 class="dialog__title"><?=lang('rename_tab')?></h2>
+			<div class="dialog__close js-modal-close"><i class="fal fa-times"></i></div>
+		</div>
+
+		<div class="dialog__body">
+			<p class="current-tab-id hidden" data-current_id data-old_name></p>
+			<form class="settings">
+				<fieldset>
+					<div class="field-instruct">
+						<label><?=lang('tab_new_name')?></label>
+						<em><?=lang('tab_name_desc')?></em>
+					</div>
+					<div class="field-control">
+						<input type="text" name="tab_name" data-illegal="<?=lang('illegal_tab_name')?>" data-duplicate="<?=lang('duplicate_tab_name')?>">
+					</div>
+				</fieldset>
+			</form>
+		</div>
+
+		<div class="dialog__actions dialog__actions--with-bg">
+			<div class="dialog__buttons">
+				<button class="button button--primary"><?=lang('rename_tab')?></button>
+			</div>
+		</div>
 	</div>
 </div>
 <?php ee('CP/Modal')->endModal(); ?>

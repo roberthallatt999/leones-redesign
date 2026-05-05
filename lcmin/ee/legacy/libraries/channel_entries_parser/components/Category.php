@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -207,11 +207,8 @@ class EE_Channel_category_parser implements EE_Channel_parser_component
                     $cats = substr($cats, 0, - $catval[1]['backspace']);
                 }
 
-                // Check to see if we need to parse {filedir_n}
-                if (strpos($cats, '{filedir_') !== false) {
-                    ee()->load->library('file_field');
-                    $cats = ee()->file_field->parse_string($cats);
-                }
+                ee()->load->library('file_field');
+                $cats = ee()->file_field->parse_string($cats);
 
                 $tagdata = str_replace($catval[2], $cats, $tagdata);
             }

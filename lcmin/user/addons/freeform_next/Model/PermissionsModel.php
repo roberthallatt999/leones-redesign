@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -31,11 +31,11 @@ use EllisLab\ExpressionEngine\Service\Model\Model;
  */
 class PermissionsModel extends Model
 {
-    const MODEL = 'freeform_next:PermissionsModel';
-    const TABLE = 'freeform_next_permissions';
+    public const MODEL = 'freeform_next:PermissionsModel';
+    public const TABLE = 'freeform_next_permissions';
 
-    const DEFAULT_PERMISSIONS__ALLOW_ALL = 'allow_all';
-    const DEFAULT_PERMISSIONS__DENY_ALL  = 'deny_all';
+    public const DEFAULT_PERMISSIONS__ALLOW_ALL = 'allow_all';
+    public const DEFAULT_PERMISSIONS__DENY_ALL  = 'deny_all';
 
     protected static $_primary_key = 'id';
     protected static $_table_name  = self::TABLE;
@@ -99,7 +99,7 @@ class PermissionsModel extends Model
     /**
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return (int) $this->id;
     }
@@ -107,7 +107,7 @@ class PermissionsModel extends Model
     /**
      * @return int
      */
-    public function getSiteId()
+    public function getSiteId(): int
     {
         return (int) $this->siteId;
     }
@@ -115,7 +115,7 @@ class PermissionsModel extends Model
     /**
      * @return array
      */
-    private static function getDefaultPermissions()
+    private static function getDefaultPermissions(): array
     {
         return [];
     }

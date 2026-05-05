@@ -3,9 +3,10 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
+
 
 (function($) {
 
@@ -109,7 +110,8 @@ Grid.MiniField = function(field, settings) {
 $.fn.miniGrid = function(params) {
 	return this.each(function() {
 		if ( ! $(this).data('gridInitialized')) {
-			return new Grid.MiniField(this, params);
+			new Grid.MiniField(this, params);
+			return false;
 		}
 	});
 }
@@ -180,21 +182,33 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 	 */
 	_bindSortable: function() {
 		var that = this,
-			params = {
-				// Fire 'beforeSort' event on sort start
-				beforeSort: function(row) {
-					that._fireEvent('beforeSort', row);
-				},
-				// Fire 'afterSort' event on sort stop
-				afterSort: function(row) {
-					// Jquery sortable sets the display property to table-cell, which breaks the grid styles, so remove it
-					row.removeAttr("style");
+			appendElem;
 
-					that._fireEvent('afterSort', row);
-					$(document).trigger('entry:preview');
-				},
-				handle: '.js-grid-reorder-handle'
-			};
+			if ($(that.root).parents('.tab-wrap').length) {
+				appendElem = '.tab-wrap';
+			} else {
+				appendElem = 'parent';
+			}
+
+		params = {
+			// Fire 'beforeSort' event on sort start
+			beforeSort: function(row) {
+				that._fireEvent('beforeSort', row);
+			},
+			// Fire 'afterSort' event on sort stop
+			afterSort: function(row) {
+				// Jquery sortable sets the display property to table-cell, which breaks the grid styles, so remove it
+				row.removeAttr("style");
+
+				that._fireEvent('afterSort', row);
+				that._updateRowCounter();
+				$(document).trigger('entry:preview');
+			},
+			handle: '.js-grid-reorder-handle',
+			cancel: '',
+			containment: false,
+			appendTo: appendElem,
+		};
 
 		params = $.extend(params, this.sortableParams);
 
@@ -216,7 +230,7 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 		var rowsCount = this._getRows().length,
 			neededRows = 0;
 
-		if (typeof(this.settings)!=='undefined')
+		if (typeof(this.settings)!=='undefined' && typeof(this.settings.grid_min_rows) !== 'undefined')
 		{
 			neededRows = this.settings.grid_min_rows - rowsCount;
 		}
@@ -279,7 +293,7 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 		}
 
 		if ($(this.rowContainer).parents('.fluid__item-field').length) {
-			var gridFieldWidth = $(this.rowContainer).innerWidth()
+			var gridFieldWidth = $(this.rowContainer).innerWidth();
 		} else {
 			var gridFieldWidth = $(this.rowContainer).width();
 		}
@@ -287,9 +301,9 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 		if ($(this.rowContainer).parents('.field-control').length) {
 			var parentFieldControlWidth = $(this.rowContainer).parents('.field-control').width();
 		} else {
-			var parentFieldControlWidth = gridFieldWidth;
+			var parentFieldControlWidth = gridFieldWidth
 		}
-			
+
 		if(rowCount == 0) {
 			var showAddButton = setInterval(function (){
 				if ( !that.find('.field-no-results').hasClass('hidden') ) {
@@ -360,6 +374,7 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 			'new_row_' + this.original_row_count
 		);
 
+
 		// Enable inputs
 		el.find(':input').removeAttr('disabled');
 
@@ -368,6 +383,13 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 			this.tableActions.before(el);
 		} else {
 			this.rowContainer.append(el);
+		}
+
+
+		//Add counter to the row
+		if ($('> '+this.cellSelector, el).hasClass('js-row-counter-column')) {
+			el.find('.js-row-counter-column > span').text(this._getRows().length);
+			el.attr('data-row-counter', this._getRows().length);
 		}
 
 		// Make sure empty field message is hidden
@@ -419,6 +441,20 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 	},
 
 	/**
+	 * Inserts new row at the bottom of our field
+	 */ 
+	_updateRowCounter: function() {
+		var totalRows = this._getRows();
+
+		totalRows.each(function(index, row) {
+			if ($(row).is('[data-row-counter]')) {
+				$(row).attr('data-row-counter', index + 1);
+				$(row).find('.js-row-counter-column > span').text(index + 1);
+			}
+		});
+	},
+
+	/**
 	 * Binds click listener to Delete button in row column to delete the row
 	 */
 	_bindDeleteButton: function() {
@@ -435,6 +471,8 @@ Grid.Publish.prototype = Grid.MiniField.prototype = {
 
 			// Remove the row
 			row.remove();
+
+			that._updateRowCounter();
 
 			that._toggleRowManipulationButtons();
 
@@ -1065,14 +1103,38 @@ $(document).ready(function () {
 
 		return false;
 	});
-
 });
 
-function checkGrigWidth() {
+function checkGridWidthForResize() {
 	var gridTables = $('.grid-field:not(.horizontal-layout)');
 
 	gridTables.each(function(el) {
 
+		if ( $(this).parents('.hidden').length ) return;
+
+		if ($(this).find('.grid-field__table').parents('.fluid__item-field').length) {
+			var tableInnerWidth = $(this).find('.grid-field__table').innerWidth()
+		} else {
+			var tableInnerWidth = $(this).find('.grid-field__table').width();
+		}
+
+		if ($(this).parents('.field-control').length) {
+			var containerWidth = $(this).parents('.field-control').width();
+		} else {
+			var containerWidth = tableInnerWidth;
+		}
+
+		if ($(this).hasClass('entry-grid') && containerWidth < tableInnerWidth) {
+			$(this).addClass('overwidth');
+			$(this).find('.grid-field__item-fieldset').show();
+		}
+	});
+}
+
+function checkGridWidth() {
+	var gridTables = $('.grid-field:not(.horizontal-layout)');
+
+	gridTables.each(function(el) {
 		if ( $(this).parents('.hidden').length ) return;
 
 		if ($(this).find('.grid-field__table').parents('.fluid__item-field').length) {
@@ -1099,32 +1161,6 @@ function checkGrigWidth() {
 	});
 }
 
-function checkGrigWidthForResize() {
-	var gridTables = $('.grid-field:not(.horizontal-layout)');
-
-	gridTables.each(function(el) {
-
-		if ( $(this).parents('.hidden').length ) return;
-
-		if ($(this).find('.grid-field__table').parents('.fluid__item-field').length) {
-			var tableInnerWidth = $(this).find('.grid-field__table').parents('.fluid__item-field').innerWidth()
-		} else {
-			var tableInnerWidth = $(this).find('.grid-field__table').width();
-		}
-
-		if ($(this).parents('.field-control').length) {
-			var containerWidth = $(this).parents('.field-control').width();
-		} else {
-			var containerWidth = tableInnerWidth;
-		}
-
-		if ($(this).hasClass('entry-grid') && containerWidth < tableInnerWidth) {
-			$(this).addClass('overwidth');
-			$(this).find('.grid-field__item-fieldset').show();
-		}
-	});
-}
-
 function addHorizontalClassToFluid() {
 	var grid = $('.grid-field.horizontal-layout');
 
@@ -1135,11 +1171,11 @@ function addHorizontalClassToFluid() {
 
 $(window).on('load', function() {
 	addHorizontalClassToFluid();
-	checkGrigWidth();
+	checkGridWidth();
 });
 
 $(window).on('resize', function() {
-	checkGrigWidthForResize();
+	checkGridWidthForResize();
 });
 
 })(jQuery);

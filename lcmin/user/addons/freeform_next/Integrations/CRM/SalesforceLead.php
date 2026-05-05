@@ -4,13 +4,15 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Integrations\CRM;
 
+use Exception;
+use stdClass;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use Solspace\Addons\FreeformNext\Integrations\CRM\Salesforce\AbstractSalesforceIntegration;
@@ -24,17 +26,17 @@ use Solspace\Addons\FreeformNext\Library\Integrations\TokenRefreshInterface;
 
 class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefreshInterface
 {
-    const TITLE        = 'Salesforce Lead';
-    const LOG_CATEGORY = 'Salesforce';
+    public const TITLE        = 'Salesforce Lead';
+    public const LOG_CATEGORY = 'Salesforce';
 
-    const SETTING_CLIENT_ID     = 'salesforce_client_id';
-    const SETTING_CLIENT_SECRET = 'salesforce_client_secret';
-    const SETTING_USER_LOGIN    = 'salesforce_username';
-    const SETTING_USER_PASSWORD = 'salesforce_password';
-    const SETTING_LEAD_OWNER    = 'salesforce_lead_owner';
-    const SETTING_SANDBOX       = 'salesforce_sandbox';
-    const SETTING_CUSTOM_URL    = 'salesforce_custom_url';
-    const SETTING_INSTANCE      = 'instance';
+    public const SETTING_CLIENT_ID     = 'salesforce_client_id';
+    public const SETTING_CLIENT_SECRET = 'salesforce_client_secret';
+    public const SETTING_USER_LOGIN    = 'salesforce_username';
+    public const SETTING_USER_PASSWORD = 'salesforce_password';
+    public const SETTING_LEAD_OWNER    = 'salesforce_lead_owner';
+    public const SETTING_SANDBOX       = 'salesforce_sandbox';
+    public const SETTING_CUSTOM_URL    = 'salesforce_custom_url';
+    public const SETTING_INSTANCE      = 'instance';
 
     /**
      * Returns a list of additional settings for this integration
@@ -42,7 +44,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -108,7 +110,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -182,7 +184,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      *
      * @param IntegrationStorageInterface $model
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         $clientId     = $this->getClientId();
         $clientSecret = $this->getClientSecret();
@@ -204,7 +206,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      *
      * @return bool
      */
-    public function checkConnection()
+    public function checkConnection(): bool
     {
         $client   = new Client();
         $endpoint = $this->getEndpoint('/');
@@ -227,9 +229,9 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      * @param array $keyValueList
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    public function pushObject(array $keyValueList, $formFields = NULL)
+    public function pushObject(array $keyValueList, ?array $formFields = NULL): bool
     {
         $client   = new Client();
         $endpoint = $this->getEndpoint('/sobjects/Lead');
@@ -361,7 +363,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      *
      * @return bool
      */
-    public function refreshToken()
+    public function refreshToken(): bool
     {
         return (bool) $this->fetchAccessToken();
     }
@@ -372,7 +374,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      *
      * @return bool|string
      */
-    public function convertCustomFieldValue(FieldObject $fieldObject, $value = null)
+    public function convertCustomFieldValue(FieldObject $fieldObject, mixed $value = null): bool|string
     {
         if ($fieldObject->getType() === FieldObject::TYPE_ARRAY) {
             return is_array($value) ? implode(';', $value) : $value;
@@ -382,11 +384,9 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
     }
 
     /**
-     * @param \stdClass $responseData
-     *
      * @throws CRMIntegrationNotFoundException
      */
-    protected function onAfterFetchAccessToken(\stdClass $responseData)
+    protected function onAfterFetchAccessToken(stdClass $responseData)
     {
         if (!isset($responseData->instance_url)) {
             throw new CRMIntegrationNotFoundException('Salesforce response data doesn\'t contain the instance URL');
@@ -400,7 +400,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      *
      * @return string
      */
-    protected function getAuthorizeUrl()
+    protected function getAuthorizeUrl(): string
     {
         return 'https://' . $this->getLoginUrl() . '.salesforce.com/services/oauth2/authorize';
     }
@@ -410,7 +410,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
      *
      * @return string
      */
-    protected function getAccessTokenUrl()
+    protected function getAccessTokenUrl(): string
     {
         return 'https://' . $this->getLoginUrl() . '.salesforce.com/services/oauth2/token';
     }
@@ -418,12 +418,12 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
     /**
      * @return string
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         $instance        = $this->getSetting(self::SETTING_INSTANCE);
         $usingCustomUrls = $this->getSetting(self::SETTING_CUSTOM_URL);
 
-        if ($instance && strpos($instance, 'https://') !== 0) {
+        if ($instance && !str_starts_with($instance, 'https://')) {
             return sprintf(
                 'https://%s%s.salesforce.com/services/data/v44.0/',
                 $instance,
@@ -442,7 +442,7 @@ class SalesforceLead extends AbstractSalesforceIntegration implements TokenRefre
     /**
      * @return string
      */
-    private function getLoginUrl()
+    private function getLoginUrl(): string
     {
         $isSandboxMode = $this->getSetting(self::SETTING_SANDBOX);
 

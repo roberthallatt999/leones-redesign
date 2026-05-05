@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -27,15 +27,15 @@ namespace Solspace\Addons\FreeformNext\Library\DataExport;
  */
 class ExportDataExcel extends ExportData {
 
-    const XmlHeader = "<?xml version=\"1.0\" encoding=\"%s\"?\>\n<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:html=\"http://www.w3.org/TR/REC-html40\">";
-    const XmlFooter = "</Workbook>";
+    public const XmlHeader = "<?xml version=\"1.0\" encoding=\"%s\"?\>\n<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:html=\"http://www.w3.org/TR/REC-html40\">";
+    public const XmlFooter = "</Workbook>";
 
     public $encoding = 'UTF-8'; // encoding type to specify in file.
     // Note that you're on your own for making sure your data is actually encoded to this encoding
 
     public $title = 'Sheet1'; // title for Worksheet
 
-    function generateHeader() {
+    function generateHeader(): string {
 
         // workbook header
         $output = stripslashes(sprintf(self::XmlHeader, $this->encoding)) . "\n";
@@ -46,7 +46,7 @@ class ExportDataExcel extends ExportData {
         $output .= "</Styles>\n";
 
         // worksheet header
-        $output .= sprintf("<Worksheet ss:Name=\"%s\">\n    <Table>\n", htmlentities($this->title));
+        $output .= sprintf("<Worksheet ss:Name=\"%s\">\n    <Table>\n", htmlentities($this->title, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8'));
 
         return $output;
     }
@@ -63,7 +63,7 @@ class ExportDataExcel extends ExportData {
         return $output;
     }
 
-    function generateRow($row) {
+    function generateRow($row): string {
         $output = '';
         $output .= "        <Row>\n";
         foreach ($row as $k => $v) {
@@ -73,7 +73,7 @@ class ExportDataExcel extends ExportData {
         return $output;
     }
 
-    private function generateCell($item) {
+    private function generateCell($item): string {
         $output = '';
         $style = '';
 
@@ -93,14 +93,14 @@ class ExportDataExcel extends ExportData {
             ($timestamp > 0) &&
             ($timestamp < strtotime('+500 years'))) {
             $type = 'DateTime';
-            $item = strftime("%Y-%m-%dT%H:%M:%S",$timestamp);
+            $item = gmdate('Y-m-d\TH:i:s', (int) $timestamp);
             $style = 'sDT'; // defined in header; tells excel to format date for display
         }
         else {
             $type = 'String';
         }
 
-        $item = str_replace('&#039;', '&apos;', htmlspecialchars($item, ENT_QUOTES));
+        $item = str_replace('&#039;', '&apos;', htmlspecialchars($item, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8'));
         $output .= "            ";
         $output .= $style ? "<Cell ss:StyleID=\"$style\">" : "<Cell>";
         $output .= sprintf("<Data ss:Type=\"%s\">%s</Data>", $type, $item);
@@ -109,7 +109,7 @@ class ExportDataExcel extends ExportData {
         return $output;
     }
 
-    function sendHttpHeaders() {
+    function sendHttpHeaders(): void {
         header("Content-Type: application/vnd.ms-excel; charset=" . $this->encoding);
         header("Content-Disposition: inline; filename=\"" . basename($this->filename) . "\"");
     }

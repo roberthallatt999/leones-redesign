@@ -5,7 +5,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -139,9 +139,10 @@ class Member_settings extends Member
         $tagdata = trim(ee()->TMPL->tagdata);
 
         // If there is tag data, it's a tag pair, otherwise it's a single tag which means it's a legacy speciality template.
+        $content = '';
         if (! empty($tagdata)) {
             $content = ee()->TMPL->tagdata;
-        } else {
+        } elseif (ee('Config')->getFile()->getBoolean('legacy_member_templates')) {
             $content = $this->_load_element('public_profile');
         }
 
@@ -724,9 +725,10 @@ class Member_settings extends Member
         $tagdata = trim(ee()->TMPL->tagdata);
 
         // If there is tag data, it's a tag pair, otherwise it's a single tag which means it's a legacy speciality template.
+        $template = '';
         if (! empty($tagdata)) {
             $template = ee()->TMPL->tagdata;
-        } else {
+        } elseif (ee('Config')->getFile()->getBoolean('legacy_member_templates')) {
             $template = $this->_load_element('edit_profile_form');
         }
 
@@ -759,11 +761,11 @@ class Member_settings extends Member
 
         $query = ee()->db->query($sql);
 
-        //		$result_row = $result->row_array()
+        // $result_row = $result->row_array()
 
-        $this->member = ee()->session->getMember();
+        $member = ee()->session->getMember();
 
-        if (empty($this->member)) {
+        if (empty($member)) {
             if (! empty($tagdata)) {
                 return ee()->TMPL->no_results();
             } else {
@@ -771,40 +773,106 @@ class Member_settings extends Member
             }
         }
 
-        $result_row = $this->member->getValues();
+        $result_row = $member->getValues();
 
         ee()->load->library('api');
         ee()->legacy_api->instantiate('channel_fields');
         // we need to reset this, because might have already been populated by channel:entries tag
         ee()->api_channel_fields->custom_fields = array();
 
-        if ($query->num_rows() > 0) {
-            foreach ($this->member->getDisplay()->getFields() as $field) {
-                if (! ee('Permission')->isSuperAdmin() && $field->get('field_public') != 'y') {
-                    continue;
+        $hasFileField = false;
+        $fields = [];
+        if (strpos($template, '{/custom_profile_fields}') !== false || !is_null(ee()->TMPL->template_engine)) {
+            if ($query->num_rows() > 0) {
+                // Find out if we have an {options}{/options} tag pair within {custom_profile_fields}{/custom_profile_fields} tag pair
+                if (strpos($template, '{/options}') !== false) {
+                    $options_tag_length = strlen(LD . 'options' . RD);
+        
+                    // Find the starting and ending position of our options tags and calculate the difference so we can grab it.
+                    $options_start = strpos($template, LD . 'options' . RD) + $options_tag_length;
+                    $options_end = strpos($template, LD . '/options' . RD);
+                    $options_diff = $options_end - $options_start;
                 }
+                
+                foreach ($member->getDisplay()->getFields() as $field) {
+                    if (! ee('Permission')->isSuperAdmin() && $field->get('field_public') != 'y') {
+                        continue;
+                    }
 
-                $temp = $profile_fields_template;
+                    $temp = $profile_fields_template;
 
-                /** ----------------------------------------
-                /**  Assign the data to the field
-                /** ----------------------------------------*/
-                $temp = str_replace('{field_id}', $field->getId(), $temp);
+                    /** ----------------------------------------
+                    /**  Assign the data to the field
+                    /** ----------------------------------------*/
+                    $temp = str_replace('{field_id}', $field->getId(), $temp);
 
-                $required = $field->isRequired() ? "<span class='alert'>*</span>&nbsp;" : '';
+                    $required = $field->isRequired() ? "<span class='alert'>*</span>&nbsp;" : '';
 
-                $temp = str_replace('{lang:profile_field}', $required . $field->getLabel(), $temp);
-                $temp = str_replace('{lang:profile_field_description}', $field->get('field_description'), $temp);
-                $temp = str_replace('{form:custom_profile_field}', $field->getForm(), $temp);
+                    $fieldForm = $field->getForm();
 
-                /** ----------------------------------------
-                /**  Render textarea fields
-                /** ----------------------------------------*/
-                if ($field->getTypeName() == 'textarea') {
-                    $temp = str_replace('<td ', "<td valign='top' ", $temp);
+                    $hasFileField = (in_array($field->getType(), ['file', 'file_grid'])) ? true : $hasFileField;
+
+                    $temp = ee()->functions->prep_conditionals($temp, [
+                        'has_error' => !empty(ee()->session->flashdata('errors')['error:'. $field->getShortName()] ?? '')
+                    ]);
+
+                    $variables = [
+                        'lang:profile_field' => $required . $field->getLabel(),
+                        'lang:profile_field_description' => $field->get('field_description'),
+                        'form:custom_profile_field' => $fieldForm,
+                        'field_name' => $field->getName(),
+                        'field_label' => $field->getLabel(),
+                        'field_id' => $field->getId(),
+                        'field_instructions' => $field->get('field_description'),
+                        'display_field' => $fieldForm,
+                        'field_data' => $result_row[$field->getName()],
+                        'text_direction' => $field->get('field_text_direction'),
+                        'maxlength' => $field->get('field_maxl'),
+                        'field_required' => $field->isRequired(),
+                        'field_type' => $field->getType(),
+                        'error' => ee()->session->flashdata('errors')['error:'. $field->getShortName()] ?? '',
+                    ];
+
+                    // Replace the field variables in the template
+                    $temp = str_replace(
+                        array_map(function($variable) {
+                            return '{'.$variable.'}';
+                        }, array_keys($variables)),
+                        array_values($variables),
+                        $temp
+                    );
+
+                    /** ----------------------------------------
+                    /**  Render textarea fields
+                    /** ----------------------------------------*/
+                    if ($field->getTypeName() == 'textarea') {
+                        $temp = str_replace('<td ', "<td valign='top' ", $temp);
+                    }
+
+                    /** ----------------------------------------
+                    /**  Render option tags
+                    /** ----------------------------------------*/
+                    // only run if there are {options} tag pairs and that there is an available array of value/label pairs to populate from
+                    if (! empty($options_diff) && array_key_exists('value_label_pairs', $field->get('field_settings'))) {
+                        $options_start = strpos($temp, LD . 'options' . RD) + $options_tag_length;
+                        $options_end = strpos($temp, LD . '/options' . RD);
+                        $options_diff = $options_end - $options_start;
+                                                
+                        $options_tagdata = substr($temp, $options_start, $options_diff);
+                        $options_temp = '';
+                        
+                        foreach($field->get('field_settings')['value_label_pairs'] as $value => $name) {
+                            $options_selected = ($field->getData() == $value ? 'selected' : '');
+                            $options_temp .= str_replace('{selected}', $options_selected , str_replace('{option_name}', $name, str_replace('{option_value}', $value, $options_tagdata)));
+                        }
+
+                        $temp = substr_replace($temp, $options_temp, $options_start, $options_diff);
+                    }
+                    
+                    $r .= $temp;
+
+                    $fields[$field->getName()] = $variables;
                 }
-
-                $r .= $temp;
             }
         }
 
@@ -839,6 +907,20 @@ class Member_settings extends Member
             $template = str_replace(LD . "custom_profile_fields" . RD, $r, $template);
         }
 
+        if (strpos($template, LD . 'field:') !== false || strpos($template, LD . 'error:') !== false) {
+            foreach ($member->getDisplay()->getFields() as $field) {
+                if (ee('Permission')->isSuperAdmin() || $field->get('field_public') == 'y') {
+                    $template = str_replace(LD . 'field:' . $field->get('field_name') . RD, $field->getForm(), $template);
+                }else{
+                    // Remove any inline errors for fields that are not visible
+                    $template = str_replace(LD . 'error:' . $field->get('field_name') . RD, '', $template);
+                }
+            }
+        }
+
+        // Parse inline errors
+        $template = ee()->TMPL->parse_inline_errors($template);
+
         //if we run EE template parser, do some things differently
         if (! empty($tagdata)) {
             ee()->load->add_package_path(PATH_ADDONS . 'channel');
@@ -846,27 +928,44 @@ class Member_settings extends Member
             ee()->channel_form_lib->datepicker = get_bool_from_string(ee()->TMPL->fetch_param('datepicker', 'y'));
             ee()->channel_form_lib->compile_js();
 
+            $data = [];
             if (ee()->TMPL->fetch_param('form_name', '') != "") {
                 $data['name'] = ee()->TMPL->fetch_param('form_name');
             }
 
-            $data['id'] = 'cform';
-            $data['class'] = ee()->TMPL->form_class;
+            $data['id'] = !empty(ee()->TMPL->form_id) ? ee()->TMPL->form_id : 'cform';
+            $data['class'] = (get_bool_from_string(ee()->TMPL->fetch_param('include_assets', 'n') || strpos($template, LD . 'form_assets' . RD) !== false) ? 'ee-cform ' : '');
+            $data['class'] .= ee()->TMPL->form_class;
 
             $data['hidden_fields'] = array(
                 'RET' => (ee()->TMPL->fetch_param('return') && ee()->TMPL->fetch_param('return') != "") ? ee()->functions->create_url(ee()->TMPL->fetch_param('return')) : ee()->functions->fetch_current_uri(),
                 'ACT' => ee()->functions->fetch_action_id('Member', 'update_profile')
             );
 
-            $return = ee()->functions->form_declaration($data) . $template . '</form>';
-            //make head appear by default
-            if (preg_match('/' . LD . 'form_assets' . RD . '/', $return)) {
-                $return = ee()->TMPL->swap_var_single('form_assets', ee()->channel_form_lib->head, $return);
-            } elseif (get_bool_from_string(ee()->TMPL->fetch_param('include_assets'), 'y')) {
-                // Head should only be there if the param is there
-                $return .= ee()->channel_form_lib->head;
+            // check the template for file fields
+            if (strpos($template, '_hidden_file') !== false || (!is_null(ee()->TMPL->template_engine) && $hasFileField)) {
+                $data['enctype'] = 'multi';
             }
+
+            $open = ee()->functions->form_declaration($data);
+            $close = '</form>';
+            //make head appear by default
+            if (strpos($template, LD . 'form_assets' . RD) !== false) {
+                $template = ee()->TMPL->swap_var_single('form_assets', ee()->channel_form_lib->head, $template);
+            } elseif (get_bool_from_string(ee()->TMPL->fetch_param('include_assets'), 'n')) {
+                // Head should only be there if the param is there
+                $close .= ee()->channel_form_lib->head;
+            }
+            $return = $open . $template . $close;
             ee()->load->remove_package_path(PATH_ADDONS . 'channel');
+
+            ee()->TMPL->set_data([
+                'open' => $open,
+                'fields' => $fields,
+                'close' => $close,
+                'username' => $result_row['username'] ?? '',
+                'email' => $result_row['email'] ?? '',
+            ]);
 
             return $return;
         }
@@ -929,27 +1028,45 @@ class Member_settings extends Member
         $member = ee('Model')->get('Member', ee()->session->userdata('member_id'))->first();
 
         if ($query->num_rows() > 0) {
+            ee()->load->library(array('api', 'file_field'));
             foreach ($query->result_array() as $row) {
                 $fname = 'm_field_id_' . $row['m_field_id'];
                 $post = ee()->input->post($fname);
 
-                // Handle arrays of checkboxes as a special case;
-                if ($row['m_field_type'] == 'checkbox') {
-                    foreach ($row['choices']  as $property => $label) {
+                // file field is a special case
+                if ($row['m_field_type'] == 'file') {
+                    if (ee()->input->post($fname . '_hidden_file') === '') {
+                        $member->$fname = '';
+                    }
+                    // trick validation into calling the file fieldtype
+                    if (isset($_FILES[$fname]['name'])) {
+                        $img = ee()->file_field->validate($_FILES[$fname]['name'], $fname);
+
+                        if (isset($img['value'])) {
+                            $member->$fname = $img['value'];
+                        } else {
+                            $member->$fname = '';
+                        }
+                    }
+                } elseif ($row['m_field_type'] == 'checkbox') {
+                    // Handle arrays of checkboxes as a special case;
+                    foreach ($row['choices'] as $property => $label) {
                         $member->$fname = in_array($property, $post) ? 'y' : 'n';
                     }
                 } else {
                     if ($post !== false) {
-                        // Check with Seth
                         $member->$fname = ee('Security/XSS')->clean($post);
-                        //$member->$fname = $post;
                     }
                 }
 
                 // Set custom field format override if available, too
                 $ft_name = 'm_field_ft_' . $row['m_field_id'];
                 if (ee()->input->post($ft_name)) {
-                    $member->{$ft_name} = ee()->input->post($ft_name);
+                    $member->{$ft_name} = ee('Security/XSS')->clean(ee('Request')->post($ft_name));
+                }
+                $dt_name = 'm_field_dt_' . $row['m_field_id'];
+                if (ee()->input->post($dt_name)) {
+                    $member->{$dt_name} = ee('Security/XSS')->clean(ee('Request')->post($dt_name));
                 }
             }
         }
@@ -958,7 +1075,6 @@ class Member_settings extends Member
 
         //if this request initiated from regular EE template, we'll process some additional stuff here
         if (REQ === 'ACTION') {
-
             //email update
             if (ee()->input->post('email') != '' && ee()->input->post('email') != $member->email) {
                 $validator = ee('Validation')->make();
@@ -985,7 +1101,7 @@ class Member_settings extends Member
                     $member->language = ee()->security->sanitize_filename($_POST['language']);
                 }
                 if (!empty($_POST['timezone'])) {
-                    foreach (array('timezone', 'date_format', 'time_format', 'include_seconds') as $key) {
+                    foreach (array('timezone', 'date_format', 'time_format', 'week_start', 'include_seconds') as $key) {
                         if (ee()->input->post('site_default') == 'y') {
                             $member->{$key} = null;
                         } else {
@@ -1002,12 +1118,12 @@ class Member_settings extends Member
 
             // username & password
             $need_validation = false;
-            if (ee()->config->item('allow_username_change') == 'y' && ee()->input->post('username') != '') {
+            if (ee()->config->item('allow_username_change') == 'y' && ee()->input->post('username') != '' && ee()->input->post('username') !== $member->username) {
                 $member->username = ee()->input->post('username');
                 $need_validation = true;
             }
 
-            if (ee()->input->post('screen_name') != '') {
+            if (ee()->input->post('screen_name') != '' && ee()->input->post('screen_name') !== $member->screen_name) {
                 $need_validation = true;
                 $member->screen_name = ee()->input->post('screen_name');
             }
@@ -1030,12 +1146,13 @@ class Member_settings extends Member
 
         $result = $member->validate();
 
-        if (ee()->input->post('password')) {
-            $password_confirm = $validator->validate($_POST);
+        // Extra validation is sometimes required outside of the Member model validation
+        // Add any failures from this validation to the Member model result object
+        if (isset($validator)) {
+            $validatorResult = $validator->validate($_POST);
 
-            // Add password confirmation failure to main result object
-            if ($password_confirm->failed()) {
-                $rules = $password_confirm->getFailed();
+            if ($validatorResult->failed()) {
+                $rules = $validatorResult->getFailed();
                 foreach ($rules as $field => $rule) {
                     $result->addFailed($field, $rule[0]);
                 }
@@ -1043,7 +1160,16 @@ class Member_settings extends Member
         }
 
         if ($result->failed()) {
-            return ee()->output->show_user_error('general', $result->renderErrors());
+            $aliases = array_reduce($member->getDisplay()->getFields(), function($carry, $field) {
+                return array_merge($carry, [
+                    $field->getName() => [
+                        'field' => $field->getShortName(),
+                        'label' => $field->getLabel()
+                    ]
+                ]);
+            }, []);
+
+            return ee()->output->show_form_error_aliases($result, $aliases);
         }
 
         // if the password was set, need to hash it before saving and kill all other sessions
@@ -1174,9 +1300,10 @@ class Member_settings extends Member
         $tagdata = trim(ee()->TMPL->tagdata);
 
         // If there is tag data, it's a tag pair, otherwise it's a single tag which means it's a legacy speciality template.
+        $template = '';
         if (! empty($tagdata)) {
             $template = ee()->TMPL->tagdata;
-        } else {
+        } elseif (ee('Config')->getFile()->getBoolean('legacy_member_templates')) {
             $template = $this->_load_element('email_prefs_form');
         }
 
@@ -1290,9 +1417,10 @@ class Member_settings extends Member
         $tagdata = trim(ee()->TMPL->tagdata);
 
         // If there is tag data, it's a tag pair, otherwise it's a single tag which means it's a legacy speciality template.
+        $template = '';
         if (! empty($tagdata)) {
             $template = ee()->TMPL->tagdata;
-        } else {
+        } elseif (ee('Config')->getFile()->getBoolean('legacy_member_templates')) {
             $template = $this->_load_element('username_password_form');
         }
 
@@ -1469,7 +1597,7 @@ class Member_settings extends Member
 
         $data['language'] = ee()->security->sanitize_filename($_POST['language']);
 
-        foreach (array('timezone', 'date_format', 'time_format', 'include_seconds') as $key) {
+        foreach (array('timezone', 'date_format', 'time_format', 'week_start', 'include_seconds') as $key) {
             if (ee()->input->post('site_default') == 'y') {
                 $data[$key] = null;
             } else {
@@ -1674,9 +1802,10 @@ class Member_settings extends Member
         /** -------------------------------------
         /**  Parse the $_POST data
         /** -------------------------------------*/
-        if (ee('Request')->post('screen_name') == '' &&
+        if (
+            ee('Request')->post('screen_name') == '' &&
             ee('Request')->post('email') == ''
-            ) {
+        ) {
             ee()->functions->redirect($redirect_url);
             exit;
         }
@@ -1693,7 +1822,7 @@ class Member_settings extends Member
                 if ($val != 'any') {
                     $search_query[] = " role_id ='" . ee()->db->escape_str((int) $_POST['group_id']) . "'";
                 }
-            } else if (in_array($key, ['screen_name', 'email'])) {
+            } elseif (in_array($key, ['screen_name', 'email'])) {
                 if ($val != '') {
                     $search_query[] = ee()->db->escape_str($key) . " LIKE '%" . ee()->db->escape_like_str(ee('Security/XSS')->clean($val)) . "%'";
                 }
@@ -1708,8 +1837,8 @@ class Member_settings extends Member
         $Q = implode(" AND ", $search_query);
 
         $sql = "SELECT DISTINCT exp_members.member_id, exp_members.screen_name FROM exp_members, exp_roles
-				WHERE exp_members.role_id = exp_roles.role_id
-				AND " . $Q;
+                WHERE exp_members.role_id = exp_roles.role_id
+                AND " . $Q;
 
         $query = ee()->db->query($sql);
 
@@ -1734,7 +1863,7 @@ class Member_settings extends Member
             array(
                 'include:search_results' => $r,
                 'path:new_search_url' => $redirect_url,
-                'which_field' => 'name'		// not used in this instance; probably will log a minor js error
+                'which_field' => 'name'     // not used in this instance; probably will log a minor js error
             )
         );
     }
@@ -1746,51 +1875,51 @@ class Member_settings extends Member
     {
         $str = <<<EOT
 
-	<script type="text/javascript">
-	//<![CDATA[
+    <script type="text/javascript">
+    //<![CDATA[
 
-	function toggle(thebutton)
-	{
-		if (thebutton.checked)
-		{
-			val = true;
-		}
-		else
-		{
-			val = false;
-		}
+    function toggle(thebutton)
+    {
+        if (thebutton.checked)
+        {
+            val = true;
+        }
+        else
+        {
+            val = false;
+        }
 
-		if (document.target)
-		{
-			var theForm = document.target;
-		}
-		else if (document.getElementById('target'))
-		{
-			var theForm = document.getElementById('target');
-		}
-		else
-		{
-			return false;
-		}
+        if (document.target)
+        {
+            var theForm = document.target;
+        }
+        else if (document.getElementById('target'))
+        {
+            var theForm = document.getElementById('target');
+        }
+        else
+        {
+            return false;
+        }
 
-		var len = theForm.elements.length;
+        var len = theForm.elements.length;
 
-		for (var i = 0; i < len; i++)
-		{
-			var button = theForm.elements[i];
+        for (var i = 0; i < len; i++)
+        {
+            var button = theForm.elements[i];
 
-			var name_array = button.name.split("[");
+            var name_array = button.name.split("[");
 
-			if (name_array[0] == "toggle")
-			{
-				button.checked = val;
-			}
-		}
+            if (name_array[0] == "toggle")
+            {
+                button.checked = val;
+            }
+        }
 
-		theForm.toggleflag.checked = val;
-	}
-	//]]>
-	</script>
+        theForm.toggleflag.checked = val;
+    }
+    //]]>
+    </script>
 
 EOT;
 
@@ -1804,44 +1933,44 @@ EOT;
     {
         return <<<EWOK
 
-	<script type="text/javascript">
-	//<![CDATA[
+    <script type="text/javascript">
+    //<![CDATA[
 
-	function list_addition(member, el)
-	{
-		var member_text = '{lang:member_usernames}';
+    function list_addition(member, el)
+    {
+        var member_text = '{lang:member_usernames}';
 
-		var Name = (member == null) ? prompt(member_text, '') : member;
-		var el = (el == null) ? 'name' : el;
+        var Name = (member == null) ? prompt(member_text, '') : member;
+        var el = (el == null) ? 'name' : el;
 
-		 if ( ! Name || Name == null)
-		 {
-		 	return;
-		 }
+         if ( ! Name || Name == null)
+         {
+            return;
+         }
 
-		var frm = document.getElementById('target');
-		var x;
+        var frm = document.getElementById('target');
+        var x;
 
-		for (i = 0; i < frm.length; i++)
-		{
-			if (frm.elements[i].name == el)
-			{
-				frm.elements[i].value = Name;
-			}
-		}
+        for (i = 0; i < frm.length; i++)
+        {
+            if (frm.elements[i].name == el)
+            {
+                frm.elements[i].value = Name;
+            }
+        }
 
-		 document.getElementById('target').submit();
-	}
+         document.getElementById('target').submit();
+    }
 
-	function dynamic_action(which)
-	{
-		if (document.getElementById('target').daction)
-		{
-			document.getElementById('target').daction.value = which;
-		}
-	}
-	//]]>
-	</script>
+    function dynamic_action(which)
+    {
+        if (document.getElementById('target').daction)
+        {
+            document.getElementById('target').daction.value = which;
+        }
+    }
+    //]]>
+    </script>
 EWOK;
     }
 
@@ -1858,7 +1987,7 @@ EWOK;
 //<![CDATA[
 function member_search()
 {
-	var popWin = window.open('{$url}', '_blank', 'width=450,height=480,scrollbars=yes,status=yes,screenx=0,screeny=0,resizable=yes');
+    var popWin = window.open('{$url}', '_blank', 'width=450,height=480,scrollbars=yes,status=yes,screenx=0,screeny=0,resizable=yes');
 }
 
 //]]>
@@ -1995,7 +2124,6 @@ UNGA;
         /** -------------------------------------
         /**  Instantiate validation class
         /** -------------------------------------*/
-
         $new_un = (string) ee()->input->post('new_username');
         $new_pw = (string) ee()->input->post('new_password');
         $new_pwc = (string) ee()->input->post('new_password_confirm');
@@ -2033,6 +2161,7 @@ UNGA;
             foreach ($validationResult->getAllErrors() as $error) {
                 $errors = array_merge($errors, array_values($error));
             }
+
             return ee()->output->show_user_error('submission', $errors);
         }
 

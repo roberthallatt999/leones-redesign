@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -21,19 +21,17 @@ abstract class ExportData {
     protected $exportTo; // Set in constructor to one of 'browser', 'file', 'string'
     protected $stringData; // stringData so far, used if export string mode
     protected $tempFile; // handle to temp file (for export file mode)
-    protected $tempFilename; // temp file name and path (for export file mode)
+    protected $tempFilename; // file mode: the output file name; browser mode: file name for download; string mode: not used
 
-    public $filename; // file mode: the output file name; browser mode: file name for download; string mode: not used
-
-    public function __construct($exportTo = "browser", $filename = "exportdata") {
-        if(!in_array($exportTo, array('browser','file','string') )) {
+    public function __construct($exportTo = "browser", // temp file name and path (for export file mode)
+    public $filename = "exportdata") {
+        if(!in_array($exportTo, ['browser', 'file', 'string'] )) {
             throw new Exception("$exportTo is not a valid ExportData export type");
         }
         $this->exportTo = $exportTo;
-        $this->filename = $filename;
     }
 
-    public function initialize() {
+    public function initialize(): void {
 
         switch($this->exportTo) {
             case 'browser':
@@ -51,11 +49,11 @@ abstract class ExportData {
         $this->write($this->generateHeader());
     }
 
-    public function addRow($row) {
+    public function addRow($row): void {
         $this->write($this->generateRow($row));
     }
 
-    public function finalize() {
+    public function finalize(): void {
 
         $this->write($this->generateFooter());
 
@@ -80,8 +78,13 @@ abstract class ExportData {
 
     abstract public function sendHttpHeaders();
 
-    protected function write($data) {
-        switch($this->exportTo) {
+    protected function write(?string $data)
+    {
+        if ($data === null) {
+            return;
+        }
+
+        switch ($this->exportTo) {
             case 'browser':
                 echo $data;
                 break;

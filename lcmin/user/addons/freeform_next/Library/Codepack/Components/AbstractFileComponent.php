@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -24,19 +24,15 @@ abstract class AbstractFileComponent implements ComponentInterface
     protected $targetFilesDirectory;
 
     /** @var Folder */
-    protected $contents;
-
-    /** @var string */
-    private $location;
+    protected FileObject $contents;
 
     /**
      * @param string $location - the location of files
      *
      * @throws CodepackException
      */
-    public final function __construct($location)
+    public final function __construct(private $location)
     {
-        $this->location = $location;
         $this->contents = $this->locateFiles();
     }
 
@@ -68,7 +64,7 @@ abstract class AbstractFileComponent implements ComponentInterface
      *
      * @param string|null $prefix
      */
-    public function install($prefix = null)
+    public function install(?string $prefix = null): void
     {
         $siteId = ee()->config->item('site_id');
 
@@ -160,10 +156,11 @@ abstract class AbstractFileComponent implements ComponentInterface
      * @param string      $content
      * @param string|null $prefix
      *
-     * @return string
+     * @return ?string
      */
-    public function fileContentModification($content, $prefix = null)
+    public function fileContentModification($content, ?string $prefix = null): ?string
     {
+        return null;
     }
 
     /**

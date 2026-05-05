@@ -4,22 +4,23 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Integrations\CRM;
 
+use stdClass;
 use GuzzleHttp\Client;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
 use Solspace\Addons\FreeformNext\Library\Integrations\SettingBlueprint;
 
 abstract class CRMOAuthConnector extends AbstractCRMIntegration
 {
-    const SETTING_CLIENT_ID     = "client_id";
-    const SETTING_CLIENT_SECRET = "client_secret";
-    const SETTING_RETURN_URI    = "return_uri";
+    public const SETTING_CLIENT_ID     = "client_id";
+    public const SETTING_CLIENT_SECRET = "client_secret";
+    public const SETTING_RETURN_URI    = "return_uri";
 
     /**
      * Returns a list of additional settings for this integration
@@ -57,7 +58,7 @@ abstract class CRMOAuthConnector extends AbstractCRMIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
         $data = [
             "response_type" => "code",
@@ -80,7 +81,7 @@ abstract class CRMOAuthConnector extends AbstractCRMIntegration
     {
         $client = new Client();
 
-        $code = isset($_GET["code"]) ? $_GET["code"] : null;
+        $code = $_GET["code"] ?? null;
         $this->onBeforeFetchAccessToken($code);
 
         if (is_null($code)) {
@@ -138,10 +139,7 @@ abstract class CRMOAuthConnector extends AbstractCRMIntegration
     {
     }
 
-    /**
-     * @param \stdClass $responseData
-     */
-    protected function onAfterFetchAccessToken(\stdClass $responseData)
+    protected function onAfterFetchAccessToken(stdClass $responseData)
     {
     }
 

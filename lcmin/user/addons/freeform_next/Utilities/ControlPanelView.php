@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -27,17 +27,15 @@ class ControlPanelView
      *
      * @return Navigation
      */
-    protected function buildNavigation()
+    protected function buildNavigation(): Navigation
     {
         return new Navigation();
     }
 
     /**
-     * @param View $view
-     *
      * @return array
      */
-    protected final function renderView(View $view)
+    protected final function renderView(View $view): array
     {
         if ($view instanceof AjaxView) {
             header('Content-Type: application/json');
@@ -83,11 +81,9 @@ class ControlPanelView
     }
 
     /**
-     * @param string $target
-     *
      * @return mixed
      */
-    protected function getLink($target)
+    protected function getLink(string $target): object
     {
         return ee('CP/URL', 'addons/settings/freeform_next/' . $target);
     }

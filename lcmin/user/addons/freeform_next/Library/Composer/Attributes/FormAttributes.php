@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -18,9 +18,6 @@ use Solspace\Addons\FreeformNext\Library\Session\SessionInterface;
 
 class FormAttributes
 {
-    /** @var int */
-    private $id;
-
     /** @var bool */
     private $csrfEnabled;
 
@@ -33,8 +30,7 @@ class FormAttributes
     /** @var string */
     private $actionUrl;
 
-    /** @var string */
-    private $method;
+    private string $method;
 
     /** @var FormValueContext */
     private $formValueContext;
@@ -43,12 +39,10 @@ class FormAttributes
      * FormAttributes constructor.
      *
      * @param                  $formId
-     * @param SessionInterface $session
-     * @param RequestInterface $request
+     * @param int $formId
      */
-    public function __construct($formId, SessionInterface $session, RequestInterface $request)
+    public function __construct(private $id, SessionInterface $session, RequestInterface $request)
     {
-        $this->id     = $formId;
         $this->method = 'POST';
         $this->setFormValueContext($session, $request);
     }
@@ -144,17 +138,15 @@ class FormAttributes
     /**
      * @return string
      */
-    public function getMethod()
+    public function getMethod(): string
     {
         return $this->method;
     }
 
     /**
-     * @param string $method
-     *
      * @return $this
      */
-    public function setMethod($method)
+    public function setMethod(string $method)
     {
         $this->method = $method;
 
@@ -170,12 +162,10 @@ class FormAttributes
     }
 
     /**
-     * @param SessionInterface $session
-     * @param RequestInterface $request
      *
      * @return FormValueContext
      */
-    private function setFormValueContext(SessionInterface $session, RequestInterface $request)
+    private function setFormValueContext(SessionInterface $session, RequestInterface $request): void
     {
         $hashPrefix = HashHelper::hash($this->id);
 

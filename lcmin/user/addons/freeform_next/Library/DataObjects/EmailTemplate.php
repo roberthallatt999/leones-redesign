@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -16,40 +16,29 @@ use Solspace\Addons\FreeformNext\Library\Helpers\StringHelper;
 
 class EmailTemplate
 {
-    const METADATA_PATTERN = "/{!--\s*__KEY__:\s*(.*)\s*--}/";
+    public const METADATA_PATTERN = "/{!--\s*__KEY__:\s*(.*)\s*--}/";
 
-    /** @var string */
-    private $name;
+    private string $name;
 
-    /** @var string */
-    private $fileName;
+    private string|array $fileName;
 
-    /** @var string */
-    private $handle;
+    private string|array $handle;
 
-    /** @var string */
-    private $description;
+    private ?string $description;
 
-    /** @var string */
-    private $templateData;
+    private string|bool $templateData;
 
-    /** @var string */
-    private $fromEmail;
+    private ?string $fromEmail;
 
-    /** @var string */
-    private $fromName;
+    private ?string $fromName;
 
-    /** @var string */
-    private $replyToEmail;
+    private ?string $replyToEmail;
 
-    /** @var bool */
-    private $includeAttachments;
+    private bool $includeAttachments;
 
-    /** @var string */
-    private $subject;
+    private ?string $subject;
 
-    /** @var string */
-    private $body;
+    private string|array|null $body = null;
 
     /**
      * EmailTemplate constructor.
@@ -87,7 +76,7 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -95,7 +84,7 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getHandle()
+    public function getHandle(): string|array
     {
         return $this->handle;
     }
@@ -103,7 +92,7 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
@@ -111,7 +100,7 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getFromEmail()
+    public function getFromEmail(): ?string
     {
         return $this->fromEmail;
     }
@@ -119,7 +108,7 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getFromName()
+    public function getFromName(): ?string
     {
         return $this->fromName;
     }
@@ -127,7 +116,7 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getReplyToEmail()
+    public function getReplyToEmail(): ?string
     {
         return $this->replyToEmail;
     }
@@ -135,7 +124,7 @@ class EmailTemplate
     /**
      * @return bool
      */
-    public function isIncludeAttachments()
+    public function isIncludeAttachments(): bool
     {
         return $this->includeAttachments;
     }
@@ -143,7 +132,7 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getSubject()
+    public function getSubject(): ?string
     {
         return $this->subject;
     }
@@ -151,25 +140,22 @@ class EmailTemplate
     /**
      * @return string
      */
-    public function getBody()
+    public function getBody(): string|array|null
     {
         return $this->body;
     }
 
     /**
-     * @param string $key
-     * @param bool   $required
-     *
      * @return null|string
      * @throws EmailTemplateException
      */
-    private function getMetadata($key, $required = false)
+    private function getMetadata(string $key, bool $required = false): ?string
     {
         $value   = null;
         $pattern = str_replace('__KEY__', $key, self::METADATA_PATTERN);
 
         if (preg_match($pattern, $this->templateData, $matches)) {
-            list ($_, $value) = $matches;
+            [$_, $value] = $matches;
             $value = trim($value);
         } else if ($required) {
             throw new EmailTemplateException(

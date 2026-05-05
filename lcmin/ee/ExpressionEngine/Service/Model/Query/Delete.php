@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -17,9 +17,9 @@ use ExpressionEngine\Service\Model\Relation\BelongsTo;
  */
 class Delete extends Query
 {
-    const DELETE_BATCH_SIZE = 100;
+    private const DELETE_BATCH_SIZE = 100;
 
-    protected $delete_list = array();
+    private $delete_list = array();
 
     public function run()
     {
@@ -344,17 +344,23 @@ class Delete extends Query
         $withs = $this->nest($withs);
 
         return function ($query) use ($relation, $withs) {
-            if (($relation->getSourceModel() == 'Role' || $relation->getSourceModel() == 'ee:Role') &&
-                ($relation->getTargetModel() == 'Member' || $relation->getTargetModel() == 'ee:Member')) {
-                return array();
-            }
-
-            if (($relation->getTargetModel() == 'Role' || $relation->getTargetModel() == 'ee:Role') &&
-                ($relation->getPivot() != array())) {
+            // When delting data with a pivot table on/to Role, don’t just blindly delete everything.
+            if (
+                ($relation->getTargetModel() == 'Role' || $relation->getTargetModel() == 'ee:Role') &&
+                ($relation->getPivot() != array())
+            ) {
                 return array();
             }
 
             $name = $relation->getName();
+
+            // for delete queries, we don't need full set of columns
+            // ... and some might be already gone because of previous queries
+            $relation_meta = $this->store->getMetaDataReader($relation->getTargetModel());
+            $relation_pk = $relation_meta->getPrimaryKey();
+            if (count($withs)) {
+                $query->fields('CurrentlyDeleting.' . $relation_pk);
+            }
             $models = $query->with($withs)->all();
 
             foreach ($models as $model) {

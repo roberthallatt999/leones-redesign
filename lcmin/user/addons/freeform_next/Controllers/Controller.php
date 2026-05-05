@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -14,16 +14,16 @@ namespace Solspace\Addons\FreeformNext\Controllers;
 use Solspace\Addons\FreeformNext\Library\Helpers\UrlHelper;
 use Solspace\Addons\FreeformNext\Services\FieldsService;
 use Solspace\Addons\FreeformNext\Services\PermissionsService;
+use Solspace\Addons\FreeformNext\Services\SettingsService;
 
 abstract class Controller
 {
     /**
      * @param string $key
-     * @param mixed  $defaultValue
      *
      * @return mixed
      */
-    protected function getPost($key, $defaultValue = null)
+    protected function getPost($key, mixed $defaultValue = null)
     {
         $value = ee()->input->post($key);
 
@@ -67,6 +67,20 @@ abstract class Controller
 
         if (null === $instance) {
             $instance = new PermissionsService();
+        }
+
+        return $instance;
+    }
+
+    /**
+     * @return SettingsService
+     */
+    protected function getSettingsService()
+    {
+        static $instance;
+
+        if (null === $instance) {
+            $instance = new SettingsService();
         }
 
         return $instance;

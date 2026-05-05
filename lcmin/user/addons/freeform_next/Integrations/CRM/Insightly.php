@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -22,10 +22,10 @@ use Solspace\Addons\FreeformNext\Library\Logging\LoggerInterface;
 
 class Insightly extends AbstractCRMIntegration
 {
-    const SETTING_API_KEY = 'api_key';
+    public const SETTING_API_KEY = 'api_key';
 
-    const TITLE        = 'Insightly';
-    const LOG_CATEGORY = 'Insightly';
+    public const TITLE        = 'Insightly';
+    public const LOG_CATEGORY = 'Insightly';
 
     /**
      * Returns a list of additional settings for this integration
@@ -33,7 +33,7 @@ class Insightly extends AbstractCRMIntegration
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -53,7 +53,7 @@ class Insightly extends AbstractCRMIntegration
      *
      * @return bool
      */
-    public function pushObject(array $keyValueList, $formFields = NULL)
+    public function pushObject(array $keyValueList, ?array$formFields = NULL): bool
     {
         $client = new Client();
 		$response = $client->get($this->getEndpoint('/Leads'), [
@@ -74,7 +74,7 @@ class Insightly extends AbstractCRMIntegration
      *
      * @return bool
      */
-    public function checkConnection()
+    public function checkConnection(): bool
     {
         $client = new Client();
 
@@ -189,7 +189,7 @@ class Insightly extends AbstractCRMIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -198,7 +198,7 @@ class Insightly extends AbstractCRMIntegration
      *
      * @param IntegrationStorageInterface $model
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         $model->updateAccessToken($this->getSetting(self::SETTING_API_KEY));
     }
@@ -206,7 +206,7 @@ class Insightly extends AbstractCRMIntegration
     /**
      * @return string
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         return 'https://api.insightly.com/v3.0/';
     }

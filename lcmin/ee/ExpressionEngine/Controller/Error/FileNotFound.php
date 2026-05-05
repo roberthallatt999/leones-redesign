@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -21,6 +21,7 @@ class FileNotFound extends CP_Controller
     {
         ee()->remove('__legacy_controller');
         parent::__construct();
+        ee()->output->enable_profiler(false);
     }
 
     public function index($url = '')

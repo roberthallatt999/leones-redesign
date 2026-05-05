@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -22,12 +22,12 @@ use Solspace\Addons\FreeformNext\Library\Integrations\SettingBlueprint;
 
 class MailChimp extends AbstractMailingListIntegration
 {
-    const TITLE        = 'MailChimp';
-    const LOG_CATEGORY = 'MailChimp';
+    public const TITLE        = 'MailChimp';
+    public const LOG_CATEGORY = 'MailChimp';
 
-    const SETTING_API_KEY       = 'api_key';
-    const SETTING_DOUBLE_OPT_IN = 'double_opt_in';
-    const SETTING_DATA_CENTER   = 'data_center';
+    public const SETTING_API_KEY       = 'api_key';
+    public const SETTING_DOUBLE_OPT_IN = 'double_opt_in';
+    public const SETTING_DATA_CENTER   = 'data_center';
 
     /**
      * Returns a list of additional settings for this integration
@@ -35,7 +35,7 @@ class MailChimp extends AbstractMailingListIntegration
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -106,7 +106,7 @@ class MailChimp extends AbstractMailingListIntegration
      * @return bool
      * @throws IntegrationException
      */
-    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues)
+    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues): bool
     {
         $client   = new Client();
         $endpoint = $this->getEndpoint('lists/' . $mailingList->getId());
@@ -158,7 +158,7 @@ class MailChimp extends AbstractMailingListIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -181,7 +181,7 @@ class MailChimp extends AbstractMailingListIntegration
      *
      * @throws IntegrationException
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         if (preg_match('/([a-zA-Z]+\d+)$/', $this->getSetting(self::SETTING_API_KEY), $matches)) {
             $dataCenter = $matches[1];
@@ -199,10 +199,10 @@ class MailChimp extends AbstractMailingListIntegration
      * Builds ListObject objects based on the results
      * And returns them
      *
-     * @return \Solspace\Addons\FreeformNext\Library\Integrations\MailingLists\DataObjects\ListObject[]
+     * @return ListObject[]
      * @throws IntegrationException
      */
-    protected function fetchLists()
+    protected function fetchLists(): array
     {
         $client = new Client();
 
@@ -294,26 +294,11 @@ class MailChimp extends AbstractMailingListIntegration
         if (isset($json->merge_fields)) {
             $fieldList = [];
             foreach ($json->merge_fields as $field) {
-                switch ($field->type) {
-                    case 'text':
-                    case 'website':
-                    case 'url':
-                    case 'dropdown':
-                    case 'radio':
-                    case 'date':
-                    case 'zip':
-                        $type = FieldObject::TYPE_STRING;
-                        break;
-
-                    case 'number':
-                    case 'phone':
-                        $type = FieldObject::TYPE_NUMERIC;
-                        break;
-
-                    default:
-                        $type = null;
-                        break;
-                }
+                $type = match ($field->type) {
+                    'text', 'website', 'url', 'dropdown', 'radio', 'date', 'zip' => FieldObject::TYPE_STRING,
+                    'number', 'phone' => FieldObject::TYPE_NUMERIC,
+                    default => null,
+                };
 
                 if (null === $type) {
                     continue;
@@ -339,7 +324,7 @@ class MailChimp extends AbstractMailingListIntegration
      * @return string
      * @throws IntegrationException
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         $dataCenter = $this->getSetting(self::SETTING_DATA_CENTER);
 

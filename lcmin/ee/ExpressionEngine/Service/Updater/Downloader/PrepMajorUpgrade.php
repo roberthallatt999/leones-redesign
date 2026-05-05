@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -47,7 +47,7 @@ class PrepMajorUpgrade
 
         if (empty($update_version_major)) {
             ee()->load->library('el_pings');
-            $version_file = ee()->el_pings->get_version_info(true);
+            $version_file = ee()->el_pings->get_version_info();
             $update_version_major = (int) explode('.', $version_file['latest_version'], 2)[0];
         }
 

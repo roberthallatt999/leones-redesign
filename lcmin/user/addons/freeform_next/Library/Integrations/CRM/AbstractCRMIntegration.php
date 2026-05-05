@@ -4,13 +4,16 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Integrations\CRM;
 
+use JsonSerializable;
+use DateTime;
+use Exception;
 use Solspace\Addons\FreeformNext\Library\Configuration\ConfigurationInterface;
 use Solspace\Addons\FreeformNext\Library\Database\CRMHandlerInterface;
 use Solspace\Addons\FreeformNext\Library\Integrations\AbstractIntegration;
@@ -19,17 +22,16 @@ use Solspace\Addons\FreeformNext\Library\Integrations\IntegrationInterface;
 use Solspace\Addons\FreeformNext\Library\Logging\LoggerInterface;
 use Solspace\Addons\FreeformNext\Library\Translations\TranslatorInterface;
 
-abstract class AbstractCRMIntegration extends AbstractIntegration implements CRMIntegrationInterface, IntegrationInterface, \JsonSerializable
+abstract class AbstractCRMIntegration extends AbstractIntegration implements CRMIntegrationInterface, IntegrationInterface, JsonSerializable
 {
-    /** @var CRMHandlerInterface */
-    private $crmHandler;
+    private CRMHandlerInterface $crmHandler;
 
     /**
      * AbstractMailingList constructor.
      *
      * @param int                    $id
      * @param string                 $name
-     * @param \DateTime              $lastUpdate
+     * @param DateTime $lastUpdate
      * @param string                 $accessToken
      * @param array|null             $settings
      * @param LoggerInterface        $logger
@@ -40,7 +42,7 @@ abstract class AbstractCRMIntegration extends AbstractIntegration implements CRM
     public final function __construct(
         $id,
         $name,
-        \DateTime $lastUpdate,
+        DateTime $lastUpdate,
         $accessToken,
         $settings,
         LoggerInterface $logger,
@@ -94,7 +96,7 @@ abstract class AbstractCRMIntegration extends AbstractIntegration implements CRM
 	{
         try {
             $fields = $this->getFields();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $e->getMessage());
 
             $fields = [];

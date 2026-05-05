@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -78,7 +78,7 @@ class Groups extends AbstractCategoriesController
     /**
      * Category group creation/edit form
      *
-     * @param	int	$group_id	ID of category group to edit
+     * @param   int $group_id   ID of category group to edit
      */
     private function form($group_id = null)
     {
@@ -195,7 +195,7 @@ class Groups extends AbstractCategoriesController
             unset($vars['buttons'][2]);
         }
 
-        if (! $cat_group->isNew()) {
+        if (! $cat_group->isNew() && !AJAX_REQUEST) {
             $vars['tabs']['fields'] = $this->renderFieldsTab($cat_group, $errors);
 
             ee()->javascript->set_global([
@@ -404,7 +404,7 @@ class Groups extends AbstractCategoriesController
         return ee('View')->make('ee:_shared/form/fields/select')->render([
             'field_name' => 'category_fields',
             'choices' => $choices,
-            'tooManyLimit' => 8,
+            'tooManyLimit' => 1,
             'value' => null,
             'force_react' => true,
             'multi' => false,
@@ -425,8 +425,8 @@ class Groups extends AbstractCategoriesController
     /**
      * Saves a category group
      *
-     * @param	int $group_id ID of category group to save
-     * @return	int ID of category group saved
+     * @param   int $group_id ID of category group to save
+     * @return  object category group to be saved
      */
     private function setWithPost($cat_group)
     {

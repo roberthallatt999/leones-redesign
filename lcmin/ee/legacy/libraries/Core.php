@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -74,8 +74,8 @@ class EE_Core
 
         // application constants
         define('APP_NAME', 'ExpressionEngine');
-        define('APP_BUILD', '20240415');
-        define('APP_VER', '6.4.17');
+        define('APP_BUILD', '20260421');
+        define('APP_VER', '7.5.22');
         define('APP_VER_ID', '');
         define('SLASH', '&#47;');
         define('LD', '{');
@@ -87,7 +87,7 @@ class EE_Core
         define('AJAX_REQUEST', ee()->input->is_ajax_request());
         define('USERNAME_MAX_LENGTH', 75);
         define('PASSWORD_MAX_LENGTH', 72);
-        define('DOC_URL', 'https://docs.expressionengine.com/v6/');
+        define('DOC_URL', 'https://docs.expressionengine.com/v7/');
         define('URL_TITLE_MAX_LENGTH', 200);
         define('CLONING_MODE', (ee('Request') && ee('Request')->post('submit') == 'save_as_new_entry'));
 
@@ -131,13 +131,16 @@ class EE_Core
         } else {
             define('IS_PRO', false);
         }
-
         // setup cookie settings for all providers
-        if (REQ != 'CLI') {
-            $providers = ee('App')->getProviders();
-            foreach ($providers as $provider) {
+        $providers = ee('App')->getProviders();
+        foreach ($providers as $provider) {
+            if (REQ == 'CP') {
                 $provider->registerCookiesSettings();
             }
+            $provider->registerFilesystemAdapters();
+            $provider->registerVariableModifiers();
+        }
+        if (REQ != 'CLI') {
             ee('CookieRegistry')->loadCookiesSettings();
         }
 
@@ -173,8 +176,6 @@ class EE_Core
         // $last_site_id = the site that you're viewing
         // config->item('site_id') = the site who's URL is being used
 
-        $last_site_id = ee()->input->cookie('cp_last_site_id');
-
         if (REQ == 'CP' && ee()->config->item('multiple_sites_enabled') == 'y') {
             $cookie_prefix = ee()->config->item('cookie_prefix');
             $cookie_path = ee()->config->item('cookie_path');
@@ -185,6 +186,7 @@ class EE_Core
                 $cookie_prefix .= '_';
             }
 
+            $last_site_id = ee()->input->cookie('cp_last_site_id');
             if (! empty($last_site_id) && is_numeric($last_site_id) && $last_site_id != ee()->config->item('site_id')) {
                 ee()->config->site_prefs('', $last_site_id);
             }
@@ -239,6 +241,9 @@ class EE_Core
         define('PATH_THEMES_GLOBAL_ASSET', PATH_THEMES . 'asset/');
         define('URL_THEMES_GLOBAL_ASSET', URL_THEMES . 'asset/');
         define('PATH_CP_THEME', PATH_THEMES . 'cp/');
+
+        define('PATH_JAVASCRIPT', PATH_THEMES_GLOBAL_ASSET . 'javascript/' . PATH_JS . '/');
+        define('PATH_JAVASCRIPT_BUILD', PATH_THEMES . 'cp/js/build/');
 
         define('PATH_PRO_THEMES', PATH_THEMES . 'pro/');
         define('URL_PRO_THEMES', URL_THEMES . 'pro/');
@@ -316,9 +321,9 @@ class EE_Core
         $this->native_plugins = array('markdown', 'rss_parser', 'xml_encode');
         $this->native_modules = array(
             'block_and_allow', 'channel', 'comment', 'commerce', 'email',
-            'file', 'filepicker', 'forum', 'ip_to_nation', 'member',
+            'file', 'filepicker', 'forum', 'member',
             'metaweblog_api', 'moblog', 'pages', 'query', 'relationship', 'rss',
-            'rte', 'search', 'simple_commerce', 'spam', 'stats'
+            'rte', 'search', 'spam', 'stats'
         );
 
         // Is this a asset request?  If so, we're done.
@@ -413,7 +418,11 @@ class EE_Core
         }
 
         // Is MFA required?
-        if (REQ == 'PAGE' && ee()->session->userdata('mfa_flag') != 'skip' && IS_PRO && ee('pro:Access')->hasValidLicense()) {
+        if (
+            REQ == 'PAGE' &&
+            (ee()->config->item('enable_mfa') === false || ee()->config->item('enable_mfa') === 'y') &&
+            ee()->session->userdata('mfa_flag') != 'skip'
+        ) {
             if (ee()->session->userdata('mfa_flag') == 'show') {
                 ee('pro:Mfa')->invokeMfaDialog();
             }
@@ -499,7 +508,7 @@ class EE_Core
             ee()->router->fetch_class() == ''/* OR
             ! isset($_GET['S'])*/
         ) {
-            ee()->functions->redirect(BASE . AMP . 'C=homepage');
+            ee()->functions->redirect(ee('CP/URL')->make('homepage')->compile());
         }
 
         if (ee()->uri->segment(1) == 'cp') {
@@ -540,12 +549,12 @@ class EE_Core
             // has their session Timed out and they are requesting a page?
             // Grab the URL, base64_encode it and send them to the login screen.
             $safe_refresh = ee()->cp->get_safe_refresh();
-            $return_url = ($safe_refresh == 'C=homepage') ? '' : AMP . 'return=' . urlencode(ee('Encrypt')->encode($safe_refresh));
+            $return = (empty($safe_refresh) || $safe_refresh == 'C=homepage') ? [] : ['return' => ee('Encrypt')->encode($safe_refresh)];
 
-            ee()->functions->redirect(BASE . AMP . 'C=login' . $return_url);
+            ee()->functions->redirect(ee('CP/URL')->make('login', $return)->compile());
         }
 
-        if ((ee()->config->item('enable_mfa') === false || ee()->config->item('enable_mfa') === 'y') && ee()->session->userdata('mfa_flag') != 'skip' && IS_PRO && ee('pro:Access')->hasValidLicense()) {
+        if ((ee()->config->item('enable_mfa') === false || ee()->config->item('enable_mfa') === 'y') && ee()->session->userdata('mfa_flag') != 'skip') {
             //only allow MFA code page
             if (!(ee()->uri->segment(2) == 'login' && in_array(ee()->uri->segment(3), ['mfa', 'mfa_reset', 'logout'])) && !(ee()->uri->segment(2) == 'members' && ee()->uri->segment(3) == 'profile' && ee()->uri->segment(4) == 'pro' && ee()->uri->segment(5) == 'mfa')) {
                 ee()->functions->redirect(ee('CP/URL')->make('/login/mfa', ['return' => urlencode(ee('Encrypt')->encode(ee()->cp->get_safe_refresh()))]));
@@ -563,18 +572,22 @@ class EE_Core
         }
 
         //is member role forced to use MFA?
-        if (ee()->session->userdata('member_id') !== 0 && ee()->session->getMember()->PrimaryRole->RoleSettings->filter('site_id', ee()->config->item('site_id'))->first()->require_mfa === true && ee()->session->getMember()->enable_mfa !== true && IS_PRO && ee('pro:Access')->hasValidLicense()) {
+        if (
+            (ee()->config->item('enable_mfa') === false || ee()->config->item('enable_mfa') === 'y') &&
+            ee()->session->userdata('member_id') !== 0 &&
+            ee()->session->getMember()->enable_mfa !== true &&
+            ee()->session->getMember()->PrimaryRole->RoleSettings->filter('site_id', ee()->config->item('site_id'))->first()->require_mfa == 'y'
+        ) {
             if (!(ee()->uri->segment(2) == 'login' && ee()->uri->segment(3) == 'logout') && !(ee()->uri->segment(2) == 'members' && ee()->uri->segment(3) == 'profile' && ee()->uri->segment(4) == 'pro' && ee()->uri->segment(5) == 'mfa')) {
-                ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
+                ee()->lang->load('pro');
                 ee('CP/Alert')->makeInline('shared-form')
-                        ->asIssue()
-                        ->withTitle(lang('mfa_required'))
-                        ->addToBody(lang('mfa_required_desc'))
-                        ->defer();
+                    ->asIssue()
+                    ->withTitle(lang('mfa_required'))
+                    ->addToBody(lang('mfa_required_desc'))
+                    ->defer();
                 ee()->functions->redirect(ee('CP/URL')->make('members/profile/pro/mfa'));
             }
         }
-
 
         // Load common helper files
         ee()->load->helper(array('url', 'form', 'quicktab', 'file'));
@@ -599,6 +612,17 @@ class EE_Core
 
         //show them post-update checks, again
         if (ee()->input->get('after') == 'update' || ee()->session->flashdata('update:completed')) {
+
+            // -------------------------------------------
+            // 'updater_complete' hook.
+            //  - added 7.5.16
+            //
+            if (ee()->extensions->active_hook('updater_complete') === true) {
+                ee()->extensions->call('updater_complete');
+            }
+            //
+            // -------------------------------------------
+
             $advisor = new \ExpressionEngine\Library\Advisor\Advisor();
             $messages = $advisor->postUpdateChecks();
             if (!empty($messages)) {
@@ -615,6 +639,24 @@ class EE_Core
                     ->canClose()
                     ->now();
             }
+
+            //tell them about new file manager
+            if (bool_config_item('warn_file_manager_compatibility_mode') && ee()->router->fetch_class(true) !== 'login' && ee()->router->fetch_class() != 'css') {
+                ee('CP/Alert')->makeBanner('file_manager_compatibility_mode')
+                    ->asAttention()
+                    ->canClose()
+                    ->withTitle(lang('file_manager_compatibility_mode_warning'))
+                    ->addToBody(
+                        sprintf(
+                            lang('file_manager_compatibility_mode_warning_desc'),
+                            DOC_URL . 'control-panel/file-manager/file-manager.html#compatibility-mode',
+                            ee('CP/URL')->make('utilities/file-usage')->compile(),
+                            ee('CP/URL')->make('settings/content-design')->compile() . '#fieldset-file_manager_compatibility_mode'
+                        )
+                    )
+                    ->now();
+                ee('Model')->get('Config')->filter('key', 'warn_file_manager_compatibility_mode')->delete();
+            }
         }
     }
 
@@ -624,7 +666,12 @@ class EE_Core
      */
     private function somebody_set_us_up_the_base()
     {
-        define('BASE', EESELF . '?S=' . ee()->session->session_id() . '&amp;D=cp'); // cp url
+        $base = EESELF . '?/cp';
+        $session_id = ee()->session->session_id();
+        if (!empty($session_id)) {
+            $base .= '&amp;S=' . $session_id;
+        }
+        define('BASE', $base); // cp url
     }
 
     /**
@@ -687,7 +734,7 @@ class EE_Core
             $forum_trigger &&
             in_array(ee()->uri->segment(1), preg_split('/\|/', $forum_trigger, -1, PREG_SPLIT_NO_EMPTY))
         ) {
-            require PATH_MOD . 'forum/mod.forum.php';
+            require PATH_THIRD . 'forum/mod.forum.php';
             $FRM = new Forum();
             $this->set_newrelic_transaction($forum_trigger . '/' . $FRM->current_request);
 

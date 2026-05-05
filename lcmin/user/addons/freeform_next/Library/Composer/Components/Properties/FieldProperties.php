@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -56,6 +56,8 @@ class FieldProperties extends AbstractProperties
 
     /** @var int */
     protected $notificationId;
+
+    protected string $format = 'html';
 
     /** @var int */
     protected $assetSourceId;
@@ -256,7 +258,7 @@ class FieldProperties extends AbstractProperties
         }
 
         $values = $this->values;
-        array_walk($values, function (&$value) {
+        array_walk($values, function (&$value): void {
             $value = (string) $value;
         });
 
@@ -266,7 +268,7 @@ class FieldProperties extends AbstractProperties
     /**
      * @return Option[]
      */
-    public function getOptions()
+    public function getOptions(): array
     {
         $return = [];
         if (is_array($this->options)) {
@@ -288,7 +290,7 @@ class FieldProperties extends AbstractProperties
     /**
      * @return boolean
      */
-    public function isChecked()
+    public function isChecked(): bool
     {
         return (bool) $this->checked;
     }
@@ -333,6 +335,11 @@ class FieldProperties extends AbstractProperties
         return $this->notificationId;
     }
 
+    public function getFormat(): string
+    {
+        return $this->format;
+    }
+
     /**
      * @return int
      */
@@ -344,7 +351,7 @@ class FieldProperties extends AbstractProperties
     /**
      * @return int
      */
-    public function getIntegrationId()
+    public function getIntegrationId(): int
     {
         return (int) $this->integrationId;
     }
@@ -352,7 +359,7 @@ class FieldProperties extends AbstractProperties
     /**
      * @return string
      */
-    public function getResourceId()
+    public function getResourceId(): string
     {
         return (string) $this->resourceId;
     }
@@ -360,7 +367,7 @@ class FieldProperties extends AbstractProperties
     /**
      * @return string
      */
-    public function getEmailFieldHash()
+    public function getEmailFieldHash(): string
     {
         return (string) $this->emailFieldHash;
     }
@@ -716,7 +723,7 @@ class FieldProperties extends AbstractProperties
      *
      * @return array
      */
-    protected function getPropertyManifest()
+    protected function getPropertyManifest(): array
     {
         return [
             'hash'                => self::TYPE_STRING,
@@ -733,6 +740,7 @@ class FieldProperties extends AbstractProperties
             'showAsRadio'         => self::TYPE_BOOLEAN,
             'showAsCheckboxes'    => self::TYPE_BOOLEAN,
             'notificationId'      => self::TYPE_STRING,
+            'format'              => self::TYPE_STRING,
             'assetSourceId'       => self::TYPE_INTEGER,
             'integrationId'       => self::TYPE_INTEGER,
             'resourceId'          => self::TYPE_STRING,

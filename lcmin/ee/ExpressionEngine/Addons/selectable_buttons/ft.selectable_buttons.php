@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -22,6 +22,8 @@ class Selectable_buttons_ft extends Multi_select_ft
     );
 
     public $has_array_data = true;
+
+    public $can_be_cloned = true;
 
     public $entry_manager_compatible = true;
 
@@ -61,18 +63,32 @@ class Selectable_buttons_ft extends Multi_select_ft
 
         $values = decode_multi_field($data);
 
-        ee()->cp->add_js_script('file', 'fields/buttons/button');
+        ee()->javascript->output("
+            $('body').on('change','.ee-buttons-field.selectable_buttons .button input[type=checkbox]', function (e) {
 
-        if (REQ == 'CP') {
-            return ee('View')->make('ee:_shared/form/fields/buttons')->render([
-                'field_name' => $this->field_name . '[]',
-                'choices' => $this->_get_field_options($data),
-                'value' => $values,
-                'multi' => isset($this->settings['allow_multiple']) ? $this->settings['allow_multiple'] : false,
-                'disabled' => $this->get_setting('field_disabled'),
-                'class' => 'selectable_buttons'
-            ]);
-        }
+                if ( !($(this).parents('.button-group').hasClass('multiple')) ) {
+                    var elParent = $(this).parents('.selectable_buttons');
+                    $(elParent).find('.button input[type=checkbox]').not(this).prop('checked', false);
+                }
+
+                $(this).parents('.button-group').find('.button input[type=checkbox]').each(function () {
+                    if ($(this).prop('checked')) {
+                        $(this).parent().addClass('active');
+                    } else {
+                        $(this).parent().removeClass('active')
+                    }
+                });
+            });
+        ");
+
+        return ee('View')->make('ee:_shared/form/fields/buttons')->render([
+            'field_name' => $this->field_name . '[]',
+            'choices' => $this->_get_historic_field_options($data),
+            'value' => $values,
+            'multi' => isset($this->settings['allow_multiple']) ? $this->settings['allow_multiple'] : false,
+            'disabled' => $this->get_setting('field_disabled'),
+            'class' => 'ee-buttons-field selectable_buttons'
+        ]);
 
         $extra = ($this->get_setting('field_disabled')) ? 'disabled' : '';
         $extra .= ' dir="' . $this->get_setting('field_text_direction', 'ltr') . '"';
@@ -81,14 +97,14 @@ class Selectable_buttons_ft extends Multi_select_ft
             $extra .= ' class="multiselect_input"';
             return form_multiselect(
                 $this->field_name . '[]',
-                $this->_get_field_options($data),
+                $this->_get_historic_field_options($data),
                 $values,
                 $extra
             );
         } else {
             return form_dropdown(
                 $this->field_name,
-                $this->_get_field_options($data, '--'),
+                $this->_get_historic_field_options($data, '--'),
                 $data,
                 $extra
             );

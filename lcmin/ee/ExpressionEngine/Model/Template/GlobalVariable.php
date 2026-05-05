@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -183,16 +183,24 @@ class GlobalVariable extends FileSyncedModel
      */
     public function loadAll()
     {
+        $paths = [
+            0 => PATH_TMPL . '_global_variables',
+            ee()->config->item('site_id') => PATH_TMPL . ee()->config->item('site_short_name') . '/_variables',
+        ];
+
+        foreach ($paths as $path) {
+            try {
+                ee('Filesystem')->getDirectoryContents($path, true, true);
+            } catch (\Exception $e) {
+                //silently continue
+            }
+        }
+
         // load up any variables
         $variables = $this->getModelFacade()->get('GlobalVariable')
             ->filter('site_id', ee()->config->item('site_id'))
             ->orFilter('site_id', 0)
             ->all();
-
-        $paths = [
-            0 => PATH_TMPL . '_global_variables',
-            ee()->config->item('site_id') => PATH_TMPL . ee()->config->item('site_short_name') . '/_variables',
-        ];
 
         $names = $variables->pluck('variable_name');
 

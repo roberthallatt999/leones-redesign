@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -64,6 +64,7 @@ class SystemPreferences extends CustomType
     protected $default_site_timezone;
     protected $date_format;
     protected $time_format;
+    protected $week_start;
     protected $mail_protocol;
     protected $email_newline;
     protected $smtp_server;
@@ -108,6 +109,7 @@ class SystemPreferences extends CustomType
     protected $max_logged_searches;
     protected $rte_default_toolset;
     protected $rte_file_browser;
+    protected $rte_custom_ckeditor_build;
     protected $forum_trigger;
 
     /**

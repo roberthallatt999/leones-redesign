@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -72,6 +72,11 @@ class DBConfig extends ConfigWithDefaults
         );
 
         if (is_array($result)) {
+            if (!isset($result['dbcollat'])) {
+                $result['dbcollat_default'] = true;
+            } elseif ($result['dbcollat'] == 'utf8mb4_unicode_ci' && $result['char_set'] == 'utf8mb4') {
+                $result['dbcollat_default'] = true;
+            }
             return array_merge($default, $result);
         }
 

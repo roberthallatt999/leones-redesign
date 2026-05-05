@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -40,12 +40,12 @@ use Symfony\Component\Config\Definition\Exception\Exception;
 
 class NextFormNotificationHelper
 {
-    const STRICT_MODE = true;
+    public const STRICT_MODE = true;
 
     /** @var array */
     public $errors;
 
-    public function saveNotification($classicNotification)
+    public function saveNotification(array $classicNotification)
     {
         $notification = NotificationRepository::getInstance()->getOrCreateNotification(null);
         $isNew        = !$notification->id;
@@ -64,6 +64,7 @@ class NextFormNotificationHelper
         $validValues['fromName'] = $this->formatHtml($classicNotification['from_name']);
         $validValues['replyToEmail'] = $classicNotification['reply_to_email'];
         $validValues['bodyHtml'] = $this->formatHtml($classicNotification['template_data']);
+        $validValues['bodyText'] = strip_tags($this->formatHtml($classicNotification['template_data']));
         $validValues['legacyId'] = $classicNotification['notification_id'];
 
         $notification->set($validValues);
@@ -90,7 +91,7 @@ class NextFormNotificationHelper
         return $formattedHtml;
     }
 
-    private function htmlFormattingMap()
+    private function htmlFormattingMap(): array
     {
         /* Old Element => New Element */
 

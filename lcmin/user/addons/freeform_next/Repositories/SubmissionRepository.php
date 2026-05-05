@@ -2,8 +2,10 @@
 
 namespace Solspace\Addons\FreeformNext\Repositories;
 
+use Exception;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Form;
 use Solspace\Addons\FreeformNext\Library\DataObjects\SubmissionAttributes;
+use Solspace\Addons\FreeformNext\Model\SpamReasonModel;
 use Solspace\Addons\FreeformNext\Model\StatusModel;
 use Solspace\Addons\FreeformNext\Model\SubmissionModel;
 
@@ -18,24 +20,25 @@ class SubmissionRepository extends Repository
     }
 
     /**
-     * @param Form $form
      * @param int  $submissionId
-     *
      * @return SubmissionModel
      */
     public function getSubmission(Form $form, $submissionId)
     {
+        $submissionTable  = SubmissionModel::TABLE . ' AS submission';
+        $statusTable      = StatusModel::TABLE . ' AS status';
+        $spamReasonsTable = SpamReasonModel::TABLE . ' AS spamReason';
+
         /** @var array $result */
         $result = ee()->db
-            ->select('s.*, stat.name AS statusName, stat.handle AS statusHandle, stat.color AS statusColor')
-            ->from(SubmissionModel::TABLE . ' AS s')
-            ->join(StatusModel::TABLE . ' AS stat', 's.statusId = stat.id')
-            ->where(
-                [
-                    's.id'   => $submissionId,
-                    'formId' => $form->getId(),
-                ]
-            )
+            ->select('submission.*, status.name AS statusName, status.handle AS statusHandle, status.color AS statusColor, spamReason.reasonType AS spamReasonType, spamReason.reasonMessage AS spamReasonMessage, spamReason.reasonValue AS spamReasonValue')
+            ->from($submissionTable)
+            ->join($statusTable, 'submission.statusId = status.id', 'left')
+            ->join($spamReasonsTable, 'spamReason.submissionId = submission.id', 'left')
+            ->where([
+                'submission.id'   => $submissionId,
+                'formId' => $form->getId(),
+            ])
             ->get()
             ->result_array();
 
@@ -47,8 +50,6 @@ class SubmissionRepository extends Repository
     }
 
     /**
-     * @param array $ids
-     *
      * @return SubmissionModel[]
      */
     public function getSubmissionsByIdList(array $ids)
@@ -82,9 +83,7 @@ class SubmissionRepository extends Repository
     }
 
     /**
-     * @param Form   $form
      * @param string $token
-     *
      * @return SubmissionModel|null
      */
     public function getSubmissionByToken(Form $form, $token)
@@ -115,15 +114,15 @@ class SubmissionRepository extends Repository
     }
 
     /**
-     * @param SubmissionAttributes $attributes
      *
      * @return SubmissionModel[]
-     * @throws \Exception
+     * @throws Exception
      */
     public function getAllSubmissionsFor(SubmissionAttributes $attributes)
     {
-        $submissionTable = SubmissionModel::TABLE;
-        $statusTable     = StatusModel::TABLE;
+        $submissionTable    = SubmissionModel::TABLE;
+        $statusTable        = StatusModel::TABLE;
+        $spamReasonsTable   = SpamReasonModel::TABLE;
 
         foreach ($attributes->getLikeFilters() as $key => $value) {
             ee()->db->like($key, $value);
@@ -171,12 +170,20 @@ class SubmissionRepository extends Repository
         }
 
         try {
-
-
             $query = ee()->db
-                ->select("$submissionTable.*, $submissionTable.id AS submissionId, $statusTable.name AS statusName, $statusTable.handle AS statusHandle, $statusTable.color AS statusColor")
+                ->select("
+                    {$submissionTable}.*,
+                    {$submissionTable}.id AS submissionId,
+                    {$statusTable}.name AS statusName,
+                    {$statusTable}.handle AS statusHandle,
+                    {$statusTable}.color AS statusColor,
+                    {$spamReasonsTable}.reasonType AS spamReasonType,
+                    {$spamReasonsTable}.reasonMessage AS spamReasonMessage,
+                    {$spamReasonsTable}.reasonValue AS spamReasonValue
+                ")
                 ->from($submissionTable)
-                ->join($statusTable, "$submissionTable.statusId = $statusTable.id");
+                ->join($statusTable, "{$submissionTable}.statusId = {$statusTable}.id", 'left')
+                ->join($spamReasonsTable, "{$spamReasonsTable}.submissionId = {$submissionTable}.id", 'left'); // left join in case no spam reason
 
             $sql = $query->_compile_select();
 
@@ -188,9 +195,9 @@ class SubmissionRepository extends Repository
             $query->_reset_select();
             ee()->db->_reset_select();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if (preg_match("/Column not found: 1054.*in 'order clause'/", $e->getMessage())) {
-                throw new \Exception(sprintf('Cannot order by %s', $attributes->getOrderBy()));
+                throw new Exception(sprintf('Cannot order by %s', $attributes->getOrderBy()));
             }
 
             return [];
@@ -207,8 +214,6 @@ class SubmissionRepository extends Repository
     }
 
     /**
-     * @param SubmissionAttributes $attributes
-     *
      * @return int
      */
     public function getAllSubmissionCountFor(SubmissionAttributes $attributes)
@@ -247,14 +252,16 @@ class SubmissionRepository extends Repository
             ee()->db->offset($attributes->getOffset());
         }
 
-        $prefix          = ee()->db->dbprefix;
-        $submissionTable = SubmissionModel::TABLE;
-        $statusTable     = StatusModel::TABLE;
+        $prefix             = ee()->db->dbprefix;
+        $submissionTable    = SubmissionModel::TABLE;
+        $statusTable        = StatusModel::TABLE;
+        $spamReasonsTable   = SpamReasonModel::TABLE;
 
         $query = ee()->db
             ->select("COUNT({$prefix}{$submissionTable}.id) AS total")
             ->from($submissionTable)
-            ->join($statusTable, "$submissionTable.statusId = $statusTable.id");
+            ->join($statusTable, "{$prefix}{$submissionTable}.statusId = {$prefix}{$statusTable}.id", 'left')
+            ->join($spamReasonsTable, "{$prefix}{$spamReasonsTable}.submissionId = {$prefix}{$submissionTable}.id", 'left');
 
         $sql = $query->_compile_select();
 
@@ -272,10 +279,32 @@ class SubmissionRepository extends Repository
     /**
      * @return array
      */
-    public function getSubmissionTotalsPerForm()
+    public function getSubmissionTotalsPerForm(): array
     {
         $result = ee()->db
             ->select('COUNT(id) as total, formId')
+            ->where('isSpam', 0)
+            ->group_by('formId')
+            ->from(SubmissionModel::TABLE)
+            ->get()
+            ->result_array();
+
+        $totals = [];
+        foreach ($result as $row) {
+            $totals[$row['formId']] = (int) $row['total'];
+        }
+
+        return $totals;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSpamTotalsPerForm(): array
+    {
+        $result = ee()->db
+            ->select('COUNT(id) as total, formId')
+            ->where('isSpam', 1)
             ->group_by('formId')
             ->from(SubmissionModel::TABLE)
             ->get()
@@ -336,18 +365,17 @@ class SubmissionRepository extends Repository
 
     /**
      * @param string $sql
-     * @param string $where
      *
      * @return string
      */
-    private function addWhereToSql($sql, $where, $hasOrderBy = true)
+    private function addWhereToSql($sql, string $where, bool $hasOrderBy = true): string|array
     {
         $pattern = '/WHERE (.*?)\s(?=(ORDER BY|LIMIT))/s';
 
         preg_match($pattern, $sql, $matches);
 
         if ($matches) {
-            list ($_, $existingRules) = $matches;
+            [$_, $existingRules] = $matches;
 
             $sql = str_replace(
                 'WHERE ' . $existingRules,
@@ -360,7 +388,7 @@ class SubmissionRepository extends Repository
             preg_match($pattern, $sql, $matches);
 
             if ($matches) {
-                list ($_, $existingRules) = $matches;
+                [$_, $existingRules] = $matches;
 
                 $sql = str_replace(
                     'WHERE ' . $existingRules,

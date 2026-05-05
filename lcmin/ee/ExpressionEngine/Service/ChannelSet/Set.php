@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -441,6 +441,7 @@ class Set
             $destination = ee('Model')->make('UploadDestination');
             $destination->site_id = $this->site_id;
             $destination->name = $upload_data->name;
+            $destination->adapter = isset($upload_data->adapter) ? $upload_data->adapter : 'local';
             $destination->url = isset($upload_data->url) ? $upload_data->url : '{base_url}';
             $destination->server_path = isset($upload_data->server_path) ? $upload_data->server_path : null;
 

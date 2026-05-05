@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -16,10 +16,9 @@ use Symfony\Component\Filesystem\Filesystem;
 
 abstract class FileObject
 {
-    const HELP_LINK = 'https://solspace.com/';
+    public const HELP_LINK = 'https://solspace.com/';
 
-    /** @var Filesystem */
-    private static $filesystem;
+    private static ?Filesystem $filesystem = null;
 
     /** @var string */
     protected $name;
@@ -64,7 +63,7 @@ abstract class FileObject
      *
      * @return void
      */
-    abstract public function copy($target, $prefix = null, $callable = null, $filePrefix = null);
+    abstract public function copy($target, ?string $prefix = null, null|callable|array $callable = null, ?string $filePrefix = null);
 
     /**
      * @return string

@@ -2,6 +2,7 @@
 
 namespace Solspace\Addons\FreeformNext\Controllers;
 
+use Exception;
 use EllisLab\ExpressionEngine\Library\CP\Table;
 use Solspace\Addons\FreeformNext\Library\Exceptions\FreeformException;
 use Solspace\Addons\FreeformNext\Library\Helpers\ExtensionHelper;
@@ -19,7 +20,7 @@ class StatusController extends Controller
     /**
      * @return CpView
      */
-    public function index()
+    public function index(): CpView
     {
         $statuses = StatusRepository::getInstance()->getAllStatuses();
 
@@ -41,7 +42,7 @@ class StatusController extends Controller
                 'name'  => 'id_list[]',
                 'value' => $status->id,
                 'data'  => [
-                    'confirm' => lang('status') . ': <b>' . htmlentities('test', ENT_QUOTES) . '</b>',
+                    'confirm' => lang('status') . ': <b>' . htmlentities('test', ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8') . '</b>',
                 ],
             ];
 
@@ -105,7 +106,7 @@ class StatusController extends Controller
      * @return View
      * @throws FreeformException
      */
-    public function edit($id)
+    public function edit($id): CpView
     {
         if ('new' === $id) {
             $status = StatusModel::create();
@@ -243,7 +244,7 @@ class StatusController extends Controller
                 ->asSuccess()
                 ->withTitle(lang('Success'))
                 ->defer();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             ee('CP/Alert')
                 ->makeInline('shared-form')
                 ->asIssue()
@@ -257,7 +258,7 @@ class StatusController extends Controller
     /**
      * @return RedirectView
      */
-    public function batchDelete()
+    public function batchDelete(): RedirectView
     {
         if (isset($_POST['id_list'])) {
             $ids = [];
@@ -286,7 +287,7 @@ class StatusController extends Controller
     /**
      * Sets the isDefault to TRUE for the first entry found if no isDefault is set
      */
-    private function updateDefaults()
+    private function updateDefaults(): void
     {
         $hasDefault = ee()
             ->db

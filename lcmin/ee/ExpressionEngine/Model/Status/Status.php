@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -43,9 +43,6 @@ class Status extends Model
             'model' => 'ChannelEntry',
             'weak' => true
         ],
-        'Site' => array(
-            'type' => 'BelongsTo'
-        ),
         'Roles' => array(
             'type' => 'hasAndBelongsToMany',
             'model' => 'Role',
@@ -120,7 +117,7 @@ class Status extends Model
      */
     public function onAfterUpdate($previous)
     {
-        if ($previous['status'] != $this->status) {
+        if (isset($previous['status']) && $previous['status'] != $this->status) {
             //direct SQL, as we need it to be fast
             ee('db')->where('status', $previous['status'])->update('channel_titles', ['status' => $this->status]);
         }

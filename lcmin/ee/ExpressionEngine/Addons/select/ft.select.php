@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -23,9 +23,13 @@ class Select_ft extends OptionFieldtype
 
     public $has_array_data = true;
 
+    public $can_be_cloned = true;
+
     public $entry_manager_compatible = true;
 
     public $size = 'small';
+
+    public $stub = 'select';
 
     /**
      * A list of operators that this fieldtype supports
@@ -37,7 +41,7 @@ class Select_ft extends OptionFieldtype
     public function validate($data)
     {
         $valid = false;
-        $field_options = $this->_get_field_options($data, '--');
+        $field_options = (REQ == 'CP') ? $this->_get_historic_field_options($data, '--') : $this->_get_field_options($data, '--');
 
         if ($data == '') {
             return true;
@@ -58,6 +62,7 @@ class Select_ft extends OptionFieldtype
         }
 
         if (! $valid) {
+            ee()->lang->load('content');
             return ee()->lang->line('invalid_selection');
         }
     }
@@ -74,16 +79,17 @@ class Select_ft extends OptionFieldtype
         if (REQ == 'CP') {
             return ee('View')->make('ee:_shared/form/fields/dropdown')->render([
                 'field_name' => $this->field_name,
-                'choices' => $this->_get_field_options($data),
+                'choices' => $this->_get_historic_field_options($data),
                 'value' => $data,
                 'empty_text' => lang('choose_wisely'),
-                'field_disabled' => $this->get_setting('field_disabled')
+                'field_disabled' => $this->get_setting('field_disabled'),
+                'ignoreSectionLabel' => $this->get_setting('ignore_section_label')
             ]);
         }
 
         $field = form_dropdown(
             $this->field_name,
-            $this->_get_field_options($data, '--'),
+            $this->_get_historic_field_options($data, '--'),
             $data,
             $extra
         );

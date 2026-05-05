@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -21,6 +21,7 @@ class Builder
     protected $from;
     protected $facade;
     protected $datastore;
+    protected $model;
 
     protected $set = array();
     protected $withs = array();
@@ -36,8 +37,6 @@ class Builder
     protected $offset = 0;
 
     protected $futile = false;
-
-    public $model;
 
     /**
      *
@@ -92,20 +91,38 @@ class Builder
     /**
      *
      */
-    public function count()
+    public function count($cache = false)
     {
+        if ($cache) {
+            $copyOfThis = clone $this;
+            unset($copyOfThis->facade);
+            unset($copyOfThis->datastore);
+            $cacheKey = crc32(serialize($copyOfThis) . '__count');
+            unset($copyOfThis);
+            $fetched = $this->getFromCache($cacheKey);
+            if ($fetched !== false) {
+                return $fetched;
+            }
+        }
+
         if ($this->isFutile()) {
             return 0;
         }
 
-        return $this->datastore->countQuery($this);
+        $fetched = $this->datastore->countQuery($this);
+
+        if ($cache) {
+            $this->saveToCache($cacheKey, $fetched);
+        }
+
+        return $fetched;
     }
 
     /**
      * Run a fetch in batches
      *
      * @param Int     $batch_size Batch size
-     * @param Closure $callback   Closure to run for each result
+     * @param \Closure $callback   Closure to run for each result
      *
      * NOTE: The callback can be passed in the first parameter, in
      * which case the default $batch_size (@see Batch) is used.
@@ -447,9 +464,9 @@ class Builder
     /**
      * Add ordering to the query
      */
-    public function order($property, $direction = '')
+    public function order($property, $direction = '', $escape = true)
     {
-        $this->orders[] = array($property, $direction);
+        $this->orders[] = array($property, $direction, $escape);
 
         return $this;
     }

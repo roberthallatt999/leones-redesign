@@ -3,7 +3,7 @@
 /**
  * ExpressionEngine Pro
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
 */
 
 namespace ExpressionEngine\Addons\Pro\Service\Access;
@@ -14,6 +14,7 @@ namespace ExpressionEngine\Addons\Pro\Service\Access;
 class Access
 {
     protected static $hasValidLicense = null;
+    protected static $requiresLicense = null;
 
     public function __construct()
     {
@@ -56,6 +57,7 @@ class Access
         }
 
         ee()->session->cache['disable_frontedit'] = true;
+
         return false;
 
         $channel_ids = isset(ee()->session->cache['channel']['channel_ids']) ? ee()->session->cache['channel']['channel_ids'] : [];
@@ -113,6 +115,15 @@ class Access
         return false;
     }
 
+    public function hasRequiredLicense()
+    {
+        if ($this->requiresValidLicense()) {
+            return $this->hasValidLicense(true);
+        }
+
+        return true;
+    }
+
     /**
      * Checks whether license/subscription is valid and active
      *
@@ -125,34 +136,177 @@ class Access
         if (is_null(static::$hasValidLicense)) {
             $addon = ee('Addon')->get('pro');
             $licenseResponse = $addon->checkCachedLicenseResponse();
+
             switch ($licenseResponse) {
                 case 'valid':
-                case 'trial':
                 case 'update_available':
                     static::$hasValidLicense = true;
+
+                    break;
+
+                case 'trial':
+                    // In the case of a trial, the license will be marked as valid, since we want users
+                    // to still have access to all features, but we're still going to throw a banner up
+                    static::$hasValidLicense = true;
+                    $this->logLicenseError('pro_license_error_trial', $showAlert);
+
                     break;
 
                 case 'na':
-                    $this->logLicenseError('pro_license_error_na', $showAlert);
                     static::$hasValidLicense = false;
+                    $this->logLicenseError('pro_license_error_na', $showAlert);
+
                     break;
 
                 case 'invalid':
-                    $this->logLicenseError('pro_license_error_invalid', $showAlert);
                     static::$hasValidLicense = false;
+                    $this->logLicenseError('pro_license_error_invalid', $showAlert);
+
                     break;
 
                 case 'expired':
-                    $this->logLicenseError('pro_license_error_expired', $showAlert);
                     static::$hasValidLicense = false;
+                    $this->logLicenseError('pro_license_error_expired');
+
                     break;
 
                 default:
                     static::$hasValidLicense = false;
+
                     break;
             }
         }
+
         return static::$hasValidLicense;
+    }
+
+    /**
+     * Determine whether the current member has the ability to manage licenses
+     *
+     * @return boolean
+     */
+    public function canManageLicenses()
+    {
+        return ee('Permission')->isSuperAdmin()
+            || ee('Permission')->hasAny(
+                'admin_channels',
+                'admin_addons',
+                'admin_roles',
+                'create_channels',
+                'edit_channels',
+                'delete_channels',
+                'create_channel_fields',
+                'edit_channel_fields',
+                'delete_channel_fields',
+                'create_members',
+                'edit_members',
+                'delete_members'
+            );
+    }
+
+    /**
+     * Get a list of license notices for a given status or set of statuses
+     *
+     * @param string|array $status
+     * @return array
+     */
+    public function getLicenseNotices($status = null, $includePro = false)
+    {
+        if(time() - (int) ee('Cookie')->getSignedCookie('license_notice_seen') <= $this->getLicenseBannerDuration()) {
+            return [];
+        }
+
+        $cacheKey = 'addon_license_statuses';
+        $addonStatuses = ee()->session->cache(__CLASS__, $cacheKey);
+
+        // If we have a cache miss compile the addon status information
+        if($addonStatuses === false) {
+            $addonStatuses = array_reduce(ee('Addon')->all(), function($carry, $addon) {
+                if($addon->isInstalled()) {
+                    $prefix = $addon->getProvider()->getPrefix();
+                    $carry[$prefix] = [
+                        'prefix' => $prefix,
+                        'title' => $addon->getName(),
+                        'status' => $addon->checkCachedLicenseResponse()
+                    ];
+                }
+
+                return $carry;
+            }, []);
+
+            ee()->session->set_cache(__CLASS__, $cacheKey, $addonStatuses);
+        }
+
+        // Filter by a single status or an array of statuses
+        if(!empty($status)) {
+            $status = (is_array($status)) ? $status : [$status];
+            $addonStatuses = array_filter($addonStatuses, function($addon) use($status) {
+                return in_array($addon['status'], $status);
+            });
+        }
+
+        if(!$includePro) {
+            unset($addonStatuses['pro']);
+        }
+
+        return $addonStatuses;
+    }
+
+    public function getLicenseBannerDuration()
+    {
+        return $this->canManageLicenses() ? min(ee()->config->item('cp_session_length') ?: 3600, 14400) : 604800;
+    }
+
+    public function expireAcknowledgement()
+    {
+        if($this->canManageLicenses() || time() > (int) ee('Cookie')->getSignedCookie('license_notice_seen') +  $this->getLicenseBannerDuration()) {
+            ee()->input->delete_cookie('license_notice_seen');
+        }
+    }
+
+    /**
+     * Determine whether or not there is a license notice for ExpressionEngine Pro with the given status
+     *
+     * @param string|array $status
+     * @return boolean
+     */
+    public function hasProNotice($status)
+    {
+        $addons = $this->getLicenseNotices($status, true);
+        return isset($addons['pro']);
+    }
+
+    public function requiresValidLicense()
+    {
+        // If there are multiple members, we require pro
+        if (is_null(static::$requiresLicense)) {
+            if ($countMemberWithCPAccess = ee()->cache->get('cp_member_count')) {
+                static::$requiresLicense = ($countMemberWithCPAccess > 1);
+
+                return static::$requiresLicense;
+            }
+
+            $cpRoleIds = ee('db')->distinct()->select('role_id')->from('permissions')->where('permission', 'can_access_cp')->get();
+            $cpRoles = [1];
+            foreach ($cpRoleIds->result_array() as $row) {
+                $cpRoles[] = $row['role_id'];
+            }
+            $cpRolesList = implode(', ', array_unique($cpRoles));
+            $countMemberWithCPAccessQuery = "SELECT COUNT(DISTINCT(exp_members.member_id)) AS count
+                FROM exp_members
+                LEFT JOIN exp_members_roles ON (exp_members.member_id = exp_members_roles.member_id)
+                LEFT JOIN exp_members_role_groups ON (exp_members.member_id = exp_members_role_groups.member_id)
+                LEFT JOIN exp_roles_role_groups ON (exp_members_role_groups.group_id = exp_roles_role_groups.group_id)
+                WHERE exp_members.role_id IN ({$cpRolesList})
+                OR exp_members_roles.role_id IN ({$cpRolesList})
+                OR exp_roles_role_groups.role_id IN ({$cpRolesList})";
+            $countMemberWithCPAccess = ee()->db->query($countMemberWithCPAccessQuery)->row('count');
+            ee()->cache->save('cp_member_count', $countMemberWithCPAccess, 60);
+
+            static::$requiresLicense = ($countMemberWithCPAccess > 1);
+        }
+
+        return static::$requiresLicense;
     }
 
     /**
@@ -162,9 +316,10 @@ class Access
      */
     public function shouldInjectLinks()
     {
-        if ($this->hasValidLicense() && $this->hasDockPermission() && $this->hasAnyFrontEditPermission() && ee()->input->cookie('frontedit') != 'off') {
+        if ($this->hasDockPermission() && $this->hasAnyFrontEditPermission() && ee()->input->cookie('frontedit') != 'off' && (!$this->requiresValidLicense() || $this->hasValidLicense())) {
             return true;
         }
+
         return false;
     }
 
@@ -178,14 +333,39 @@ class Access
     {
         ee()->load->library('logger');
         ee()->lang->load('addons');
-        ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
-        $message = sprintf(lang('pro_license_check_instructions'), lang($message), ee('CP/URL')->make('settings/general', [], ee()->config->item('cp_url'))->compile() . '#fieldset-site_license_key');
-        ee()->logger->developer($message, true);
+        ee()->lang->load('pro');
+        $isTrial = ($message === 'pro_license_error_trial');
+
+        if (! $this->hasValidLicense()) {
+            $message = sprintf(
+                lang('pro_license_check_instructions'),
+                lang($message),
+                ee('CP/URL')->make('settings/general', [], ee()->config->item('cp_url'))->compile() . '#fieldset-site_license_key'
+            );
+        } else {
+            $message = sprintf(
+                lang('pro_license_check_trial_instructions'),
+                lang($message),
+                ee('CP/URL')->make('settings/general', [], ee()->config->item('cp_url'))->compile() . '#fieldset-site_license_key'
+            );
+        }
+
+        // If the user is running pro as a trial then they should only see the error once
+        if ($isTrial && ee('Session')->proBannerSeen()) {
+            $showAlert = false;
+        }
+
+        // No longer writing these messages to the developer log but showing alerts when applicable
+        // ee()->logger->developer($message, true, 60 * 60 * 24 * 7);
+
         if (REQ == 'CP' && $showAlert) {
+            // The user has seen the banner, so we're marking it in the session
+            ee('Session')->setProBannerSeen();
+
             ee('CP/Alert')->makeBanner('pro-license-error')
                 ->asIssue()
                 ->canClose()
-                ->withTitle(lang('license_error'))
+                ->withTitle(lang('pro_license_error'))
                 ->addToBody($message)
                 ->now();
         }

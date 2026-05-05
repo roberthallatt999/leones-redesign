@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -19,5 +19,5 @@ interface RequestInterface
      *
      * @return mixed
      */
-    public function getPost($key, $defaultValue = null);
+    public function getPost($key, mixed $defaultValue = null);
 }

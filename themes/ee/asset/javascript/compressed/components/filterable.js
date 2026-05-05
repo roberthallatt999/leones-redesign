@@ -27,15 +27,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 function makeFilterableComponent(WrappedComponent) {
   var _temp;
 
-  return _temp =
-  /*#__PURE__*/
-  function (_React$Component) {
+  return _temp = /*#__PURE__*/function (_React$Component) {
     _inherits(_temp, _React$Component);
 
     function _temp(props) {
@@ -121,14 +119,17 @@ function makeFilterableComponent(WrappedComponent) {
       value: function filterItems(items, searchTerm) {
         var _this2 = this;
 
+        searchTerm = searchTerm.toLowerCase();
         items = items.map(function (item) {
           // Clone item so we don't modify reference types
           item = Object.assign({}, item); // If any children contain the search term, we'll keep the parent
 
           if (item.children) item.children = _this2.filterItems(item.children, searchTerm);
           var itemFoundInChildren = item.children && item.children.length > 0;
-          var itemFound = String(item.label).toLowerCase().includes(searchTerm.toLowerCase());
-          return itemFound || itemFoundInChildren ? item : false;
+          var itemFound = String(item.label).toLowerCase().includes(searchTerm);
+          var itemShortName;
+          if (item.instructions) itemShortName = String(item.instructions).toLowerCase().includes(searchTerm);
+          return itemFound || itemFoundInChildren || itemShortName ? item : false;
         });
         return items.filter(function (item) {
           return item;

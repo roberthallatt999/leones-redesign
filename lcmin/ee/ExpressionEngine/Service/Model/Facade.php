@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -26,6 +26,8 @@ class Facade
 {
     protected $datastore;
     protected $validation;
+
+    protected $_typed_models = ['File', 'Directory'];
 
     /**
      * @param $datastore ExpressionEngine\Service\Model\DataStore
@@ -55,6 +57,10 @@ class Facade
             } else {
                 $builder->filter($shortname, $default_ids);
             }
+        }
+
+        if (in_array($name, $this->_typed_models)) {
+            $builder->filter('model_type', $name);
         }
 
         $builder->setFacade($this);

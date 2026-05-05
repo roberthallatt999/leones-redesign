@@ -1,16 +1,40 @@
 <?php
 
 /**
- * @author TJ Draper <tj@buzzingpixel.com>
- * @copyright 2017 BuzzingPixel, LLC
- * @license https://buzzingpixel.com/software/ansel-ee/license
- * @link https://buzzingpixel.com/software/ansel-ee
+ * @package     ExpressionEngine
+ * @subpackage  Add-ons
+ * @category    Ansel
+ * @author      Brian Litzinger
+ * @copyright   Copyright (c) 2024 - BoldMinded, LLC
+ * @link        http://boldminded.com/add-ons/ansel
+ * @license
+ *
+ * This source is commercial software. Use of this software requires a
+ * site license for each domain it is used on. Use of this software or any
+ * of its source code without express written permission in the form of
+ * a purchased commercial or other license is prohibited.
+ *
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * As part of the license agreement for this software, all modifications
+ * to this source must be submitted to the original author for review and
+ * possible inclusion in future releases. No compensation will be provided
+ * for patches, although where possible we will attribute each contribution
+ * in file revision notes. Submitting such modifications constitutes
+ * assignment of copyright to the original author (Brian Litzinger and
+ * BoldMinded, LLC) for such modifications. If you do not wish to assign
+ * copyright to the original author, your license to  use and modify this
+ * source is null and void. Use of this software constitutes your agreement
+ * to this clause.
  */
 
-namespace BuzzingPixel\Ansel\Service\ImageManipulation;
+namespace BoldMinded\Ansel\Service\ImageManipulation;
 
-use BuzzingPixel\Ansel\Service\FileCacheService;
-use ImageOptimizer\OptimizerFactory;
+use BoldMinded\Ansel\Service\FileCacheService;
+use BoldMinded\Ansel\Dependency\ImageOptimizer\OptimizerFactory;
 use EE_Config as EEConfigService;
 
 /**
@@ -25,6 +49,7 @@ use EE_Config as EEConfigService;
  * @property int $maxWidth
  * @property int $maxHeight
  * @property bool $forceJpg
+ * @property bool $forceWebp
  * @property int $quality
  * @property bool $optimize
  *
@@ -33,415 +58,418 @@ use EE_Config as EEConfigService;
  */
 class ManipulateImage
 {
-	/**
-	 * Properties
-	 *
-	 * @var array $properties
-	 */
-	private $properties = array(
-		'x' => 0,
-		'y' => 0,
-		'width' => 0,
-		'height' => 0,
-		'minWidth' => 0,
-		'minHeight' => 0,
-		'maxWidth' => 0,
-		'maxHeight' => 0,
-		'forceJpg' => false,
-		'quality' => 90,
-		'optimize' => true
-	);
+    /**
+     * Properties
+     *
+     * @var array $properties
+     */
+    private $properties = array(
+        'x' => 0,
+        'y' => 0,
+        'width' => 0,
+        'height' => 0,
+        'minWidth' => 0,
+        'minHeight' => 0,
+        'maxWidth' => 0,
+        'maxHeight' => 0,
+        'forceJpg' => false,
+        'forceWebp' => false,
+        'quality' => 90,
+        'optimize' => true
+    );
 
-	/**
-	 * @var FileCacheService $fileCacheService
-	 */
-	private $fileCacheService;
+    /**
+     * @var FileCacheService $fileCacheService
+     */
+    private $fileCacheService;
 
-	/**
-	 * @var CropImage $cropImageService
-	 */
-	private $cropImageService;
+    /**
+     * @var CropImage $cropImageService
+     */
+    private $cropImageService;
 
-	/**
-	 * @var ResizeImage $resizeImageService
-	 */
-	private $resizeImageService;
+    /**
+     * @var ResizeImage $resizeImageService
+     */
+    private $resizeImageService;
 
-	/**
-	 * @var CopyImage $copyImageService
-	 */
-	private $copyImageService;
+    /**
+     * @var CopyImage $copyImageService
+     */
+    private $copyImageService;
 
-	/**
-	 * @var OptimizerFactory $optimizerFactory
-	 */
-	private $optimizerFactory;
+    /**
+     * @var OptimizerFactory $optimizerFactory
+     */
+    private $optimizerFactory;
 
-	/**
-	 * @var EEConfigService $eeConfigService
-	 */
-	private $eeConfigService;
+    /**
+     * @var EEConfigService $eeConfigService
+     */
+    private $eeConfigService;
 
-	/**
-	 * Constructor
-	 *
-	 * @param FileCacheService $fileCacheService
-	 * @param CropImage $cropImageService
-	 * @param ResizeImage $resizeImageService
-	 * @param CopyImage $copyImageService
-	 * @param OptimizerFactory $optimizerFactory
-	 * @param EEConfigService $eeConfigService
-	 */
-	public function __construct(
-		FileCacheService $fileCacheService,
-		CropImage $cropImageService,
-		ResizeImage $resizeImageService,
-		CopyImage $copyImageService,
-		$optimizerFactory,
-		EEConfigService $eeConfigService
-	) {
-		// Inject dependencies
-		$this->fileCacheService = $fileCacheService;
-		$this->cropImageService = $cropImageService;
-		$this->resizeImageService = $resizeImageService;
-		$this->copyImageService = $copyImageService;
-		$this->optimizerFactory = $optimizerFactory;
-		$this->eeConfigService = $eeConfigService;
-	}
+    /**
+     * Constructor
+     *
+     * @param FileCacheService $fileCacheService
+     * @param CropImage $cropImageService
+     * @param ResizeImage $resizeImageService
+     * @param CopyImage $copyImageService
+     * @param OptimizerFactory $optimizerFactory
+     * @param EEConfigService $eeConfigService
+     */
+    public function __construct(
+        FileCacheService $fileCacheService,
+        CropImage $cropImageService,
+        ResizeImage $resizeImageService,
+        CopyImage $copyImageService,
+        $optimizerFactory,
+        EEConfigService $eeConfigService
+    ) {
+        // Inject dependencies
+        $this->fileCacheService = $fileCacheService;
+        $this->cropImageService = $cropImageService;
+        $this->resizeImageService = $resizeImageService;
+        $this->copyImageService = $copyImageService;
+        $this->optimizerFactory = $optimizerFactory;
+        $this->eeConfigService = $eeConfigService;
+    }
 
-	/**
-	 * Set magic method
-	 *
-	 * @param string $name
-	 * @param mixed $val
-	 */
-	public function __set($name, $val)
-	{
-		// Check if settable
-		if (! isset($this->properties[$name])) {
-			return;
-		}
+    /**
+     * Set magic method
+     *
+     * @param string $name
+     * @param mixed $val
+     */
+    public function __set($name, $val)
+    {
+        // Check if settable
+        if (! isset($this->properties[$name])) {
+            return;
+        }
 
-		// Get the type
-		$type = gettype($this->properties[$name]);
+        // Get the type
+        $type = gettype($this->properties[$name]);
 
-		// Cast type
-		if ($type === 'integer') {
-			$this->properties[$name] = (int) $val;
-		} elseif ($type === 'boolean') {
-			$this->properties[$name] = $val === 'y' ||
-				$val === 'yes' ||
-				$val === 'true' ||
-				$val === '1' ||
-				$val === 1 ||
-				$val === true;
-		} elseif ($type === 'string') {
-			$this->properties[$name] = (string) $val;
-		}
+        // Cast type
+        if ($type === 'integer') {
+            $this->properties[$name] = (int) $val;
+        } elseif ($type === 'boolean') {
+            $this->properties[$name] = $val === 'y' ||
+                $val === 'yes' ||
+                $val === 'true' ||
+                $val === '1' ||
+                $val === 1 ||
+                $val === true;
+        } elseif ($type === 'string') {
+            $this->properties[$name] = (string) $val;
+        }
 
-		return;
-	}
+        return;
+    }
 
-	/**
-	 * Get magic method
-	 *
-	 * @param string $name
-	 * @return mixed
-	 */
-	public function __get($name)
-	{
-		if (isset($this->properties[$name])) {
-			return $this->properties[$name];
-		}
+    /**
+     * Get magic method
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function __get($name)
+    {
+        if (isset($this->properties[$name])) {
+            return $this->properties[$name];
+        }
 
-		if (isset($this->{$name})) {
-			return $this->{$name};
-		}
+        if (isset($this->{$name})) {
+            return $this->{$name};
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	/**
-	 * Run
-	 *
-	 * @param string $filePath Path to the image to manipulate
-	 * @return string
-	 */
-	public function run($filePath)
-	{
-		if (! $filePath) {
-			return null;
-		}
+    /**
+     * Run
+     *
+     * @param string $filePath Path to the image to manipulate
+     * @return string
+     */
+    public function run($filePath)
+    {
+        if (! $filePath) {
+            ee('ansel:Logger')->developer('[Ansel] Cannot manipulate empty file path: ' . $filePath, true);
 
-		// Get image size
-		$imageSize = getimagesize($filePath);
-		$imgWidth = $imageSize[0];
-		$imgHeight = $imageSize[1];
+            return null;
+        }
 
-		// Start a high quality image variable
-		$runningImage = $filePath;
+        $this->cropImageService->forceJpg = $this->forceJpg;
+        $this->cropImageService->forceWebp = $this->forceWebp;
 
-		// Check if cropping is needed
-		if (($this->width && $this->width < $imgWidth) ||
-			($this->height && $this->height < $imgHeight)
-		) {
-			// Set cropping values
-			$this->cropImageService->width = $this->width;
-			$this->cropImageService->height = $this->height;
-			$this->cropImageService->x = $this->x;
-			$this->cropImageService->y = $this->y;
+        // Get image size
+        $imageSize = getimagesize($filePath);
+        $imgWidth = $imageSize[0];
+        $imgHeight = $imageSize[1];
 
-			// Set quality to 100 for this operation
-			$this->cropImageService->quality = 100;
+        // Start a high quality image variable
+        $runningImage = $filePath;
 
-			// Set old image path
-			$oldImagePath = $runningImage;
+        // Check if cropping is needed
+        if (($this->width && $this->width < $imgWidth) ||
+            ($this->height && $this->height < $imgHeight)
+        ) {
+            // Set cropping values
+            $this->cropImageService->width = $this->width;
+            $this->cropImageService->height = $this->height;
+            $this->cropImageService->x = $this->x;
+            $this->cropImageService->y = $this->y;
 
-			// Get the cropped image
-			$runningImage = $this->cropImageService->run($runningImage);
+            // Set quality to 100 for this operation
+            $this->cropImageService->quality = 100;
 
-			// If the old image path is not equal to the file path, remove it
-			if ($oldImagePath !== $filePath) {
-				unlink($oldImagePath);
-			}
-		}
+            // Set old image path
+            $oldImagePath = $runningImage;
 
-		// Check if up-scaling is needed
-		if (($this->minWidth && $imgWidth < $this->minWidth) ||
-			($this->minHeight && $imgHeight < $this->minHeight)
-		) {
-			// Calculate the upscale by width
-			$dimensions = $this->calcUpscaleByWidth();
+            // Get the cropped image
+            $runningImage = $this->cropImageService->run($runningImage);
 
-			// Check if height meets requirements
-			if ($this->minHeight && $dimensions['height'] < $this->minHeight) {
-				// Calculate dimensions by height
-				$dimensions = $this->calcUpscaleByHeight();
-			}
+            // If the old image path is not equal to the file path, remove it
+            if ($oldImagePath !== $filePath) {
+                unlink($oldImagePath);
+            }
+        }
 
-			// Because of pixel rounding, determine how close width is and set
-			// to min if within tolerance
-			$difference = 0;
-			if ($dimensions['width'] > $this->minWidth) {
-				$difference = $dimensions['width'] - $this->minWidth;
-			} elseif ($this->minWidth > $dimensions['width']) {
-				$difference = $this->minWidth - $dimensions['width'];
-			}
-			if ($difference < 4) {
-				$dimensions['width'] = $this->minWidth;
-			}
+        // Check if up-scaling is needed
+        if (($this->minWidth && $imgWidth < $this->minWidth) ||
+            ($this->minHeight && $imgHeight < $this->minHeight)
+        ) {
+            // Calculate the upscale by width
+            $dimensions = $this->calcUpscaleByWidth();
 
-			// Because of pixel rounding, determine how close height is and set
-			// to min if within tolerance
-			$difference = 0;
-			if ($dimensions['height'] > $this->minHeight) {
-				$difference = $dimensions['height'] - $this->minHeight;
-			} elseif ($this->minHeight > $dimensions['height']) {
-				$difference = $this->minHeight - $dimensions['height'];
-			}
-			if ($difference < 4) {
-				$dimensions['height'] = $this->minHeight;
-			}
+            // Check if height meets requirements
+            if ($this->minHeight && $dimensions['height'] < $this->minHeight) {
+                // Calculate dimensions by height
+                $dimensions = $this->calcUpscaleByHeight();
+            }
 
-			// Set resize parameters
-			$this->resizeImageService->width = $dimensions['width'];
-			$this->resizeImageService->height = $dimensions['height'];
+            // Because of pixel rounding, determine how close width is and set
+            // to min if within tolerance
+            $difference = 0;
+            if ($dimensions['width'] > $this->minWidth) {
+                $difference = $dimensions['width'] - $this->minWidth;
+            } elseif ($this->minWidth > $dimensions['width']) {
+                $difference = $this->minWidth - $dimensions['width'];
+            }
+            if ($difference < 4) {
+                $dimensions['width'] = $this->minWidth;
+            }
 
-			// Set quality to 100 for this operation
-			$this->cropImageService->quality = 100;
+            // Because of pixel rounding, determine how close height is and set
+            // to min if within tolerance
+            $difference = 0;
+            if ($dimensions['height'] > $this->minHeight) {
+                $difference = $dimensions['height'] - $this->minHeight;
+            } elseif ($this->minHeight > $dimensions['height']) {
+                $difference = $this->minHeight - $dimensions['height'];
+            }
+            if ($difference < 4) {
+                $dimensions['height'] = $this->minHeight;
+            }
 
-			// Set old image path
-			$oldImagePath = $runningImage;
+            // Set resize parameters
+            $this->resizeImageService->width = $dimensions['width'];
+            $this->resizeImageService->height = $dimensions['height'];
 
-			// Get the re-sized image
-			$runningImage = $this->resizeImageService->run($runningImage);
+            // Set quality to 100 for this operation
+            $this->cropImageService->quality = 100;
 
-			// If the old image path is not equal to the file path, remove it
-			if ($oldImagePath !== $filePath) {
-				unlink($oldImagePath);
-			}
-		}
+            // Set old image path
+            $oldImagePath = $runningImage;
 
-		// Check if resizing is needed
-		if (($this->maxWidth && $this->width > $this->maxWidth) ||
-			($this->maxHeight && $this->height > $this->maxHeight)
-		) {
-			// Calculate resize by width
-			$dimensions = $this->calcResizeByWidth();
+            // Get the re-sized image
+            $runningImage = $this->resizeImageService->run($runningImage);
 
-			// Check if height meets requirements this way
-			if (! $this->maxWidth ||
-				$this->maxHeight && $dimensions['height'] > $this->maxHeight
-			) {
-				// Calculate dimensions by height if height is over
-				$dimensions = $this->calcResizeByHeight();
-			}
+            // If the old image path is not equal to the file path, remove it
+            if ($oldImagePath !== $filePath) {
+                unlink($oldImagePath);
+            }
+        }
 
-			// Set resize parameters
-			$this->resizeImageService->width = $dimensions['width'];
-			$this->resizeImageService->height = $dimensions['height'];
+        // Check if resizing is needed
+        if (($this->maxWidth && $this->width > $this->maxWidth) ||
+            ($this->maxHeight && $this->height > $this->maxHeight)
+        ) {
+            // Calculate resize by width
+            $dimensions = $this->calcResizeByWidth();
 
-			// Set quality to 100 for this operation
-			$this->cropImageService->quality = 100;
+            // Check if height meets requirements this way
+            if (! $this->maxWidth ||
+                $this->maxHeight && $dimensions['height'] > $this->maxHeight
+            ) {
+                // Calculate dimensions by height if height is over
+                $dimensions = $this->calcResizeByHeight();
+            }
 
-			// Set old image path
-			$oldImagePath = $runningImage;
+            // Set resize parameters
+            $this->resizeImageService->width = $dimensions['width'];
+            $this->resizeImageService->height = $dimensions['height'];
 
-			// Get the re-sized image
-			$runningImage = $this->resizeImageService->run($runningImage);
+            // Set quality to 100 for this operation
+            $this->cropImageService->quality = 100;
 
-			// If the old image path is not equal to the file path, remove it
-			if ($oldImagePath !== $filePath) {
-				unlink($oldImagePath);
-			}
-		}
+            // Set old image path
+            $oldImagePath = $runningImage;
 
-		// Copy image at specified quality
-		$this->copyImageService->quality = $this->quality;
+            // Get the re-sized image
+            $runningImage = $this->resizeImageService->run($runningImage);
 
-		// Set whether jpeg should be forced
-		$this->copyImageService->forceJpg = $this->forceJpg;
+            // If the old image path is not equal to the file path, remove it
+            if ($oldImagePath !== $filePath) {
+                unlink($oldImagePath);
+            }
+        }
 
-		// Set old image path
-		$oldImagePath = $runningImage;
+        // Copy image at specified quality
+        $this->copyImageService->quality = $this->quality;
 
-		// Get the copied image
-		$runningImage = $this->copyImageService->run($runningImage);
+        // Set old image path
+        $oldImagePath = $runningImage;
 
-		// If the old image path is not equal to the file path, remove it
-		if ($oldImagePath !== $filePath) {
-			unlink($oldImagePath);
-		}
+        // Get the copied image
+        $runningImage = $this->copyImageService->run($runningImage);
 
-		// Bail out here if optimization is not supported or not requested
-		if (! ANSEL_SUPPORTS_OPTIM || ! $this->optimize) {
-			return $runningImage;
-		}
+        // If the old image path is not equal to the file path, remove it
+        if ($oldImagePath !== $filePath) {
+            unlink($oldImagePath);
+        }
 
-		// Get the image type
-		$imageType = exif_imagetype($runningImage);
+        // Bail out here if optimization is not supported or not requested
+        if (! ANSEL_SUPPORTS_OPTIM || ! $this->optimize) {
+            return $runningImage;
+        }
 
-		// Get the appropriate image optimizer
-		$imageOptimizer = null;
-		if ($imageType === IMAGETYPE_GIF) {
-			// Check if image optimization for gifsicle is disabled
-			if ($this->eeConfigService->item('disableGifsicle', 'ansel')) {
-				return $runningImage;
-			}
+        // Get the image type
+        $imageType = exif_imagetype($runningImage);
 
-			// Get optimizer
-			$imageOptimizer = $this->optimizerFactory->get('gifsicle');
-		} elseif ($imageType === IMAGETYPE_JPEG) {
-			// Check if image optimization for jpegoptim is disabled
-			if ($this->eeConfigService->item('disableJpegoptim', 'ansel')) {
-				return $runningImage;
-			}
+        // Get the appropriate image optimizer
+        $imageOptimizer = null;
+        if ($imageType === IMAGETYPE_GIF) {
+            // Check if image optimization for gifsicle is disabled
+            if ($this->eeConfigService->item('disableGifsicle', 'ansel')) {
+                return $runningImage;
+            }
 
-			// Get optimizer
-			$imageOptimizer = $this->optimizerFactory->get('jpegoptim');
-		} elseif ($imageType === IMAGETYPE_PNG) {
-			// Check if image optimization for optipng is disabled
-			if ($this->eeConfigService->item('disableOptipng', 'ansel')) {
-				return $runningImage;
-			}
+            // Get optimizer
+            $imageOptimizer = $this->optimizerFactory->get('gifsicle');
+        } elseif ($imageType === IMAGETYPE_JPEG) {
+            // Check if image optimization for jpegoptim is disabled
+            if ($this->eeConfigService->item('disableJpegoptim', 'ansel')) {
+                return $runningImage;
+            }
 
-			// Get optimizer
-			$imageOptimizer = $this->optimizerFactory->get('optipng');
-		}
+            // Get optimizer
+            $imageOptimizer = $this->optimizerFactory->get('jpegoptim');
+        } elseif ($imageType === IMAGETYPE_PNG) {
+            // Check if image optimization for optipng is disabled
+            if ($this->eeConfigService->item('disableOptipng', 'ansel')) {
+                return $runningImage;
+            }
 
-		// Make sure we have an image optimizer here
-		if (! $imageOptimizer) {
-			return $runningImage;
-		}
+            // Get optimizer
+            $imageOptimizer = $this->optimizerFactory->get('optipng');
+        }
 
-		// Run the optimizer
-		$imageOptimizer->optimize($runningImage);
+        // Make sure we have an image optimizer here
+        if (! $imageOptimizer) {
+            return $runningImage;
+        }
 
-		// Return the image path
-		return $runningImage;
-	}
+        // Run the optimizer
+        $imageOptimizer->optimize($runningImage);
 
-	/**
-	 * Calculate resize by width
-	 *
-	 * @return array {
-	 *     @var float $ratio
-	 *     @var int $width
-	 *     @var int $height
-	 * }
-	 */
-	private function calcResizeByWidth()
-	{
-		// Get the ratio
-		$ratio = (float) $this->maxWidth / $this->width;
+        // Return the image path
+        return $runningImage;
+    }
 
-		return array(
-			'ratio' => $ratio,
-			'width' => $this->maxWidth,
-			'height' => (int) round($this->height * $ratio)
-		);
-	}
+    /**
+     * Calculate resize by width
+     *
+     * @return array {
+     *     @var float $ratio
+     *     @var int $width
+     *     @var int $height
+     * }
+     */
+    private function calcResizeByWidth()
+    {
+        // Get the ratio
+        $ratio = (float) $this->maxWidth / $this->width;
 
-	/**
-	 * Calculate Resize by height
-	 *
-	 * @return array {
-	 *     @var float $ratio
-	 *     @var int $height
-	 *     @var int $width
-	 * }
-	 */
-	private function calcResizeByHeight()
-	{
-		// Get the ratio
-		$ratio = (float) $this->maxHeight / $this->height;
+        return array(
+            'ratio' => $ratio,
+            'width' => $this->maxWidth,
+            'height' => (int) round($this->height * $ratio)
+        );
+    }
 
-		return array(
-			'ratio' => $ratio,
-			'height' => $this->maxHeight,
-			'width' => (int) round($this->width * $ratio)
-		);
-	}
+    /**
+     * Calculate Resize by height
+     *
+     * @return array {
+     *     @var float $ratio
+     *     @var int $height
+     *     @var int $width
+     * }
+     */
+    private function calcResizeByHeight()
+    {
+        // Get the ratio
+        $ratio = (float) $this->maxHeight / $this->height;
 
-	/**
-	 * Calculate resize by width
-	 *
-	 * @return array {
-	 *     @var float $ratio
-	 *     @var int $width
-	 *     @var int $height
-	 * }
-	 */
-	private function calcUpscaleByWidth()
-	{
-		// Get the ratio
-		$ratio = (float) $this->minWidth / $this->width;
+        return array(
+            'ratio' => $ratio,
+            'height' => $this->maxHeight,
+            'width' => (int) round($this->width * $ratio)
+        );
+    }
 
-		return array(
-			'ratio' => $ratio,
-			'width' => $this->minWidth,
-			'height' => (int) round($this->height * $ratio)
-		);
-	}
+    /**
+     * Calculate resize by width
+     *
+     * @return array {
+     *     @var float $ratio
+     *     @var int $width
+     *     @var int $height
+     * }
+     */
+    private function calcUpscaleByWidth()
+    {
+        // Get the ratio
+        $ratio = (float) $this->minWidth / $this->width;
 
-	/**
-	 * Calculate Resize by height
-	 *
-	 * @return array {
-	 *     @var float $ratio
-	 *     @var int $height
-	 *     @var int $width
-	 * }
-	 */
-	private function calcUpscaleByHeight()
-	{
-		// Get the ratio
-		$ratio = (float) $this->minHeight / $this->height;
+        return array(
+            'ratio' => $ratio,
+            'width' => $this->minWidth,
+            'height' => (int) round($this->height * $ratio)
+        );
+    }
 
-		return array(
-			'ratio' => $ratio,
-			'height' => $this->minHeight,
-			'width' => (int) round($this->width * $ratio)
-		);
-	}
+    /**
+     * Calculate Resize by height
+     *
+     * @return array {
+     *     @var float $ratio
+     *     @var int $height
+     *     @var int $width
+     * }
+     */
+    private function calcUpscaleByHeight()
+    {
+        // Get the ratio
+        $ratio = (float) $this->minHeight / $this->height;
+
+        return array(
+            'ratio' => $ratio,
+            'height' => $this->minHeight,
+            'width' => (int) round($this->width * $ratio)
+        );
+    }
 }

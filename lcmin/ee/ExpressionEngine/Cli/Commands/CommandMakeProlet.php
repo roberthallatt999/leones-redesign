@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -64,8 +64,8 @@ class CommandMakeProlet extends Cli
         $this->info('command_make_prolet_lets_build_prolet');
 
         // Gather alll the prolet information
-        $this->data['name'] =  $this->getFirstUnnamedArgument("command_make_prolet_ask_prolet_name", null, true);
-        $this->data['addon'] = $this->getOptionOrAsk('--addon', "command_make_prolet_ask_addon", null, true);
+        $this->data['name'] = $this->getFirstUnnamedArgument("command_make_prolet_ask_prolet_name", null, true);
+        $this->data['addon'] = $this->getOptionOrAskAddon('--addon', "command_make_prolet_ask_addon");
         $this->data['description'] = $this->getOptionOrAsk('--description', "command_make_prolet_ask_description");
 
         // Add flag for generating a default icon file
@@ -87,7 +87,7 @@ class CommandMakeProlet extends Cli
             $service = ee('ProletGenerator', $this->data);
             $service->build();
         } catch (\Exception $e) {
-            $this->fail($e->getMessage());
+            $this->fail(addslashes($e->getMessage()));
         }
 
         $this->info('command_make_prolet_created_successfully');
@@ -101,7 +101,7 @@ class CommandMakeProlet extends Cli
                 $service = ee('WidgetGenerator', $widgetData);
                 $service->build();
             } catch (\Exception $e) {
-                $this->fail($e->getMessage());
+                $this->fail(addslashes($e->getMessage()));
             }
 
             $this->info('command_make_prolet_widget_created_successfully');

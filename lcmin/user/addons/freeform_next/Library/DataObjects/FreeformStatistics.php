@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -13,22 +13,14 @@ namespace Solspace\Addons\FreeformNext\Library\DataObjects;
 
 class FreeformStatistics
 {
-    /** @var int */
-    private $submissionCount;
-
-    /** @var int */
-    private $spamBlockCount;
-
     /**
      * FreeformStatistics constructor.
      *
      * @param int $submissionCount
      * @param int $spamBlockCount
      */
-    public function __construct($submissionCount, $spamBlockCount)
+    public function __construct(private $submissionCount, private $spamBlockCount)
     {
-        $this->submissionCount           = $submissionCount;
-        $this->spamBlockCount            = $spamBlockCount;
     }
 
     /**

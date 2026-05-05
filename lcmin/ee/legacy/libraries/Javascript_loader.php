@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -44,7 +44,8 @@ class Javascript_loader
             'file' => PATH_JAVASCRIPT,
             'package' => PATH_THIRD,
             'fp_module' => PATH_ADDONS,
-            'pro_file' => PATH_PRO_THEMES . 'js/'
+            'pro_file' => PATH_PRO_THEMES . 'js/',
+            'template' => ''
         );
 
         $mock_name = '';
@@ -53,7 +54,27 @@ class Javascript_loader
             $mock_name .= ee()->input->get_post($type);
             $files = explode(',', ee()->input->get_post($type));
 
+            if ($type == 'template') {
+                if (!isset(ee()->JS_TMPL)) {
+                    ee()->load->library('template', null, 'JS_TMPL');
+                }
+                foreach ($files as $templateId) {
+                    $templateModel = ee('Model')->get('Template', $templateId)->with('TemplateGroup')->filter('template_type', 'js')->first(true);
+                    if (! empty($templateModel)) {
+                        ee()->JS_TMPL->fetch_and_parse($templateModel->TemplateGroup->group_name, $templateModel->template_name, false, $templateModel->site_id);
+                        if (! empty(ee()->JS_TMPL->final_template)) {
+                            $contents .= ee()->JS_TMPL->parse_globals(ee()->JS_TMPL->final_template);
+                        }
+                    }
+                }
+
+                continue;
+            }
+
             foreach ($files as $file) {
+                if (empty($file)) {
+                    continue;
+                }
                 if ($type == 'package' or $type == 'fp_module') {
                     if (strpos($file, ':') !== false) {
                         list($package, $file) = explode(':', $file);
@@ -90,10 +111,22 @@ class Javascript_loader
                     }
                 }
 
-                $file = $path . $file . '.js';
+                $fullFilePath = $path . $file . '.js';
 
-                if (file_exists($file)) {
-                    $contents .= file_get_contents($file) . "\n\n";
+                if (file_exists($fullFilePath)) {
+                    $contents .= file_get_contents($fullFilePath) . "\n\n";
+                } elseif ($type == 'package') {
+                    //fallback to first-party addon package
+                    $fullFilePath = PATH_ADDONS . $file . '.js';
+                    if (file_exists($fullFilePath)) {
+                        $contents .= file_get_contents($fullFilePath) . "\n\n";
+                    } else {
+                        // if still not found, check third-party themes folder
+                        $fullFilePath = PATH_THIRD_THEMES . $file . '.js';
+                        if (file_exists($fullFilePath)) {
+                            $contents .= file_get_contents($fullFilePath) . "\n\n";
+                        }
+                    }
                 }
             }
         }
@@ -108,9 +141,9 @@ class Javascript_loader
     /**
      * Set Headers
      *
-     * @access	private
-     * @param	string
-     * @return	string
+     * @access  private
+     * @param   string
+     * @return  string
      */
     public function set_headers($file, $mtime = false)
     {
@@ -146,7 +179,7 @@ class Javascript_loader
         ee()->output->set_header("ETag: " . md5($modified . $file));
 
         // All times GMT
-        $modified = gmdate('D, d M Y H:i:s', $modified) . ' GMT';
+        $modified = gmdate('D, d M Y H:i:s', (int) $modified) . ' GMT';
         $expires = gmdate('D, d M Y H:i:s', time() + $max_age) . ' GMT';
 
         ee()->output->set_status_header(200);

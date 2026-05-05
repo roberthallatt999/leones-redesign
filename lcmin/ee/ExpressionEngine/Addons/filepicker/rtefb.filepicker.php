@@ -5,7 +5,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -28,8 +28,12 @@ class Filepicker_rtefb extends AbstractRteFilebrowser
                 'cp/files/picker'
             ),
         ));
+        $fpUrl = ee('CP/FilePicker')->make($uploadDir)->getUrl();
+        $fpUrl->addQueryStringVariables(array(
+            'hasUpload' => true,
+        ));
         ee()->javascript->set_global([
-            'Rte.fpUrl' => ee('CP/FilePicker')->make($uploadDir)->getUrl()->compile(),
+            'Rte.fpUrl' => $fpUrl->compile(),
         ]);
         ee()->javascript->output("window.Rte_browseImages = function(sourceElement, params) {
             Rte.loadEEFileBrowser(sourceElement, params, '" . $uploadDir . "', 'image');

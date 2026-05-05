@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -14,7 +14,12 @@ use CP_Controller;
 
 class Themes extends Jumps
 {
-    private $themes = array('light' => 'fa-sun', 'dark' => 'fa-moon');
+    private $themes = array(
+        'light' => 'fa-sun',
+        'dark' => 'fa-moon',
+        'slate' => 'fa-mountain-sun',
+        // 'snow' => 'fa-snowflake',
+    );
 
     public function __construct()
     {

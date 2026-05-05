@@ -22,7 +22,7 @@
 <div id="<?=$setBlockId?>" class="conditionset-item <?php if ($template) :?>conditionset-temlates-row hidden <?php endif; ?>">
     <a href="#" class="remove-set">
         <span class="sr-only"><?=lang('remove_set')?></span>
-        <i class="fas fa-times alert__close-icon"></i>
+        <i class="fal fa-times alert__close-icon"></i>
     </a>
 
     <div class="field-conditionset">

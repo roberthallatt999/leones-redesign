@@ -14,8 +14,8 @@ use EllisLab\ExpressionEngine\Service\Model\Model;
  */
 class ExportSettingModel extends Model
 {
-    const MODEL = 'freeform_next:ExportSettingModel';
-    const TABLE = 'freeform_next_export_settings';
+    public const MODEL = 'freeform_next:ExportSettingModel';
+    public const TABLE = 'freeform_next_export_settings';
 
     protected static $_primary_key = 'id';
     protected static $_table_name  = self::TABLE;

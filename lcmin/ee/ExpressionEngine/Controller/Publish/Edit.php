@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -16,6 +16,7 @@ use ExpressionEngine\Model\Channel\ChannelEntry as ChannelEntry;
 use ExpressionEngine\Service\Validation\Result as ValidationResult;
 use Mexitek\PHPColors\Color;
 use ExpressionEngine\Library\CP\EntryManager;
+use ExpressionEngine\Library\CP\EntryManager\Columns\Column;
 
 /**
  * Publish/Edit Controller
@@ -72,7 +73,7 @@ class Edit extends AbstractPublishController
         $entry_listing = ee(
             'CP/EntryListing',
             ee()->input->get_post('filter_by_keyword'),
-            ee()->input->get_post('search_in') ?: 'titles_and_content',
+            ee()->input->get_post('search_in') ?: 'titles',
             false,
             null, //ee()->input->get_post('view') ?: '',//view is not used atm
             $extra_filters
@@ -94,10 +95,6 @@ class Edit extends AbstractPublishController
         }
         $columns = array_filter($columns);
 
-        if (! ee('Permission')->hasAny($this->permissions['others'])) {
-            $entries->filter('author_id', ee()->session->userdata('member_id'));
-        }
-
         $count = $entry_listing->getEntryCount();
 
         // if no entries check to see if we have any channels
@@ -105,10 +102,6 @@ class Edit extends AbstractPublishController
             // cast to bool
             $vars['channels_exist'] = (bool) ee('Model')->get('Channel')->filter('site_id', ee()->config->item('site_id'))->count();
         }
-
-        $vars['filters'] = $filters->renderEntryFilters($base_url);
-        $vars['filters_search'] = $filters->renderSearch($base_url);
-        $vars['search_value'] = htmlentities(ee()->input->get_post('filter_by_keyword'), ENT_QUOTES, 'UTF-8');
 
         $base_url->addQueryStringVariables(
             array_filter(
@@ -169,11 +162,15 @@ class Edit extends AbstractPublishController
                 break;
             }
         }
-        $sort_field = $columns[$sort_col]->getEntryManagerColumnSortField();
-        $entries->order($sort_field, $table->sort_dir);
-        if ($sort_col != 'entry_id') {
-            $entries->order('entry_id', $table->sort_dir);
+
+        if(isset($columns[$sort_col]) && $columns[$sort_col] instanceof Column) {
+            $sort_field = $columns[$sort_col]->getEntryManagerColumnSortField();
+            $entries->order($sort_field, $table->sort_dir);
+            if ($sort_col != 'entry_id') {
+                $entries->order('entry_id', $table->sort_dir);
+            }
         }
+
         $entries->limit($filter_values['perpage'])
             ->offset($offset);
         $entries = $entries->all();
@@ -183,6 +180,14 @@ class Edit extends AbstractPublishController
         $entry_id = ee()->session->flashdata('entry_id');
 
         $statuses = ee('Model')->get('Status')->all(true)->indexBy('status');
+
+        $addQueryString = ee('CP/URL')->getCurrentUrl()->qs;
+        if ($page != 1) {
+            $addQueryString['page'] = $page;
+        }
+        if (isset($addQueryString['page']) && isset($addQueryString['sort_col']) && $addQueryString['sort_col'] == 'edit_date') {
+            unset($addQueryString['page']);
+        }
 
         foreach ($entries as $entry) {
             // wW had a delete cascade issue that could leave entries orphaned and
@@ -206,7 +211,7 @@ class Edit extends AbstractPublishController
 
             $data[] = array(
                 'attrs' => $attrs,
-                'columns' => $column_renderer->getRenderedTableRowForEntry($entry)
+                'columns' => $column_renderer->getRenderedTableRowForEntry($entry, 'list', false, $addQueryString)
             );
         }
 
@@ -223,7 +228,7 @@ class Edit extends AbstractPublishController
 
         $vars['head'] = array(
             'title' => lang('entry_manager'),
-            'action_button' => (count($choices) || ee('Permission')->can('create_entries_channel_id_' . $channel_id)) && $show_new_button ? [
+            'action_button' => (count($choices) || ($channel_id && ee('Permission')->can('create_entries_channel_id_' . $channel_id))) && $show_new_button ? [
                 'text' => $channel_id ? sprintf(lang('btn_create_new_entry_in_channel'), $channel->channel_title) : lang('new'),
                 'href' => ee('CP/URL', 'publish/create/' . $channel_id)->compile(),
                 'filter_placeholder' => lang('filter_channels'),
@@ -232,7 +237,7 @@ class Edit extends AbstractPublishController
             'class' => 'entries'
         );
 
-        if ($table->sort_dir != 'desc' && $table->sort_col != 'column_entry_date') {
+        if (! ($table->sort_dir == 'desc' && $table->sort_col == 'column_entry_date')) {
             $base_url->addQueryStringVariables(
                 array(
                     'sort_dir' => $table->sort_dir,
@@ -241,6 +246,9 @@ class Edit extends AbstractPublishController
             );
         }
 
+        $vars['filters'] = $filters->renderEntryFilters($base_url);
+        $vars['filters_search'] = $filters->renderSearch($base_url);
+        $vars['search_value'] = htmlentities(ee()->input->get_post('filter_by_keyword'), ENT_QUOTES, 'UTF-8');
         $vars['pagination'] = ee('CP/Pagination', $count)
             ->perPage($filter_values['perpage'])
             ->currentPage($page)
@@ -373,12 +381,14 @@ class Edit extends AbstractPublishController
                 ee()->cp->switch_site($entry->site_id, $base_url);
             } else {
                 //but we only auto-switch if we're saving
-                show_error(lang('no_entries_matching_that_criteria'));
+                show_error(lang('no_entries_on_this_site'));
             }
         }
 
-        if (! ee('Permission')->can('edit_other_entries_channel_id_' . $entry->channel_id)
-            && $entry->author_id != ee()->session->userdata('member_id')) {
+        if (
+            ($entry->author_id != ee()->session->userdata('member_id') && ! ee('Permission')->can('edit_other_entries_channel_id_' . $entry->channel_id)) ||
+            ($entry->author_id == ee()->session->userdata('member_id') && ! ee('Permission')->can('edit_self_entries_channel_id_' . $entry->channel_id))
+        ) {
             show_error(lang('unauthorized_access'), 403);
         }
 
@@ -483,21 +493,25 @@ class Edit extends AbstractPublishController
             }
         }
 
-        $channel_layout = ee('Model')->get('ChannelLayout')
-            ->filter('site_id', ee()->config->item('site_id'))
-            ->filter('channel_id', $entry->channel_id)
-            ->with('PrimaryRoles')
-            ->filter('PrimaryRoles.role_id', ee()->session->userdata('role_id'))
-            ->first();
-
-        if (empty($channel_layout)) {
+        if (isset($vars['pro_class'])) {
+            $channel_layout = null;
+        } else {
             $channel_layout = ee('Model')->get('ChannelLayout')
                 ->filter('site_id', ee()->config->item('site_id'))
                 ->filter('channel_id', $entry->channel_id)
                 ->with('PrimaryRoles')
-                ->filter('PrimaryRoles.role_id', 'IN', ee()->session->getMember()->getAllRoles()->pluck('role_id'))
-                ->all()
+                ->filter('PrimaryRoles.role_id', ee()->session->userdata('role_id'))
                 ->first();
+
+            if (empty($channel_layout)) {
+                $channel_layout = ee('Model')->get('ChannelLayout')
+                    ->filter('site_id', ee()->config->item('site_id'))
+                    ->filter('channel_id', $entry->channel_id)
+                    ->with('PrimaryRoles')
+                    ->filter('PrimaryRoles.role_id', 'IN', ee()->session->getMember()->getAllRoles()->pluck('role_id'))
+                    ->all()
+                    ->first();
+            }
         }
 
         $vars['layout'] = $entry->getDisplay($channel_layout);
@@ -522,7 +536,10 @@ class Edit extends AbstractPublishController
                 'ee_filebrowser',
                 'ee_fileuploader',
             ),
-            'file' => array('cp/publish/publish')
+            'file' => array(
+                'cp/publish/publish',
+                'cp/publish/entry-list',
+            )
         ));
 
         ee()->view->cp_breadcrumbs = array(
@@ -540,7 +557,7 @@ class Edit extends AbstractPublishController
             $vars['layout']->setIsInModalContext(true);
             ee()->output->enable_profiler(false);
 
-            if (IS_PRO && ee('Request')->get('hide_closer') == 'y') {
+            if (ee('Request')->get('hide_closer') == 'y') {
                 ee()->cp->add_js_script(array(
                     'pro_file' => array(
                         'iframe-listener'
@@ -647,7 +664,7 @@ class Edit extends AbstractPublishController
                     $entry->Site->save();
                 }
             }
-            
+
             $entries->delete();
         }
 

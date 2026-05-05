@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -29,7 +29,7 @@ trait OptionsTrait
     /**
      * @return array
      */
-    public function getOptionsAsArray()
+    public function getOptionsAsArray(): array
     {
         $data = [];
         foreach ($this->options as $option) {

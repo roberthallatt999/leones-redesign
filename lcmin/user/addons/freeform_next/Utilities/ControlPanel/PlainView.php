@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -17,28 +17,20 @@ use Solspace\Addons\FreeformNext\Utilities\ControlPanel\Navigation\NavigationLin
 
 class PlainView extends View
 {
-    /** @var string */
-    private $template;
-
-    /** @var array */
-    private $templateVariables;
-
     /**
      * CpView constructor.
      *
      * @param       $template
-     * @param array $templateVariables
+     * @param string $template
      */
-    public function __construct($template, array $templateVariables = [])
+    public function __construct(private $template, private array $templateVariables = [])
     {
-        $this->template          = $template;
-        $this->templateVariables = $templateVariables;
     }
 
     /**
      * @return string
      */
-    public function compile()
+    public function compile(): string|bool
     {
         ob_start();
         extract($this->templateVariables, EXTR_SKIP);
@@ -71,17 +63,15 @@ class PlainView extends View
     /**
      * @return array
      */
-    public function getTemplateVariables()
+    public function getTemplateVariables(): array
     {
         return $this->templateVariables ?: [];
     }
 
     /**
-     * @param array $templateVariables
-     *
      * @return $this
      */
-    public function setTemplateVariables($templateVariables)
+    public function setTemplateVariables(array $templateVariables)
     {
         $this->templateVariables = $templateVariables;
 

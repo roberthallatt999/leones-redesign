@@ -97,7 +97,7 @@ $lang = array(
 The following files are affected:
 {changed}
 
-If you made these changes, please accept the modifications on the control panel homepage. If you did not alter these files it may indicate a hacking attempt. Check the files for any suspicious contents (JavaScript or iFrames) and see: ' . DOC_URL . 'troubleshooting/error-messages.html#expressionengine-has-detected-the-modification-of-a-core-file',
+If you made these changes, please accept the modifications on the Control Panel homepage. If you did not alter these files it may indicate a hacking attempt. Check the files for any suspicious contents (JavaScript or iFrames) and see: ' . DOC_URL . 'troubleshooting/error-messages.html#expressionengine-has-detected-the-modification-of-a-core-file',
 
     'checksum_email_subject' => 'A core file was modified on your site.',
 
@@ -120,6 +120,8 @@ If you made these changes, please accept the modifications on the control panel 
     'error' => 'Error',
 
     'file_not_found' => 'File %s does not exist.',
+
+    'file_manager' => 'File Manager',
 
     'general_error' => 'The following errors were encountered',
 
@@ -163,7 +165,11 @@ If you made these changes, please accept the modifications on the control panel 
 
     'php72_intl_error' => 'Your <code>intl</code> PHP extentsion is out-of-date. Please ensure you have <code>ICU 4.6</code> or newer installed.',
 
-    /* Member Groups */
+    'license_error' => 'License error',
+    'license_error_file_not_writable' => 'The cache folder needs to be writable in order for ExpressionEngine Pro to work',
+    'license_error_file_broken' => 'There has been an error validating ExpressionEngine Pro license status',
+
+    /* Roles */
     'banned' => 'Banned',
 
     'guests' => 'Guests',
@@ -481,17 +487,20 @@ If you made these changes, please accept the modifications on the control panel 
     'cookie_viewtype_desc' => 'Determines View Type to be used in Filemanager (table or thumbs view)',
 
     'cookie_cp_last_site_id' => 'CP Last Site ID',
-    'cookie_cp_last_site_id_desc' => 'MSM cookie indicating the last site accessed in the control panel.',
+    'cookie_cp_last_site_id_desc' => 'MSM cookie indicating the last site accessed in the Control Panel.',
 
     'cookie_collapsed_nav' => 'Collapsed Navigation',
-    'cookie_collapsed_nav_desc' => 'Determines whether navigation sidebar is control panel should be collapsed.',
+    'cookie_collapsed_nav_desc' => 'Determines whether navigation sidebar in the Control Panel should be collapsed.',
+
+    'cookie_secondary_sidebar' => 'Secondary Sidebar State',
+    'cookie_secondary_sidebar_desc' => 'Determines whether secondary navigation sidebar in the Control Panel should be collapsed for each corresponding section.',
 
     'cookie_ee_cp_viewmode' => 'CP View Mode',
-    'cookie_ee_cp_viewmode_desc' => 'Determines view mode for control panel.',
+    'cookie_ee_cp_viewmode_desc' => 'Determines view mode for the Control Panel.',
 
     'cp' => 'Control Panel',
 
-    
+    'adapter_local' => 'Local',
 
 );
 
