@@ -116,6 +116,8 @@ jobs:
             --exclude='node_modules/' \
             --exclude='src/assets/certs/' \
             --exclude='LocalValetDriver.php' \
+            --exclude='.db-backup.sql.gz' \
+            --exclude='.release-info' \
             ./ "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.STAGE_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}/"
 
       - name: Store release info

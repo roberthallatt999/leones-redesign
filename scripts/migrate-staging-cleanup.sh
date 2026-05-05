@@ -23,6 +23,11 @@ REMOTE_BASE_PATH="/home/forge/lc.digitaldesigns.dev"
 # Items to delete from the BASE_PATH root. Anything not in this list is left
 # alone. Specifically EXCLUDED: releases, shared, current, .release-info, dotfiles
 # we don't recognize (better to leave them).
+#
+# Some items below are NOT part of the original site but are artifacts of a
+# Forge auto-deploy that ran (and pulled the repo into the BASE_PATH root)
+# before we disabled it. They're listed here so cleanup wipes them too:
+#   .git, .github, .gitignore, .nvmrc, DEPLOY.md, LICENSE, scripts, src/build
 LEGACY_ITEMS=(
     images
     lcmin
@@ -40,6 +45,14 @@ LEGACY_ITEMS=(
     .well-known
     package.json
     package-lock.json
+    # Forge auto-deploy artifacts (only relevant if Forge git-pulled into root)
+    .git
+    .github
+    .gitignore
+    .nvmrc
+    DEPLOY.md
+    LICENSE
+    scripts
 )
 
 red()    { printf '\033[31m%s\033[0m\n' "$*"; }
