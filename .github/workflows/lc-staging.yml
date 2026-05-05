@@ -1,0 +1,247 @@
+name: Deploy Leone's Creamery to Staging
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: 'Commit hash to rollback to'
+        required: false
+        type: string
+
+# Prevent concurrent deployments
+concurrency:
+  group: deploy-lc-staging-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Deployment Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Required Secrets
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          STAGE_DB_HOST: ${{ secrets.STAGE_DB_HOST }}
+          STAGE_DB_USER: ${{ secrets.STAGE_DB_USER }}
+          STAGE_DB_PASS: ${{ secrets.STAGE_DB_PASS }}
+          STAGE_DB_NAME: ${{ secrets.STAGE_DB_NAME }}
+          STAGE_BASE_PATH: ${{ secrets.STAGE_BASE_PATH }}
+        run: |
+          missing_secrets=()
+
+          [[ -z "$SERVER_HOST" ]]     && missing_secrets+=("SERVER_HOST")
+          [[ -z "$SERVER_USER" ]]     && missing_secrets+=("SERVER_USER")
+          [[ -z "$SSH_PRIVATE_KEY" ]] && missing_secrets+=("SSH_PRIVATE_KEY")
+          [[ -z "$STAGE_DB_HOST" ]]   && missing_secrets+=("STAGE_DB_HOST")
+          [[ -z "$STAGE_DB_USER" ]]   && missing_secrets+=("STAGE_DB_USER")
+          [[ -z "$STAGE_DB_PASS" ]]   && missing_secrets+=("STAGE_DB_PASS")
+          [[ -z "$STAGE_DB_NAME" ]]   && missing_secrets+=("STAGE_DB_NAME")
+          [[ -z "$STAGE_BASE_PATH" ]] && missing_secrets+=("STAGE_BASE_PATH")
+
+          [[ -n "$SERVER_HOST" ]]     && echo "✅ SERVER_HOST is set"     || echo "❌ SERVER_HOST is missing"
+          [[ -n "$SERVER_USER" ]]     && echo "✅ SERVER_USER is set"     || echo "❌ SERVER_USER is missing"
+          [[ -n "$SSH_PRIVATE_KEY" ]] && echo "✅ SSH_PRIVATE_KEY is set" || echo "❌ SSH_PRIVATE_KEY is missing"
+          [[ -n "$STAGE_DB_HOST" ]]   && echo "✅ STAGE_DB_HOST is set"   || echo "❌ STAGE_DB_HOST is missing"
+          [[ -n "$STAGE_DB_USER" ]]   && echo "✅ STAGE_DB_USER is set"   || echo "❌ STAGE_DB_USER is missing"
+          [[ -n "$STAGE_DB_PASS" ]]   && echo "✅ STAGE_DB_PASS is set"   || echo "❌ STAGE_DB_PASS is missing"
+          [[ -n "$STAGE_DB_NAME" ]]   && echo "✅ STAGE_DB_NAME is set"   || echo "❌ STAGE_DB_NAME is missing"
+          [[ -n "$STAGE_BASE_PATH" ]] && echo "✅ STAGE_BASE_PATH is set" || echo "❌ STAGE_BASE_PATH is missing"
+
+          if [ ${#missing_secrets[@]} -ne 0 ]; then
+            echo "❌ Missing required secrets: ${missing_secrets[*]}"
+            echo "Please run .github/deploy-scripts/manage-secrets.sh to set up all required secrets"
+            exit 1
+          fi
+
+          echo "All required secrets are set ✅"
+
+  deploy:
+    needs: validate
+    if: ${{ !github.event.inputs.rollback }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Generate release timestamp
+        id: release
+        run: echo "timestamp=$(date -u '+%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create release directory on server
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "mkdir -p ${{ secrets.STAGE_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}"
+
+      - name: Backup database before deploy
+        env:
+          RELEASE_TIMESTAMP: ${{ steps.release.outputs.timestamp }}
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "mysqldump -h '${{ secrets.STAGE_DB_HOST }}' \
+              -u '${{ secrets.STAGE_DB_USER }}' \
+              -p'${{ secrets.STAGE_DB_PASS }}' \
+              --single-transaction \
+              --no-tablespaces \
+              --routines \
+              --triggers \
+              '${{ secrets.STAGE_DB_NAME }}' | \
+            gzip > '${{ secrets.STAGE_BASE_PATH }}/releases/${RELEASE_TIMESTAMP}/.db-backup.sql.gz'"
+          echo "Database backup saved to releases/${RELEASE_TIMESTAMP}/.db-backup.sql.gz"
+
+      - name: Sync files to server
+        run: |
+          rsync -az --delete \
+            --exclude='.git/' \
+            --exclude='lcmin/user/cache/' \
+            --exclude='lcmin/user/config/config.local.php' \
+            --exclude='images/' \
+            --exclude='.ddev/' \
+            --exclude='.github/' \
+            --exclude='.vscode/' \
+            --exclude='node_modules/' \
+            --exclude='src/assets/certs/' \
+            --exclude='LocalValetDriver.php' \
+            ./ "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.STAGE_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}/"
+
+      - name: Store release info
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "echo '${{ github.sha }}' > ${{ secrets.STAGE_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}/.release-info"
+
+      - name: Run staging deployment script
+        env:
+          RELEASE_TIMESTAMP: ${{ steps.release.outputs.timestamp }}
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "DB_HOST='${{ secrets.STAGE_DB_HOST }}' \
+            DB_USER='${{ secrets.STAGE_DB_USER }}' \
+            DB_PASSWORD='${{ secrets.STAGE_DB_PASS }}' \
+            DB_NAME='${{ secrets.STAGE_DB_NAME }}' \
+            PHP_BIN='${{ secrets.SERVER_PHP_PATH }}' \
+            bash -s -- \
+              '${{ secrets.STAGE_BASE_PATH }}/releases/${RELEASE_TIMESTAMP}' \
+              '${{ secrets.STAGE_BASE_PATH }}'" \
+            < .github/deploy-scripts/lc-staging.sh
+
+      - name: Switch current symlink (atomic)
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "ln -sfn ${{ secrets.STAGE_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }} \
+            ${{ secrets.STAGE_BASE_PATH }}/current"
+
+      - name: Clean up old releases (keep 7)
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "ls -dt ${{ secrets.STAGE_BASE_PATH }}/releases/*/ 2>/dev/null | tail -n +8 | xargs --no-run-if-empty rm -rf"
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployed to staging successfully"
+          echo "Release: ${{ steps.release.outputs.timestamp }}"
+          echo "Commit:  ${{ github.sha }}"
+
+  rollback:
+    needs: validate
+    if: ${{ github.event.inputs.rollback != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Find release for commit hash
+        id: find-release
+        env:
+          ROLLBACK_HASH: ${{ github.event.inputs.rollback }}
+        run: |
+          RELEASE_DIR=$(ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" "
+            for dir in ${{ secrets.STAGE_BASE_PATH }}/releases/*/; do
+              if [ -f \"\${dir}.release-info\" ] && grep -qF '${ROLLBACK_HASH}' \"\${dir}.release-info\"; then
+                echo \"\$dir\"
+                break
+              fi
+            done
+          ")
+
+          if [ -z "$RELEASE_DIR" ]; then
+            echo "❌ No release found for commit: ${ROLLBACK_HASH}"
+            exit 1
+          fi
+
+          echo "Found release: ${RELEASE_DIR}"
+          echo "release_dir=${RELEASE_DIR}" >> $GITHUB_OUTPUT
+
+      - name: Find current release for database backup
+        id: current-release
+        run: |
+          CURRENT=$(ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "readlink -f ${{ secrets.STAGE_BASE_PATH }}/current")
+          echo "current_release=${CURRENT}" >> $GITHUB_OUTPUT
+          echo "Current active release: ${CURRENT}"
+
+      - name: Restore database from backup
+        run: |
+          BACKUP_FILE="${{ steps.current-release.outputs.current_release }}/.db-backup.sql.gz"
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "if [ -f '${BACKUP_FILE}' ]; then \
+              echo 'Restoring database from: ${BACKUP_FILE}' && \
+              gunzip -c '${BACKUP_FILE}' | \
+              mysql -h '${{ secrets.STAGE_DB_HOST }}' \
+                -u '${{ secrets.STAGE_DB_USER }}' \
+                -p'${{ secrets.STAGE_DB_PASS }}' \
+                '${{ secrets.STAGE_DB_NAME }}' && \
+              echo 'Database restored successfully ✅'; \
+            else \
+              echo '⚠️  No database backup found at ${BACKUP_FILE}'; \
+              echo 'Proceeding with code-only rollback'; \
+            fi"
+
+      - name: Run staging rollback script
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "DB_HOST='${{ secrets.STAGE_DB_HOST }}' \
+            DB_USER='${{ secrets.STAGE_DB_USER }}' \
+            DB_PASSWORD='${{ secrets.STAGE_DB_PASS }}' \
+            DB_NAME='${{ secrets.STAGE_DB_NAME }}' \
+            PHP_BIN='${{ secrets.SERVER_PHP_PATH }}' \
+            bash -s -- \
+              '${{ steps.find-release.outputs.release_dir }}' \
+              '${{ secrets.STAGE_BASE_PATH }}'" \
+            < .github/deploy-scripts/lc-staging-rollback.sh
+
+      - name: Switch current symlink to rollback release
+        run: |
+          ssh "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "ln -sfn ${{ steps.find-release.outputs.release_dir }} \
+            ${{ secrets.STAGE_BASE_PATH }}/current"
+
+      - name: Rollback summary
+        env:
+          ROLLBACK_HASH: ${{ github.event.inputs.rollback }}
+        run: |
+          echo "✅ Rolled back staging to commit: $ROLLBACK_HASH"
+          echo "Active release: ${{ steps.find-release.outputs.release_dir }}"

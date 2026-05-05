@@ -30,6 +30,9 @@ LocalValetDriver.php
 # Editor settings (per-developer)
 .vscode/settings.json
 
+# GitHub Actions deployment secrets (NEVER commit — populated locally)
+.github/secrets.yaml
+
 # build script
 
 node_modules/

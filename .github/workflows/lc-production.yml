@@ -1,0 +1,248 @@
+name: Deploy Leone's Creamery to Production
+
+# Production is initially gated to workflow_dispatch only.
+# When ready, uncomment the push trigger below to enable auto-deploy on merge to main.
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: 'Commit hash to rollback to'
+        required: false
+        type: string
+
+concurrency:
+  group: deploy-lc-production-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Deployment Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Required Secrets
+        env:
+          PROD_SERVER_HOST: ${{ secrets.PROD_SERVER_HOST }}
+          PROD_SERVER_USER: ${{ secrets.PROD_SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          PROD_DB_HOST: ${{ secrets.PROD_DB_HOST }}
+          PROD_DB_USER: ${{ secrets.PROD_DB_USER }}
+          PROD_DB_PASS: ${{ secrets.PROD_DB_PASS }}
+          PROD_DB_NAME: ${{ secrets.PROD_DB_NAME }}
+          PROD_BASE_PATH: ${{ secrets.PROD_BASE_PATH }}
+        run: |
+          missing_secrets=()
+
+          [[ -z "$PROD_SERVER_HOST" ]] && missing_secrets+=("PROD_SERVER_HOST")
+          [[ -z "$PROD_SERVER_USER" ]] && missing_secrets+=("PROD_SERVER_USER")
+          [[ -z "$SSH_PRIVATE_KEY" ]]  && missing_secrets+=("SSH_PRIVATE_KEY")
+          [[ -z "$PROD_DB_HOST" ]]     && missing_secrets+=("PROD_DB_HOST")
+          [[ -z "$PROD_DB_USER" ]]     && missing_secrets+=("PROD_DB_USER")
+          [[ -z "$PROD_DB_PASS" ]]     && missing_secrets+=("PROD_DB_PASS")
+          [[ -z "$PROD_DB_NAME" ]]     && missing_secrets+=("PROD_DB_NAME")
+          [[ -z "$PROD_BASE_PATH" ]]   && missing_secrets+=("PROD_BASE_PATH")
+
+          [[ -n "$PROD_SERVER_HOST" ]] && echo "✅ PROD_SERVER_HOST is set" || echo "❌ PROD_SERVER_HOST is missing"
+          [[ -n "$PROD_SERVER_USER" ]] && echo "✅ PROD_SERVER_USER is set" || echo "❌ PROD_SERVER_USER is missing"
+          [[ -n "$SSH_PRIVATE_KEY" ]]  && echo "✅ SSH_PRIVATE_KEY is set"  || echo "❌ SSH_PRIVATE_KEY is missing"
+          [[ -n "$PROD_DB_HOST" ]]     && echo "✅ PROD_DB_HOST is set"     || echo "❌ PROD_DB_HOST is missing"
+          [[ -n "$PROD_DB_USER" ]]     && echo "✅ PROD_DB_USER is set"     || echo "❌ PROD_DB_USER is missing"
+          [[ -n "$PROD_DB_PASS" ]]     && echo "✅ PROD_DB_PASS is set"     || echo "❌ PROD_DB_PASS is missing"
+          [[ -n "$PROD_DB_NAME" ]]     && echo "✅ PROD_DB_NAME is set"     || echo "❌ PROD_DB_NAME is missing"
+          [[ -n "$PROD_BASE_PATH" ]]   && echo "✅ PROD_BASE_PATH is set"   || echo "❌ PROD_BASE_PATH is missing"
+
+          if [ ${#missing_secrets[@]} -ne 0 ]; then
+            echo "❌ Missing required secrets: ${missing_secrets[*]}"
+            echo "Please run .github/deploy-scripts/manage-secrets.sh to set up all required secrets"
+            exit 1
+          fi
+
+          echo "All required secrets are set ✅"
+
+  deploy:
+    needs: validate
+    if: ${{ !github.event.inputs.rollback }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: ssh-keyscan -H "${{ secrets.PROD_SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Generate release timestamp
+        id: release
+        run: echo "timestamp=$(date -u '+%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create release directory on server
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "mkdir -p ${{ secrets.PROD_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}"
+
+      - name: Backup database before deploy
+        env:
+          RELEASE_TIMESTAMP: ${{ steps.release.outputs.timestamp }}
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "mysqldump -h '${{ secrets.PROD_DB_HOST }}' \
+              -u '${{ secrets.PROD_DB_USER }}' \
+              -p'${{ secrets.PROD_DB_PASS }}' \
+              --single-transaction \
+              --no-tablespaces \
+              --routines \
+              --triggers \
+              '${{ secrets.PROD_DB_NAME }}' | \
+            gzip > '${{ secrets.PROD_BASE_PATH }}/releases/${RELEASE_TIMESTAMP}/.db-backup.sql.gz'"
+          echo "Database backup saved to releases/${RELEASE_TIMESTAMP}/.db-backup.sql.gz"
+
+      - name: Sync files to server
+        run: |
+          rsync -az --delete \
+            --exclude='.git/' \
+            --exclude='lcmin/user/cache/' \
+            --exclude='lcmin/user/config/config.local.php' \
+            --exclude='images/' \
+            --exclude='.ddev/' \
+            --exclude='.github/' \
+            --exclude='.vscode/' \
+            --exclude='node_modules/' \
+            --exclude='src/assets/certs/' \
+            --exclude='LocalValetDriver.php' \
+            ./ "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}:${{ secrets.PROD_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}/"
+
+      - name: Store release info
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "echo '${{ github.sha }}' > ${{ secrets.PROD_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}/.release-info"
+
+      - name: Run production deployment script
+        env:
+          RELEASE_TIMESTAMP: ${{ steps.release.outputs.timestamp }}
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "DB_HOST='${{ secrets.PROD_DB_HOST }}' \
+            DB_USER='${{ secrets.PROD_DB_USER }}' \
+            DB_PASSWORD='${{ secrets.PROD_DB_PASS }}' \
+            DB_NAME='${{ secrets.PROD_DB_NAME }}' \
+            PHP_BIN='${{ secrets.SERVER_PHP_PATH }}' \
+            bash -s -- \
+              '${{ secrets.PROD_BASE_PATH }}/releases/${RELEASE_TIMESTAMP}' \
+              '${{ secrets.PROD_BASE_PATH }}'" \
+            < .github/deploy-scripts/lc-production.sh
+
+      - name: Switch current symlink (atomic)
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "ln -sfn ${{ secrets.PROD_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }} \
+            ${{ secrets.PROD_BASE_PATH }}/current"
+
+      - name: Clean up old releases (keep 7)
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "ls -dt ${{ secrets.PROD_BASE_PATH }}/releases/*/ 2>/dev/null | tail -n +8 | xargs --no-run-if-empty rm -rf"
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployed to production successfully"
+          echo "Release: ${{ steps.release.outputs.timestamp }}"
+          echo "Commit:  ${{ github.sha }}"
+
+  rollback:
+    needs: validate
+    if: ${{ github.event.inputs.rollback != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: ssh-keyscan -H "${{ secrets.PROD_SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Find release for commit hash
+        id: find-release
+        env:
+          ROLLBACK_HASH: ${{ github.event.inputs.rollback }}
+        run: |
+          RELEASE_DIR=$(ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" "
+            for dir in ${{ secrets.PROD_BASE_PATH }}/releases/*/; do
+              if [ -f \"\${dir}.release-info\" ] && grep -qF '${ROLLBACK_HASH}' \"\${dir}.release-info\"; then
+                echo \"\$dir\"
+                break
+              fi
+            done
+          ")
+
+          if [ -z "$RELEASE_DIR" ]; then
+            echo "❌ No release found for commit: ${ROLLBACK_HASH}"
+            exit 1
+          fi
+
+          echo "Found release: ${RELEASE_DIR}"
+          echo "release_dir=${RELEASE_DIR}" >> $GITHUB_OUTPUT
+
+      - name: Find current release for database backup
+        id: current-release
+        run: |
+          CURRENT=$(ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "readlink -f ${{ secrets.PROD_BASE_PATH }}/current")
+          echo "current_release=${CURRENT}" >> $GITHUB_OUTPUT
+          echo "Current active release: ${CURRENT}"
+
+      - name: Restore database from backup
+        run: |
+          BACKUP_FILE="${{ steps.current-release.outputs.current_release }}/.db-backup.sql.gz"
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "if [ -f '${BACKUP_FILE}' ]; then \
+              echo 'Restoring database from: ${BACKUP_FILE}' && \
+              gunzip -c '${BACKUP_FILE}' | \
+              mysql -h '${{ secrets.PROD_DB_HOST }}' \
+                -u '${{ secrets.PROD_DB_USER }}' \
+                -p'${{ secrets.PROD_DB_PASS }}' \
+                '${{ secrets.PROD_DB_NAME }}' && \
+              echo 'Database restored successfully ✅'; \
+            else \
+              echo '⚠️  No database backup found at ${BACKUP_FILE}'; \
+              echo 'Proceeding with code-only rollback'; \
+            fi"
+
+      - name: Run production rollback script
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "DB_HOST='${{ secrets.PROD_DB_HOST }}' \
+            DB_USER='${{ secrets.PROD_DB_USER }}' \
+            DB_PASSWORD='${{ secrets.PROD_DB_PASS }}' \
+            DB_NAME='${{ secrets.PROD_DB_NAME }}' \
+            PHP_BIN='${{ secrets.SERVER_PHP_PATH }}' \
+            bash -s -- \
+              '${{ steps.find-release.outputs.release_dir }}' \
+              '${{ secrets.PROD_BASE_PATH }}'" \
+            < .github/deploy-scripts/lc-production-rollback.sh
+
+      - name: Switch current symlink to rollback release
+        run: |
+          ssh "${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}" \
+            "ln -sfn ${{ steps.find-release.outputs.release_dir }} \
+            ${{ secrets.PROD_BASE_PATH }}/current"
+
+      - name: Rollback summary
+        env:
+          ROLLBACK_HASH: ${{ github.event.inputs.rollback }}
+        run: |
+          echo "✅ Rolled back production to commit: $ROLLBACK_HASH"
+          echo "Active release: ${{ steps.find-release.outputs.release_dir }}"
