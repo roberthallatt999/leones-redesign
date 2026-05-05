@@ -1,11 +1,11 @@
 name: Deploy Leone's Creamery to Production
 
-# Production is initially gated to workflow_dispatch only.
-# When ready, uncomment the push trigger below to enable auto-deploy on merge to main.
+# Auto-deploys on every push to main. Manual deploys + rollbacks via
+# workflow_dispatch (Run workflow button or `gh workflow run`).
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       rollback:
