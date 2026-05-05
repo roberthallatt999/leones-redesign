@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -24,6 +24,7 @@ class FluidField extends Model
     protected static $_typed_columns = array(
         'fluid_field_id' => 'int',
         'entry_id' => 'int',
+        'field_group_id' => 'int',
         'field_id' => 'int',
         'field_data_id' => 'int',
         'order' => 'int',
@@ -43,6 +44,17 @@ class FluidField extends Model
         'ChannelField' => array(
             'type' => 'belongsTo',
             'model' => 'ee:ChannelField',
+            'weak' => true,
+            'inverse' => array(
+                'name' => 'FluidField',
+                'type' => 'hasMany',
+                'weak' => true
+            )
+        ),
+        'ChannelFieldGroup' => array(
+            'type' => 'belongsTo',
+            'from_key' => 'field_group_id',
+            'model' => 'ee:ChannelFieldGroup',
             'weak' => true,
             'inverse' => array(
                 'name' => 'FluidField',
@@ -71,9 +83,11 @@ class FluidField extends Model
     protected $id;
     protected $fluid_field_id;
     protected $entry_id;
+    protected $field_group_id;
     protected $field_id;
     protected $field_data_id;
     protected $order;
+    protected $group;
 
     public function onAfterDelete()
     {
@@ -129,14 +143,14 @@ class FluidField extends Model
             $field_data = ee()->extensions->call(
                 'fluid_field_get_all_data',
                 $field_data,
-                $fluid_field_id
+                $this->fluid_field_id
             );
         }
 
         return $field_data;
     }
 
-    public function getField(FieldData $field_data = null)
+    public function getField(?FieldData $field_data = null)
     {
         $field = $this->ChannelField->getField();
         $field->setContentId($this->entry_id);

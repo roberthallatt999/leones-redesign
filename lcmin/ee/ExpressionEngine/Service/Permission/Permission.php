@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -101,7 +101,7 @@ class Permission
     }
 
     /**
-     * Can they use Pro?
+     * Can they use Front-end editing features?
      *
      * @return boolean
      */
@@ -110,14 +110,9 @@ class Permission
         if ($this->isSuperAdmin()) {
             return true;
         }
-        
-        //currently. anyone with CP access 
-        //if the future, inject into Permissions service
-        if ($this->has('can_access_cp')) {
-            $assigned_modules = ee()->session->getMember()->getAssignedModules()->pluck('module_name');
-            if (in_array('Pro', $assigned_modules)) {
-                return true;
-            }
+
+        if ($this->has('can_access_cp') && $this->has('can_access_dock')) {
+            return true;
         }
 
         return false;
@@ -128,8 +123,8 @@ class Permission
      *
      * Member access validation
      *
-     * @param	string  single permission name
-     * @return	bool    TRUE if member has permission
+     * @param   string  single permission name
+     * @return  bool    TRUE if member has permission
      */
     public function has()
     {
@@ -157,8 +152,8 @@ class Permission
      *
      * Member access validation
      *
-     * @param	mixed   array or any number of permission names
-     * @return	bool    TRUE if member has all permissions
+     * @param   mixed   array or any number of permission names
+     * @return  bool    TRUE if member has all permissions
      */
     public function hasAll()
     {
@@ -187,8 +182,8 @@ class Permission
      *
      * Member access validation
      *
-     * @param	mixed   array or any number of permission names
-     * @return	bool    TRUE if member has any permissions in the set
+     * @param   mixed   array or any number of permission names
+     * @return  bool    TRUE if member has any permissions in the set
      */
     public function hasAny()
     {
@@ -278,9 +273,9 @@ class Permission
      *
      * Member access validation
      *
-     * @param	string $which any number of permission names
-     * @return	mixed    False if the requested userdata array key doesn't exist
-     *							otherwise returns the key's value
+     * @param   string $which any number of permission names
+     * @return  mixed    False if the requested userdata array key doesn't exist
+     *                          otherwise returns the key's value
      */
     protected function getUserdatum($which)
     {

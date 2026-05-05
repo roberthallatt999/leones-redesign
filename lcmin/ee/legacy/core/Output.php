@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -14,8 +14,8 @@
 class EE_Output
 {
     public $out_type = 'webpage';
-    public $refresh_msg = true;			// TRUE/FALSE - whether to show the "You will be redirected in 5 seconds" message.
-    public $refresh_time = 1;			// Number of seconds for redirects
+    public $refresh_msg = true;         // TRUE/FALSE - whether to show the "You will be redirected in 5 seconds" message.
+    public $refresh_time = 1;           // Number of seconds for redirects
 
     public $remove_unparsed_variables = false; // whether to remove left-over variables that had bad syntax
 
@@ -23,7 +23,7 @@ class EE_Output
     public $cache_expiration = 0;
     public $headers = array();
     public $enable_profiler = false;
-    public $parse_exec_vars = true;	// whether or not to parse variables like {elapsed_time} and {memory_usage}
+    public $parse_exec_vars = true; // whether or not to parse variables like {elapsed_time} and {memory_usage}
 
     public $_zlib_oc = false;
 
@@ -39,8 +39,8 @@ class EE_Output
      *
      * Returns the current output string
      *
-     * @access	public
-     * @return	string
+     * @access  public
+     * @return  string
      */
     public function get_output()
     {
@@ -52,9 +52,9 @@ class EE_Output
      *
      * Sets the output string
      *
-     * @access	public
-     * @param	string
-     * @return	void
+     * @access  public
+     * @param   string
+     * @return  void
      */
     public function set_output($output)
     {
@@ -66,9 +66,9 @@ class EE_Output
      *
      * Appends data onto the output string
      *
-     * @access	public
-     * @param	string
-     * @return	void
+     * @access  public
+     * @param   string
+     * @return  void
      */
     public function append_output($output)
     {
@@ -83,9 +83,9 @@ class EE_Output
      * Note:  If a file is cached, headers will not be sent.  We need to figure out
      * how to permit header data to be saved with the cache data...
      *
-     * @access	public
-     * @param	string
-     * @return	void
+     * @access  public
+     * @param   string
+     * @return  void
      */
     public function set_header($header, $replace = true)
     {
@@ -111,10 +111,10 @@ class EE_Output
      * Set HTTP Status Header
      * moved to Common procedural functions in 1.7.2
      *
-     * @access	public
-     * @param	int		the status code
-     * @param	string
-     * @return	void
+     * @access  public
+     * @param   int     the status code
+     * @param   string
+     * @return  void
      */
     public function set_status_header($code = 200, $text = '')
     {
@@ -124,9 +124,9 @@ class EE_Output
     /**
      * Enable/disable Profiler
      *
-     * @access	public
-     * @param	bool
-     * @return	void
+     * @access  public
+     * @param   bool
+     * @return  void
      */
     public function enable_profiler($val = true)
     {
@@ -136,9 +136,9 @@ class EE_Output
     /**
      * Set Cache
      *
-     * @access	public
-     * @param	integer
-     * @return	void
+     * @access  public
+     * @param   integer
+     * @return  void
      */
     public function cache($time)
     {
@@ -166,8 +166,8 @@ class EE_Output
     /**
      * Display the final output
      *
-     * @access	public
-     * @return	void
+     * @access  public
+     * @return  void
      */
     public function _display($output = '', $status = 200)
     {
@@ -261,11 +261,6 @@ class EE_Output
             ee()->config->set_item('compress_output', true);
         }
 
-        // Send FLOC headers
-        if(REQ == 'PAGE' && ee()->config->item('enable_floc') !== 'y') {
-            $this->set_header("Permissions-Policy: interest-cohort=()");
-        }
-
         // Parse query count
         if (REQ != 'CP') {
             $output = str_replace(LD . 'total_queries' . RD, ee()->db->query_count, $output);
@@ -277,6 +272,13 @@ class EE_Output
         global $BM, $CFG;
 
         // --------------------------------------------------------------------
+
+        if (isset(ee()->extensions) && ee()->extensions->active_hook('before_response_send_output') === true) {
+            $output = ee()->extensions->call('before_response_send_output', $output);
+            if (ee()->extensions->end_script === true) {
+                return;
+            }
+        }
 
         // Set the output data
         if ($output == '') {
@@ -334,12 +336,8 @@ class EE_Output
 
         // --------------------------------------------------------------------
         // Include PRO stuff
-        $installMode = false;
-        if (file_exists(FCPATH . '.env.php') && (require FCPATH . '.env.php') == true) {
-            $installMode = getenv('EE_INSTALL_MODE') === 'TRUE';
-        }
-        $inInstallMode = is_dir(SYSPATH . 'ee/installer/') && $installMode;
-        if (IS_PRO && !$inInstallMode) {
+        $inEEInstallMode = is_dir(SYSPATH . 'ee/installer/') && (! defined('INSTALL_MODE') or INSTALL_MODE != false);
+        if (! $inEEInstallMode) {
             $output = ee('pro:Dock')->buildOutput($output);
         }
         if (REQ == 'PAGE' || (REQ == 'ACTION' && ee('LivePreview')->hasEntryData())) {
@@ -388,8 +386,8 @@ class EE_Output
 
         if (REQ == 'PAGE') {
             /* -------------------------------------------
-            /*	Hidden Configuration Variables
-            /*	- remove_unparsed_vars => Whether or not to remove unparsed EE variables
+            /*  Hidden Configuration Variables
+            /*  - remove_unparsed_vars => Whether or not to remove unparsed EE variables
             /*  This is most helpful if you wish for debug to be set to 0, as EE will not
             /*  strip out javascript.
             /* -------------------------------------------*/
@@ -409,6 +407,13 @@ class EE_Output
 
         echo $output;  // Send it to the browser!
 
+        if (isset(ee()->extensions) && ee()->extensions->active_hook('after_response_send_output') === true) {
+            ee()->extensions->call('after_response_send_output');
+            if (ee()->extensions->end_script === true) {
+                return;
+            }
+        }
+
         log_message('debug', "Final output sent to browser");
         log_message('debug', "Total execution time: " . $elapsed);
     }
@@ -416,9 +421,9 @@ class EE_Output
     /**
      * Do extra processing for feeds
      *
-     * @access	private
-     * @param	string
-     * @return	void
+     * @access  private
+     * @param   string
+     * @return  void
      */
     public function _send_feed(&$output)
     {
@@ -464,8 +469,8 @@ class EE_Output
     /**
      * Display fatal error message
      *
-     * @access	public
-     * @return	void
+     * @access  public
+     * @return  void
      */
     public function fatal_error($error_msg = '', $use_lang = true)
     {
@@ -482,8 +487,8 @@ class EE_Output
     /**
      * System is off message
      *
-     * @access	public
-     * @return	void
+     * @access  public
+     * @return  void
      */
     public function system_off_msg()
     {
@@ -506,7 +511,7 @@ class EE_Output
      * This is not used in the control panel, only with publicly
      * accessible pages.
      *
-     * @access	public
+     * @access  public
      * @param array $data
      * @param boolean $xhtml
      * @param boolean $redirect_url
@@ -571,7 +576,7 @@ class EE_Output
             ->filter('site_id', ee()->config->item('site_id'))
             ->filter('group_name', 'system_messages')->first();
 
-        if (isset(ee()->session) && ! empty($template_group)) {
+        if (! empty($template_group)) {
             $template = ee('Model')->get('Template')
                 ->filter('site_id', ee()->config->item('site_id'))
                 ->filter('group_id', $template_group->group_id)
@@ -622,13 +627,97 @@ class EE_Output
     }
 
     /**
+     * Show form error
+     *
+     * @access  public
+     * @param   string
+     * @param   mixed
+     * @param   string
+     * @return  void
+     */
+    public function show_form_error($errors = '', $type = 'general')
+    {
+        return $this->show_form_error_aliases($errors, [], $type);
+    }
+
+    /**
+     * Show form error with aliases
+     *
+     * @access  public
+     * @param   string
+     * @param   mixed
+     * @param   string
+     * @return  void
+     */
+    public function show_form_error_aliases($errors = '', $aliases = [], $type = 'general')
+    {
+        $url = ee()->functions->determine_error_return();
+
+        if($errors instanceof \ExpressionEngine\Service\Validation\Result) {
+            $validationErrors = $errors->getFirstErrors();
+            $errors = [];
+
+            foreach ($validationErrors as $field => $error) {
+                $label = $field;
+
+                // Handle aliased field names
+                if(!empty($aliases) && array_key_exists($field, $aliases)) {
+                    $original = $field;
+                    $field = $aliases[$field]['field'] ?? $aliases[$field];
+                    $label = $aliases[$original]['label'] ?? $field;
+                }
+
+                // Build error for system error page
+                // or store as field name for inline error display
+                if($url === false) {
+                    $label = lang($label);
+                    $errors[] = "<b>{$label}: </b>{$error}";
+                }else {
+                    $errors['error:' . $field] = $error;
+                }
+            }
+        }else if(is_array($errors) && $url !== false) {
+            // Automatically prefix error keys
+            $errors = array_reduce(array_keys($errors), function($carry, $key) use($errors) {
+                $error = $errors[$key];
+                if(!is_numeric($key) && strpos($key, 'error:') !== 0) {
+                    $key = "error:$key";
+                }
+                $carry[$key] = $error;
+                return $carry;
+            }, []);
+        }
+
+        // Flash errors for redirect
+        if($url !== false) {
+            ee()->session->set_flashdata('errors', $errors);
+
+            // Save old input values from POST for error redirect.
+            // Filter out temporary hashes and sensitive values and any keys found in $_FILES
+            $old = array_filter($_POST, function ($key) {
+                $key = strtolower($key);
+                return !in_array($key, ['act', 'ret', 'from', 'p', 'site_id', 'csrf', 'csrf_token', 'xid', 'captcha'])
+                    && !in_array($key, array_keys($_FILES ?: []))
+                    && strpos($key, 'password') === false;
+            }, ARRAY_FILTER_USE_KEY);
+
+            // Prefix old input variables for template display
+            $old = array_combine(array_map(function($key) {return "old:$key";}, array_keys($old)), $old);
+
+            ee()->session->set_flashdata('old', $old);
+        }
+
+        return $this->show_user_error($type, $errors, '', $url);
+    }
+
+    /**
      * Show user error
      *
-     * @access	public
-     * @param	string
-     * @param	mixed
-     * @param	string
-     * @return	void
+     * @access  public
+     * @param   string
+     * @param   mixed
+     * @param   string
+     * @return  void
      */
     public function show_user_error($type = 'submission', $errors = '', $heading = '', $redirect_url = '')
     {
@@ -681,21 +770,32 @@ class EE_Output
      * Outputs and exits content, makes sure profiler is disabled
      * and sends 500 status header on error
      *
-     * @access	public
-     * @param	string
-     * @param	bool	whether or not the response is an error
-     * @return	void
+     * @access  public
+     * @param   string
+     * @param   bool|int    HTTP status code. If boolean, status code to send.
+     * @return  void
      */
-    public function send_ajax_response($msg, $error = false)
+    public function send_ajax_response($msg, $statusCode = false)
     {
         $this->enable_profiler(false);
 
-        if ($error === true) {
+        if ($statusCode === true) {
             $this->set_status_header(500);
+        } else if ($statusCode === false || (!is_int($statusCode) && !is_bool($statusCode))) {
+            $this->set_status_header(200);
+        } else {
+            $this->set_status_header($statusCode);
         }
 
         if (ee()->config->item('send_headers') == 'y') {
             header("Content-Type: application/json; charset=" . ee()->config->item('charset'));
+        }
+
+        // Are there any server headers to send?
+        if (count($this->headers) > 0) {
+            foreach ($this->headers as $header) {
+                @header($header[0], $header[1]);
+            }
         }
 
         exit(json_encode($msg));
@@ -706,11 +806,11 @@ class EE_Output
      *
      * Used to control client caching for JS, CSS
      *
-     * @access	public
-     * @param	int		Unix Timestamp, date of "file" modification
-     * @param	int		max-age value
-     * @param	string	path identifier for ETag, helpful in load balanced environs
-     * @return	void
+     * @access  public
+     * @param   int     Unix Timestamp, date of "file" modification
+     * @param   int     max-age value
+     * @param   string  path identifier for ETag, helpful in load balanced environs
+     * @return  void
      */
     public function send_cache_headers($modified, $max_age = 172800, $etag_path = null)
     {
@@ -756,7 +856,7 @@ class EE_Output
      *
      * used in the ee.php controller.
      *
-     * @param 	boolean
+     * @param   boolean
      */
     public function remove_unparsed_variables($remove_unparsed_vars)
     {

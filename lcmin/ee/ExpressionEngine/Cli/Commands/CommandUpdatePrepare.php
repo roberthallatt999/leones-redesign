@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -12,7 +12,6 @@ namespace ExpressionEngine\Cli\Commands;
 
 use ExpressionEngine\Cli\Cli;
 use ExpressionEngine\Cli\Commands\Upgrade\UpgradeMap;
-use ExpressionEngine\Library\Filesystem\Filesystem;
 
 class CommandUpdatePrepare extends Cli
 {
@@ -312,7 +311,7 @@ class CommandUpdatePrepare extends Cli
 
     private function copyNewEEFiles()
     {
-        $filesystem->copy(
+        ee('Filesystem')->copy(
             SYSPATH,
             $this->upgradeConfig['new_system_path']
         );

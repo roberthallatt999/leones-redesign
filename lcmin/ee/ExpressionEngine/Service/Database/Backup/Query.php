@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -449,6 +449,7 @@ class Query
             strpos($type, 'text') !== false or
             strpos($type, 'date') !== false or
             strpos($type, 'time') !== false or
+            strpos($type, 'set') !== false or
             strpos($type, 'enum') !== false) {
             return self::STRING_TYPE;
         } elseif (strpos($type, 'int') !== false or

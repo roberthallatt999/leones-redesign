@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -15,7 +15,6 @@ use ExpressionEngine\Addons\FilePicker\FilePicker;
  */
 class Text_ft extends EE_Fieldtype
 {
-
     public $info = array(
         'name' => 'Text Input',
         'version' => '1.0.0'
@@ -116,6 +115,10 @@ class Text_ft extends EE_Fieldtype
             'field_content_type' => $type
         );
 
+        if ($this->get_setting('readonly')) {
+            $field['readonly'] = true;
+        }
+
         if ($this->get_setting('field_disabled')) {
             $field['disabled'] = 'disabled';
         }
@@ -147,10 +150,12 @@ class Text_ft extends EE_Fieldtype
             if ($this->get_setting('field_show_file_selector')) {
                 $fp = new FilePicker();
                 $fp->inject(ee()->view);
-                $vars['fp_url'] = ee('CP/URL')->make($fp->controller, array('directory' => 'all'));
+                $vars['fp_url'] = ee('CP/URL')->make($fp->controller, array('field_upload_locations' => 'all', 'hasUpload' => true));
 
                 ee()->cp->add_js_script(array(
-                    'file' => array('fields/textarea/cp'),
+                    'file' => array(
+                        'fields/textarea/textarea'
+                    ),
                     'plugin' => array('ee_txtarea')
                 ));
             }
@@ -296,7 +301,7 @@ class Text_ft extends EE_Fieldtype
     /**
      * Returns allowed content types for the text fieldtype
      *
-     * @return	array
+     * @return  array
      */
     private function _get_content_options()
     {
@@ -368,11 +373,10 @@ class Text_ft extends EE_Fieldtype
     /**
      * Returns database column setting for a particular text field configuration
      *
-     * @param	string	Type of data to be stored in this text field
-     * @param	int		Field/column ID to map settings to
-     * @param	bool	Whether or not we're preparing these settings for
-     * 					a Grid field
-     * @return	array	Database column settings for this text field
+     * @param   string  Type of data to be stored in this text field
+     * @param   int     Field/column ID to map settings to
+     * @param   bool    Whether or not we're preparing these settings for a Grid field
+     * @return  array   Database column settings for this text field
      */
     private function _get_column_settings($data_type, $field_id, $grid = false)
     {
@@ -418,24 +422,23 @@ class Text_ft extends EE_Fieldtype
         }
 
         switch ($type) {
-            case 'numeric':	$data = rtrim(rtrim(sprintf('%F', $data), '0'), '.'); // remove trailing zeros up to decimal point and kill decimal point if no trailing zeros
-
+            case 'numeric':
+                $data = rtrim(rtrim(sprintf('%F', $data), '0'), '.'); // remove trailing zeros up to decimal point and kill decimal point if no trailing zeros
                 break;
-            case 'integer': $data = sprintf('%d', $data);
-
+            case 'integer':
+                $data = sprintf('%d', $data);
                 break;
             case 'decimal':
                 $parts = explode('.', sprintf('%F', $data));
                 $parts[1] = isset($parts[1]) ? rtrim($parts[1], '0') : '';
-
                 $decimals = ($decimals === false) ? 2 : $decimals;
                 $data = $parts[0] . '.' . str_pad($parts[1], $decimals, '0');
-
                 break;
             default:
                 if ($decimals && ctype_digit(str_replace('.', '', $data))) {
                     $data = number_format($data, $decimals);
                 }
+                break;
         }
 
         return $data;

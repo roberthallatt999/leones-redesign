@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -77,7 +77,7 @@ class Layout
             'visible' => true,
             'collapse' => false,
             'htmlbuttons' => false,
-            'width' => '100%'
+            'width' => '100'
         );
 
         $layout_fields = array('enable_versioning', 'comment_system_enabled');
@@ -198,9 +198,20 @@ class Layout
             return false;
         }
 
-        $layouts = ee('Model')->get('ChannelLayout')
-            ->filter('site_id', ee()->config->item('site_id'))
-            ->all();
+        if (! is_array($channel_id)) {
+            $channel_id = array($channel_id);
+        }
+
+        if(count($channel_id) > 0) {
+            $layouts = ee('Model')->get('ChannelLayout')
+                ->filter('site_id', ee()->config->item('site_id'))
+                ->filter('channel_id', 'IN', $channel_id)
+                ->all();
+        } else {
+            $layouts = ee('Model')->get('ChannelLayout')
+                ->filter('site_id', ee()->config->item('site_id'))
+                ->all();
+        }
 
         if (! $layouts) {
             return false;

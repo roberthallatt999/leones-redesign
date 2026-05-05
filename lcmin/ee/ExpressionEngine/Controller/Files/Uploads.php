@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -43,8 +43,10 @@ class Uploads extends AbstractFilesController
             show_error(lang('unauthorized_access'), 403);
         }
 
-        $this->stdHeader();
-        $this->generateSidebar(null);
+        if (! AJAX_REQUEST) {
+            $this->stdHeader();
+            $this->generateSidebar(null);
+        }
 
         ee()->view->cp_breadcrumbs = array(
             ee('CP/URL')->make('files')->compile() => lang('files'),
@@ -66,8 +68,10 @@ class Uploads extends AbstractFilesController
             show_error(lang('unauthorized_access'), 403);
         }
 
-        $this->stdHeader($upload_id);
-        $this->generateSidebar($upload_id);
+        if (! AJAX_REQUEST) {
+            $this->stdHeader();
+            $this->generateSidebar($upload_id);
+        }
 
         ee()->view->cp_breadcrumbs = array(
             ee('CP/URL')->make('files')->compile() => lang('files'),
@@ -105,7 +109,7 @@ class Uploads extends AbstractFilesController
         if (! empty($_POST)) {
             $validate = $this->validateUploadPreferences($upload_destination);
 
-            if (AJAX_REQUEST) {
+            if (AJAX_REQUEST && !empty(ee()->input->post('ee_fv_field'))) {
                 $field = ee()->input->post('ee_fv_field');
 
                 // We may be validating a field in a Grid
@@ -159,6 +163,46 @@ class Uploads extends AbstractFilesController
             }
         }
 
+        $fileTypes = array_filter(array_keys(ee()->config->loadFile('mimes')), 'is_string');
+        $allowed_types = [];
+        foreach ($fileTypes as $type) {
+            $allowed_types[$type] = lang('type_' . $type);
+        }
+
+        if (! bool_config_item('file_manager_compatibility_mode')) {
+            $adapters = ee('Filesystem/Adapter')->all();
+        } else {
+            $adapters = ['local' => ee('Filesystem/Adapter')->get('local')];
+        }
+        $settingsValues = array_merge([
+            'url' => $upload_destination->getConfigOverriddenProperty('url'),
+            'server_path' => $upload_destination->getConfigOverriddenProperty('server_path'),
+        ], $upload_destination->getProperty('adapter_settings') ?? []);
+
+        $adapter_groups = [];
+        $adapter_choices = [];
+        $adapter_settings = [];
+        foreach ($adapters as $key => $adapter) {
+            $adapter_choices[$key] = lang('adapter_' . $key);
+            $adapter_groups[$key] = "adapter_{$key}";
+            $adapterFields = ee('Filesystem/Adapter')->createSettingsFields($key, ($upload_destination->getProperty('adapter') == $key) ? $settingsValues : []);
+            if (!empty($adapterFields)) {
+                foreach ($adapterFields as $field) {
+                    // Prefix all field names for the adapter
+                    foreach ($field['fields'] as $input_name => $input) {
+                        $prefixed_name = implode('', [
+                            "_for_adapter[{$key}]",
+                            (strpos($input_name, '[') !== false) ? '['. str_replace('[', '][', $input_name) : "[{$input_name}]"
+                        ]);
+                        $field['fields'][$prefixed_name] = $input;
+                        unset($field['fields'][$input_name]);
+                    }
+
+                    $adapter_settings[] = array_merge($field, ['group' => "adapter_{$key}"]);
+                }
+            }
+        }
+
         $vars['sections'] = array(
             array(
                 array(
@@ -172,41 +216,60 @@ class Uploads extends AbstractFilesController
                     )
                 ),
                 array(
-                    'title' => 'upload_url',
-                    'desc' => 'upload_url_desc',
+                    'title' => 'filesystem_adapter',
+                    'desc' => '',
                     'fields' => array(
-                        'url' => array(
-                            'type' => 'text',
-                            'value' => $upload_destination->getConfigOverriddenProperty('url') ?: '{base_url}',
-                            'required' => true
+                        'adapter' => array(
+                            'type' => 'dropdown',
+                            'required' => true,
+                            'choices' => $adapter_choices,
+                            'group_toggle' => $adapter_groups,
+                            'value' => $upload_destination->getProperty('adapter')
                         )
                     )
                 ),
-                array(
-                    'title' => 'upload_path',
-                    'desc' => 'upload_path_desc',
-                    'fields' => array(
-                        'server_path' => array(
-                            'type' => 'text',
-                            'value' => $upload_destination->getConfigOverriddenProperty('server_path') ?: '{base_path}',
-                            'required' => true
-                        )
-                    )
-                ),
+            )
+        );
+        $vars['sections'][0] = array_merge($vars['sections'][0], $adapter_settings);
+        $vars['sections'][0] = array_merge($vars['sections'][0], array(
                 array(
                     'title' => 'upload_allowed_types',
                     'desc' => '',
                     'fields' => array(
                         'allowed_types' => array(
-                            'type' => 'radio',
-                            'choices' => array(
-                                'img' => lang('upload_allowed_types_opt_images'),
-                                'all' => lang('upload_allowed_types_opt_all')
-                            ),
-                            'value' => $upload_destination->allowed_types ?: 'img'
-                        )
+                            'type' => 'checkbox',
+                            'nested' => true,
+                            'attrs' => 'data-any="y"',
+                            'choices' => [
+                                '--' => [
+                                    'name' => lang('type_all'),
+                                    'children' => $allowed_types,
+                                ]
+                            ],
+                            'value' => $upload_destination->allowed_types ? (in_array('all', $upload_destination->allowed_types) ? ['--'] : $upload_destination->allowed_types) : ['img'],
+                            'toggle_all' => false,
+                        ),
                     )
                 ),
+            )
+        );
+
+        if (bool_config_item('multiple_sites_enabled')) {
+            $vars['sections'][0][] = array(
+                'title' => 'share_directory_on_all_sites',
+                'desc' => 'share_directory_on_all_sites_desc',
+                'fields' => array(
+                    'share_directory' => array(
+                        'type' => 'yes_no',
+                        'value' => $upload_destination->site_id === 0,
+                        'disabled' => ! $upload_destination->isNew()
+                    )
+                )
+            );
+        }
+
+        $vars['sections'] = array_merge($vars['sections'], array(
+            'browser_behavior' => array(
                 array(
                     'title' => 'default_modal_view',
                     'desc' => 'default_modal_view_desc',
@@ -220,7 +283,7 @@ class Uploads extends AbstractFilesController
                             'value' => $upload_destination->default_modal_view ?: 'list'
                         )
                     )
-                )
+                ),
             ),
             'file_limits' => array(
                 array(
@@ -254,7 +317,36 @@ class Uploads extends AbstractFilesController
                     )
                 )
             )
-        );
+        ));
+
+        if (!bool_config_item('file_manager_compatibility_mode')) {
+            $vars['sections']['browser_behavior'] = array_merge($vars['sections']['browser_behavior'], array(
+                array(
+                    'title' => 'allow_subfolders',
+                    'desc' => 'allow_subfolders_desc',
+                    'fields' => array(
+                        'allow_subfolders' => array(
+                            'type' => 'yes_no',
+                            'group_toggle' => array(
+                                'y' => 'rel_subfolder',
+                            ),
+                            'value' => $upload_destination->allow_subfolders
+                        )
+                    )
+                ),
+                array(
+                    'title' => 'keep_subfolders_top',
+                    'desc' => 'keep_subfolders_top_desc',
+                    'group' => 'rel_subfolder',
+                    'fields' => array(
+                        'subfolders_on_top' => array(
+                            'type' => 'yes_no',
+                            'value' => $upload_destination->subfolders_on_top ?: false
+                        )
+                    )
+                ),
+            ));
+        }
 
         // Image manipulations Grid
         $grid = $this->getImageSizesGrid($upload_destination);
@@ -302,15 +394,12 @@ class Uploads extends AbstractFilesController
             ? $this->upload_errors['image_sizes'] : array();
 
         // Category group assignment
-        ee()->load->model('category_model');
-        $query = ee()->category_model->get_category_groups('', false, 1);
-
-        $cat_group_options = array();
-        if ($query->num_rows() > 0) {
-            foreach ($query->result() as $row) {
-                $cat_group_options[$row->group_id] = $row->group_name;
-            }
-        }
+        $cat_group_options = ee('Model')
+            ->get('CategoryGroup')
+            ->filter('site_id', ee()->config->item('site_id'))
+            ->filter('exclude_group', '!=', '2')
+            ->all()
+            ->getDictionary('group_id', 'group_name');
 
         $vars['sections']['upload_privileges'][] = array(
             'title' => 'upload_category_groups',
@@ -319,7 +408,7 @@ class Uploads extends AbstractFilesController
                 'cat_group' => array(
                     'type' => 'checkbox',
                     'choices' => $cat_group_options,
-                    'value' => ($upload_destination) ? explode('|', (string) $upload_destination->cat_group) : array(),
+                    'value' => ($upload_destination) ? $upload_destination->CategoryGroups->pluck('group_id') : array(),
                     'no_results' => [
                         'text' => sprintf(lang('no_found'), lang('category_groups'))
                     ]
@@ -351,6 +440,10 @@ class Uploads extends AbstractFilesController
                 'working' => 'btn_saving'
             ]
         ];
+
+        if (AJAX_REQUEST) {
+            return ee()->cp->render('_shared/form', $vars);
+        }
 
         ee()->cp->render('settings/form', $vars);
     }
@@ -538,6 +631,17 @@ class Uploads extends AbstractFilesController
     private function validateUploadPreferences($upload_destination)
     {
         $upload_destination->set($_POST);
+
+        if ($upload_destination->isNew() && ee('Request')->post('share_directory') == 'y') {
+            $upload_destination->site_id = 0;
+        }
+
+        // Pull adapter specific configuration
+        if (isset($_POST['_for_adapter']) && isset($_POST['_for_adapter'][$_POST['adapter']])) {
+            $adapterSettings = $_POST['_for_adapter'][$_POST['adapter']];
+            $upload_destination->set($adapterSettings);
+        }
+
         $cat_group = ee()->input->post('cat_group');
 
         if (! empty($cat_group)) {
@@ -545,9 +649,9 @@ class Uploads extends AbstractFilesController
                 unset($_POST['cat_group'][0]);
             }
 
-            $upload_destination->cat_group = implode('|', ee()->input->post('cat_group'));
+            $upload_destination->CategoryGroups = ee('Model')->get('CategoryGroup', ee('Request')->post('cat_group'))->all();
         } else {
-            $upload_destination->cat_group = '';
+            $upload_destination->CategoryGroups = null;
         }
 
         $access = ee()->input->post('upload_roles') ?: array();
@@ -564,6 +668,40 @@ class Uploads extends AbstractFilesController
         }
 
         $result = $upload_destination->validate();
+
+        if (!empty($upload_destination->getProperty('adapter'))) {
+            //validate adapter settings
+            $adapter = $upload_destination->getFilesystemAdapter(['allow_missing' => true]);
+            $adapterValidation = ee('Validation')->make()->validate($adapter);
+
+            foreach ($adapterValidation->getFailed() as $field_name => $rules) {
+                if (property_exists($upload_destination, $field_name)) {
+                    $field = '_for_adapter[' . $upload_destination->getProperty('adapter') . '][' . $field_name . ']';
+                } else {
+                    $field = '_for_adapter[' . $upload_destination->getProperty('adapter') . '][adapter_settings][' . $field_name . ']';
+                }
+                $result->addFailed($field, $rules[0]);
+            }
+
+            //for the local adapter, try to create directory, if missing
+            //and then do extra validation
+            //but only on form submission
+            if (! AJAX_REQUEST && ee('Request')->post('adapter') == 'local' && !empty($adapterSettings['server_path'])) {
+                $parsedServerPath = rtrim(parse_config_variables($adapterSettings['server_path']), '\\/') . DIRECTORY_SEPARATOR;
+                if ((DIRECTORY_SEPARATOR == '/' && strpos($parsedServerPath, '/') === 0) || (DIRECTORY_SEPARATOR == '\\' && strpos($parsedServerPath, ':') === 1)) {
+                    ee('Filesystem')->mkDir($parsedServerPath);
+                }
+                $localAdapterValidation = ee('Validation')->make(['server_path' => 'required|fileExists|writable'])->validate(['server_path' => $parsedServerPath]);
+                foreach ($localAdapterValidation->getFailed() as $field_name => $rules) {
+                    if (property_exists($upload_destination, $field_name)) {
+                        $field = '_for_adapter[' . $upload_destination->getProperty('adapter') . '][' . $field_name . ']';
+                    } else {
+                        $field = '_for_adapter[' . $upload_destination->getProperty('adapter') . '][adapter_settings][' . $field_name . ']';
+                    }
+                    $result->addFailed($field, $rules[0]);
+                }
+            }
+        }
 
         if (! $result->isValid()) {
             $this->upload_errors = $result->renderErrors();
@@ -604,7 +742,7 @@ class Uploads extends AbstractFilesController
 
         foreach ($new_sizes as $row_id => $columns) {
             $model = ee('Model')->make('FileDimension', $columns);
-            $model->site_id = ee()->config->item('site_id');
+            $model->site_id = $upload_destination->site_id;
             $upload_destination->FileDimensions[] = $model;
 
             $validate[$row_id] = $model;
@@ -654,7 +792,7 @@ class Uploads extends AbstractFilesController
 
         if (ee('Permission')->isSuperAdmin()) {
             $upload_destination = ee('Model')->get('UploadDestination', $upload_id)
-                ->filter('site_id', ee()->config->item('site_id'))
+                ->filter('site_id', 'IN', [0, ee()->config->item('site_id')])
                 ->first();
         } else {
             $member = ee()->session->getMember();
@@ -666,25 +804,15 @@ class Uploads extends AbstractFilesController
         }
 
         // Get a listing of raw files in the directory
-        ee()->load->library('filemanager');
-        $files = ee()->filemanager->directory_files_map(
-            $upload_destination->server_path,
-            1,
-            false,
-            $upload_destination->allowed_types
-        );
-        $files_count = count($files);
+        $files = $upload_destination->getAllFileNames();
 
-        // Change the decription of this first field depending on the
-        // type of files allowed
-        $file_sync_desc = ($upload_destination->allowed_types == 'all')
-            ? lang('file_sync_desc') : lang('file_sync_desc_images');
+        $files_count = count($files, COUNT_RECURSIVE);
 
         $vars['sections'] = array(
             array(
                 array(
                     'title' => 'file_sync',
-                    'desc' => sprintf($file_sync_desc, $files_count),
+                    'desc' => sprintf(lang('file_sync_desc'), $files_count),
                     'fields' => array(
                         'progress' => array(
                             'type' => 'html',
@@ -803,16 +931,9 @@ class Uploads extends AbstractFilesController
             return false;
         }
 
-        ee()->load->library('filemanager');
-        ee()->load->model('file_model');
+        $uploadDestination = ee('Model')->get('UploadDestination', $id)->first();
 
-        $upload_dirs = ee()->filemanager->fetch_upload_dirs(array('ignore_site_id' => false));
-
-        foreach ($upload_dirs as $row) {
-            $this->_upload_dirs[$row['id']] = $row;
-        }
-
-        if (! isset($this->_upload_dirs[$id])) {
+        if (empty($uploadDestination)) {
             return ee()->output->send_ajax_response([
                 'message_type' => 'failure',
                 'errors' => lang('unauthorized_access'),
@@ -835,185 +956,22 @@ class Uploads extends AbstractFilesController
             return;
         }
 
-        $dir_data = $this->_upload_dirs[$id];
-
-        ee()->filemanager->xss_clean_off();
-        $dir_data['dimensions'] = (is_array($sizes[$id])) ? $sizes[$id] : array();
-        ee()->filemanager->set_upload_dir_prefs($id, $dir_data);
-
-        // Now for everything NOT forcably replaced
-
-        $missing_only_sizes = (is_array($sizes[$id])) ? $sizes[$id] : array();
-
-        // Check for resize_ids
         $resize_ids = ee()->input->post('resize_ids');
-
-        if (is_array($resize_ids)) {
-            foreach ($resize_ids as $resize_id) {
-                $replace_sizes[$resize_id] = $sizes[$id][$resize_id];
-                unset($missing_only_sizes[$resize_id]);
-            }
-        }
-
-        // @todo, bail if there are no files in the directory!  :D
-
-        $files = ee()->filemanager->fetch_files($id, $current_files, true);
-
-        // Setup data for batch insert
-        foreach ($files->files[$id] as $file) {
-            if (! $file['mime']) {
-                $errors[$file['name']] = lang('invalid_mime');
-
-                continue;
-            }
-
-            // Clean filename
-            $clean_filename = basename(ee()->filemanager->clean_filename(
-                $file['name'],
-                $id,
-                array('convert_spaces' => false)
-            ));
-
-            if ($file['name'] != $clean_filename) {
-                // It is just remotely possible the new clean filename already exists
-                // So we check for that and increment if such is the case
-                if (file_exists($this->_upload_dirs[$id]['server_path'] . $clean_filename)) {
-                    $clean_filename = basename(ee()->filemanager->clean_filename(
-                        $clean_filename,
-                        $id,
-                        array(
-                            'convert_spaces' => false,
-                            'ignore_dupes' => false
-                        )
-                    ));
-                }
-
-                // Rename the file
-                if (! @copy(
-                    $this->_upload_dirs[$id]['server_path'] . $file['name'],
-                    $this->_upload_dirs[$id]['server_path'] . $clean_filename
-                )) {
-                    $errors[$file['name']] = lang('invalid_filename');
-
-                    continue;
-                }
-
-                unlink($this->_upload_dirs[$id]['server_path'] . $file['name']);
-                $file['name'] = $clean_filename;
-            }
-
-            // Does it exist in DB?
-            $query = ee()->file_model->get_files_by_name($file['name'], $id);
-
-            if ($query->num_rows() > 0) {
-                // It exists, but do we need to change sizes or add a missing thumb?
-
-                if (! ee()->filemanager->is_editable_image($this->_upload_dirs[$id]['server_path'] . $file['name'], $file['mime'])) {
-                    continue;
-                }
-
-                // Note 'Regular' batch needs to check if file exists- and then do something if so
-                if (! empty($replace_sizes)) {
-                    $thumb_created = ee()->filemanager->create_thumb(
-                        $this->_upload_dirs[$id]['server_path'] . $file['name'],
-                        array(
-                            'server_path' => $this->_upload_dirs[$id]['server_path'],
-                            'file_name' => $file['name'],
-                            'dimensions' => $replace_sizes,
-                            'mime_type' => $file['mime']
-                        ),
-                        true,	// Create thumb
-                        false	// Overwrite existing thumbs
-                    );
-
-                    if (! $thumb_created) {
-                        $errors[$file['name']] = lang('thumb_not_created');
-                    }
-                }
-
-                // Now for anything that wasn't forcably replaced- we make sure an image exists
-                $thumb_created = ee()->filemanager->create_thumb(
-                    $this->_upload_dirs[$id]['server_path'] . $file['name'],
-                    array(
-                        'server_path' => $this->_upload_dirs[$id]['server_path'],
-                        'file_name' => $file['name'],
-                        'dimensions' => $missing_only_sizes,
-                        'mime_type' => $file['mime']
-                    ),
-                    true, 	// Create thumb
-                    true 	// Don't overwrite existing thumbs
-                );
-
-                $file_path_name = $this->_upload_dirs[$id]['server_path'] . $file['name'];
-
-                // Update dimensions
-                $image_dimensions = ee()->filemanager->get_image_dimensions($file_path_name);
-
-                $file_data = array(
-                    'file_id' => $query->row('file_id'),
-                    'file_size' => filesize($file_path_name),
-                    'file_hw_original' => $image_dimensions['height'] . ' ' . $image_dimensions['width']
-                );
-
-                ee()->file_model->save_file($file_data);
-
-                continue;
-            }
-
-            $file_location = reduce_double_slashes(
-                $dir_data['url'] . '/' . $file['name']
-            );
-
-            $file_path = reduce_double_slashes(
-                $dir_data['server_path'] . '/' . $file['name']
-            );
-
-            $file_dim = (isset($file['dimensions']) && $file['dimensions'] != '') ? str_replace(array('width="', 'height="', '"'), '', $file['dimensions']) : '';
-
-            $image_dimensions = ee()->filemanager->get_image_dimensions($file_path);
-
-            // This may not be an image, in which case
-            $imageDimensionsToWrite = is_array($image_dimensions)
-                        ? $image_dimensions['height'] . ' ' . $image_dimensions['width']
-                        : ' ';
-
-            $file_data = array(
-                'upload_location_id' => $id,
-                'site_id' => ee()->config->item('site_id'),
-                'mime_type' => $file['mime'],
-                'file_name' => $file['name'],
-                'file_size' => $file['size'],
-                'uploaded_by_member_id' => ee()->session->userdata('member_id'),
-                'modified_by_member_id' => ee()->session->userdata('member_id'),
-                'file_hw_original' => $imageDimensionsToWrite,
-                'upload_date' => $file['date'],
-                'modified_date' => $file['date']
-            );
-
-            $saved = ee()->filemanager
-                ->save_file(
-                    $this->_upload_dirs[$id]['server_path'] . $file['name'],
-                    $id,
-                    $file_data,
-                    false
-                );
-
-            if (! $saved['status']) {
-                $errors[$file['name']] = $saved['message'];
-            }
-        }
+        $synced = $uploadDestination->syncFiles($current_files, $sizes, $resize_ids);
 
         if (AJAX_REQUEST) {
-            if (count($errors)) {
+            if ($synced === true) {
+                return ee()->output->send_ajax_response(array(
+                    'message_type' => 'success'
+                ));
+            } else {
                 return ee()->output->send_ajax_response(array(
                     'message_type' => 'failure',
-                    'errors' => $errors
+                    'errors' => $synced
                 ));
             }
 
-            return ee()->output->send_ajax_response(array(
-                'message_type' => 'success'
-            ));
+
         }
     }
 }

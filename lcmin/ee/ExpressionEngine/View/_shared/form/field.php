@@ -23,6 +23,9 @@ $attrs = (isset($field['attrs'])) ? $field['attrs'] : '';
 if (isset($field['disabled']) && $field['disabled'] == true) {
     $attrs .= ' disabled="disabled"';
 }
+if (isset($field['readonly']) && $field['readonly'] == true) {
+    $attrs .= ' readonly="readonly"';
+}
 // This is to handle showing and hiding certain parts
 // of the form when a form element changes
 if (isset($field['group_toggle'])) {
@@ -112,6 +115,7 @@ if ($field['type'] == 'checkbox' && ! $value) {
         'scalar' => isset($field['scalar']) ? $field['scalar'] : null,
         'multi' => ($field['type'] == 'checkbox'),
         'nested' => isset($field['nested']) ? $field['nested'] : false,
+        'nestableReorder' => isset($nestable_reorder) ? $nestable_reorder : false,
         'selectable' => isset($field['selectable']) ? $field['selectable'] : true,
         'reorderable' => isset($field['reorderable']) ? $field['reorderable'] : false,
         'removable' => isset($field['removable']) ? $field['removable'] : false,
@@ -193,7 +197,7 @@ case 'image': ?>
             <?php endif; ?>
             <li class="remove"><a class="remove button button--default button--xsmall" href="" title="remove"></a></li>
         </ul>
-        <input type="hidden" name="<?=$field_name?>" value="<?=$value?>" aria-label="<?=$field_name?>">
+        <input type="hidden" name="<?=$field_name?>" value="<?=$value?>">
     </figure>
 <?php break;
 
@@ -227,7 +231,7 @@ case 'html':
 </div>
 <?php endif ?>
 <?php if (! $grid): ?>
-    <?=form_error(rtrim($field_name, '[]'))?>
+    <?=form_error(str_replace('[]', '', $field_name))?>
     <?php if (isset($errors)) {
         echo $errors->renderError($field_name);
     } ?>

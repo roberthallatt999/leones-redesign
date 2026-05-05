@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -56,6 +56,24 @@ class CommandMakeMigration extends Cli
     public $migration_name;
 
     /**
+     * Migration location
+     * @var string
+     */
+    public $migration_location;
+
+    /**
+     * Migration category
+     * @var string
+     */
+    public $migrationCategory;
+
+    /**
+     * Migration
+     * @var object
+     */
+    public $migration;
+
+    /**
      * Migration action. Options are create, update, and generic
      * @var string
      */
@@ -66,6 +84,12 @@ class CommandMakeMigration extends Cli
      * @var string
      */
     public $templateName = 'GenericMigration';
+
+    /**
+     * Template variables
+     * @var array
+     */
+    public $templateVariables = [];
 
     /**
      * Table name
@@ -132,6 +156,9 @@ class CommandMakeMigration extends Cli
             $this->askTablename();
         }
 
+        // Set tablename
+        $this->templateVariables['table'] = $this->tableName;
+
         // Generates an instance of a migration model using a timestamped, processed filename
         $this->migration = ee('Migration')->generateMigration($this->migration_name, $this->migration_location);
 
@@ -143,7 +170,7 @@ class CommandMakeMigration extends Cli
         $this->info(lang('command_make_migration_table_file_location') . $this->migration->getFilepath());
         $this->info(lang('command_make_migration_table_template_name') . $this->templateName);
 
-        ee('Migration', $this->migration)->writeMigrationFileFromTemplate($this->templateName, $this->tableName);
+        ee('Migration', $this->migration)->writeMigrationFileFromTemplate($this->templateName, $this->templateVariables);
 
         $this->info('<<bold>>' . lang('command_make_migration_successfully_wrote_file'));
     }

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -192,8 +192,8 @@ class FolderItem extends ListItem
             'url' => $this->url,
             'external' => $this->url_is_external,
             'class' => $class,
-            'edit' => $this->has_edit,
-            'remove' => $this->has_remove,
+            'edit' => $this->has_edit && !empty($this->edit_url),
+            'remove' => $this->has_remove && !empty($this->remove_confirmation),
             'edit_url' => $this->edit_url,
             'modal_name' => $this->name,
             'confirm' => $this->remove_confirmation,

@@ -5,16 +5,19 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
 namespace ExpressionEngine\Addons\Rte;
 
 use ExpressionEngine\Library\Rte\RteFilebrowserInterface;
+use ExpressionEngine\Library\CP\FileManager\Traits\FileUsageTrait;
 
 class RteHelper
 {
+    use FileUsageTrait;
+
     private static $_fileTags;
     private static $_pageTags;
     private static $_extraTags;
@@ -36,9 +39,8 @@ class RteHelper
             $tags = array();
             $urls = array();
 
-            $dirs = ee('Model')->get('UploadDestination')
-                ->all()
-                ->getDictionary('id', 'url');
+            ee()->load->model('file_upload_preferences_model');
+            $dirs = ee()->file_upload_preferences_model->get_paths();
 
             foreach ($dirs as $id => $url) {
                 // ignore "/" URLs
@@ -62,12 +64,8 @@ class RteHelper
      */
     public static function replaceFileTags(&$data)
     {
-		if (empty($data)) {
-			return $data;
-		}
-		
-        $tags = static::_getFileTags();
-        $data = str_replace($tags[0], $tags[1], $data);
+        ee()->load->library('file_field');
+        $data = ee()->file_field->parse_string($data);
     }
 
     /**
@@ -79,6 +77,15 @@ class RteHelper
     {
         $tags = static::_getFileTags();
         $data = str_replace($tags[1], $tags[0], $data);
+        
+        $filedirReplacements = static::getFileUsageReplacements($data);
+        if (!empty($filedirReplacements)) {
+            foreach ($filedirReplacements as $file_id => $replacements) {
+                foreach ($replacements as $from => $to) {
+                    $data = str_replace($from, $to, $data);
+                }
+            }
+        }
     }
 
     /**
@@ -137,10 +144,19 @@ class RteHelper
             $pageData = static::getSitePages('', $site_id);
 
             if (!empty($pageData)) {
+                // Since the arrays being populated are going to be used in
+                // replacing URL's we need to sort them by the length
+                // of their url.  This prevents shorter segments that
+                // are part of longer segments from being replaced
+                uasort($pageData, function ($a, $b) {
+                    return (strlen($a->uri) < strlen($b->uri)) ? 1 : -1;
+                });
                 foreach ($pageData as $page) {
                     if (isset($page->entry_id)) {
-                        $tags[] = LD . 'page_' . $page->entry_id . RD;
-                        $urls[] = $page->uri;
+                        // We want to preserve sorting order, so we'll make sure the key is string
+                        $key = '_' . $page->entry_id;
+                        $tags[$key] = LD . 'page_' . $page->entry_id . RD;
+                        $urls[$key] = $page->uri;
                     }
                 }
             }
@@ -153,49 +169,76 @@ class RteHelper
 
     /**
      * Replaces {page_X} tags with the page URLs.
+     * This happens on entry render and when field is loaded for editing
      *
      * @param string &$data
      */
-    public static function replacePageTags(&$data)
+    public static function replacePageTags(&$data, $site_id = null, $buildFullUrls = false)
     {
-        if ( !empty($data) && strpos($data, LD . 'page_') !== false) {
-            $tags = static::_getPageTags();
+        // only do the replacement if there's something to replace
+        if (!empty($data) && strpos($data, LD . 'page_') !== false) {
+            $tags = static::_getPageTags($site_id);
 
-            foreach ($tags[0] as $key => $pageTag) {
-                $pattern = '/(?!&quot;|\")(' . preg_quote($pageTag) . ')(&quot;|\"|\/)?/u';
-                preg_match_all($pattern, $data, $matches);
+            $hasPageTags = preg_match_all('/' . LD . 'page_(\d+)' . RD . '/', $data, $pageTags);
+            if (empty($hasPageTags)) {
+                return $data;
+            }
 
-                if ($matches && count($matches[0]) > 0) {
-                    // $matches[2] should either be &quot;, ", / or empty
-                    foreach ($matches[2] as $innerKey => $match) {
-                        $search = '/(' . preg_quote($matches[1][$innerKey]) . ')/uU';
-                        $replace = $tags[1][$key];
+            $find = [];
+            $replace = [];
 
-                        // If there is not a trailing quote or slash, we're going to add one.
-                        if (empty($match)) {
-                            $replace .= '/';
-                        }
-
-                        $data = preg_replace($search, $replace, $data);
+            foreach ($pageTags[0] as $key => $pageTag) {
+                if (isset($tags[1]['_' . $pageTags[1][$key]])) {
+                    $url = $tags[1]['_' . $pageTags[1][$key]];
+                    if (empty($url)) {
+                        // homepage might be empty string, make sure we add a slash
+                        $url = '/';
                     }
+                    if ($buildFullUrls) {
+                        $url = reduce_double_slashes(ee()->functions->fetch_site_index(0, 0) . $url);
+                    }
+                    // ensure trailing slash - TODO need to make this an option
+                    // $url = rtrim($url, '/') . '/';
+                    $find[] = $pageTag;
+                    $replace[] = $url;
                 }
             }
+            $data = str_replace($find, $replace, $data);
         }
     }
 
     /**
      * Replace page URLs with {page_X} tags.
+     * This happens on entry save
      *
      * @param string &$data
      */
     public static function replacePageUrls(&$data)
     {
         $tags = static::_getPageTags();
+        $siteUrlSansProtocol = trim(str_replace(['http://', 'https://'], '', ee()->config->item('site_url')), '/');
+        // This regular expression is built with consideration that site URL may be present or not present (with or without protocol)),
+        // optional index.php and question mark after it,
+        // The link might be followed by an anchor or extra GET parameters
+        // The capturing groups are:
+        // 1. The site URL (with or without protocol)
+        // 2. The index.php (with or without question mark)
+        // 3. The page URI
+        $regex = '/"((?:(?:https?:)?\/\/)?' . str_replace('/', '\/', preg_quote($siteUrlSansProtocol)) . ')?(\/(?:' . str_replace('/', '\/', preg_quote(ee()->config->item('site_index'))) . ')?\??)?(\/__PAGE_URL__\/?)(?:\?[\S]*|&[\S]*|#[\S]*)?"/uU';
 
         foreach ($tags[1] as $key => $pageUrl) {
-            $pageUrl = str_replace('/', '\/', preg_quote(rtrim($pageUrl, '/')));
-            $search = '/(?!\")(' . $pageUrl . ')\/?(?=\")/uU';
-            $data = preg_replace($search, $tags[0][$key], $data);
+            $pageUrl = str_replace('/', '\/', preg_quote(trim($pageUrl, '/')));
+            $search = str_replace('__PAGE_URL__', $pageUrl, $regex);
+            $hasMatch = preg_match_all($search, $data, $matches);
+            if (!empty($hasMatch)) {
+                foreach ($matches[0] as $i => $match) {
+                    // build the part that we need to replace
+                    // we only want to replace the links, so include the quote
+                    $find = '"' . $matches[1][$i] . $matches[2][$i] . $matches[3][$i];
+                    // do the replacement
+                    $data = str_replace($find, '"' . $tags[0][$key], $data);
+                }
+            }
         }
     }
 
@@ -222,54 +265,32 @@ class RteHelper
 
         if ($pages === false) {
             $pages = [];
-            $break = false;
-            /**
-             * `rte_autocomplete_pages` extension hook
-             * allows addons to modify (narrow down) the list of pages that can be inserted
-             * Expects array of following structure:
-             * $pages[] = (object) [
-             *          'id' => '@unique-identifier',
-             *          'text' => 'main displayed text (e.g. entry title)',
-             *          'extra' => 'extra info displayed (e.g. channel name)',
-             *          'href' => 'link to the page',
-             *          'entry_id' => entry ID,
-             *          'uri' => page URI
-             *      ];
-             */
-            /*if (ee()->extensions->active_hook('rte_autocomplete_pages') === true) {
-                $pages = ee()->extensions->call('rte_autocomplete_pages', $pages, $search, $site_id);
-                if (ee()->extensions->end_script === true) {
-                    $break = true;
-                }
-            }*/
 
-            if (!$break) {
-                $site = ee('Model')->get('Site', $site_id)->first();
-                $site_pages = $site->site_pages;
-                if (isset($site_pages[$site_id]['uris'])) {
-                    $entry_ids = array_keys($site_pages[$site_id]['uris']);
-                    $channels = ee('Model')->get('Channel')
-                        ->fields('channel_id', 'channel_title')
-                        ->all()
-                        ->getDictionary('channel_id', 'channel_title');
-                    $entries = ee('Model')->get('ChannelEntry', $entry_ids)
-                        ->fields('entry_id', 'title', 'url_title', 'channel_id');
-                    if (!empty($search)) {
-                        $entries->filter('title', 'LIKE', '%' . $search . '%');
-                    }
-                    $titles = $entries->all()->getDictionary('entry_id', 'title');
-                    $channel_ids = $entries->all()->getDictionary('entry_id', 'channel_id');
-                    foreach ($site_pages[$site_id]['uris'] as $entry_id => $uri) {
-                        if (isset($titles[$entry_id])) {
-                            $pages[] = (object) [
-                                'id' => '@' . $entry_id,
-                                'text' => $titles[$entry_id],
-                                'extra' => $channels[$channel_ids[$entry_id]],
-                                'href' => '{page_' . $entry_id . '}',
-                                'entry_id' => $entry_id,
-                                'uri' => $uri
-                            ];
-                        }
+            $site = ee('Model')->get('Site', $site_id)->first();
+            $site_pages = $site->site_pages;
+            if (isset($site_pages[$site_id]['uris'])) {
+                $entry_ids = array_keys($site_pages[$site_id]['uris']);
+                $channels = ee('Model')->get('Channel')
+                    ->fields('channel_id', 'channel_title')
+                    ->all()
+                    ->getDictionary('channel_id', 'channel_title');
+                $entries = ee('Model')->get('ChannelEntry', $entry_ids)
+                    ->fields('entry_id', 'title', 'url_title', 'channel_id');
+                if (!empty($search)) {
+                    $entries->filter('title', 'LIKE', '%' . ee()->db->escape_like_str($search) . '%');
+                }
+                $titles = $entries->all()->getDictionary('entry_id', 'title');
+                $channel_ids = $entries->all()->getDictionary('entry_id', 'channel_id');
+                foreach ($site_pages[$site_id]['uris'] as $entry_id => $uri) {
+                    if (isset($titles[$entry_id])) {
+                        $pages[] = (object) [
+                            'id' => '@' . $entry_id,
+                            'text' => $titles[$entry_id],
+                            'extra' => $channels[$channel_ids[$entry_id]],
+                            'href' => '{page_' . $entry_id . '}',
+                            'entry_id' => $entry_id,
+                            'uri' => $uri,
+                        ];
                     }
                 }
             }

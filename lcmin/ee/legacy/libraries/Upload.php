@@ -5,9 +5,11 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
+
+use ExpressionEngine\Dependency\League\Flysystem\Adapter\Local;
 
 /**
  * Core Upload
@@ -26,6 +28,7 @@ class EE_Upload
     public $file_size = "";
     public $file_ext = "";
     public $upload_path = "";
+    public $upload_destination = null;
     public $overwrite = false;
     public $encrypt_name = false;
     public $is_image = false;
@@ -40,6 +43,7 @@ class EE_Upload
     public $temp_prefix = "temp_file_";
     public $client_name = '';
     public $auto_resize = false;
+    public $image_processed = false;
 
     protected $use_temp_dir = false;
     protected $raw_upload = false;
@@ -53,6 +57,7 @@ class EE_Upload
     {
         if (count($props) > 0) {
             $this->initialize($props);
+            return true;
         }
 
         ee()->load->helper('xss');
@@ -173,7 +178,7 @@ class EE_Upload
         // Set the uploaded data as class variables
         $this->file_temp = $_FILES[$field]['tmp_name'];
         $this->file_size = $_FILES[$field]['size'];
-        $this->file_type = ee()->mime_type->ofFile($this->file_temp);
+        $this->file_type = ee('MimeType')->ofFile($this->file_temp);
         $this->file_name = $this->_prep_filename($_FILES[$field]['name']);
         $this->file_ext = $this->get_extension($this->file_name);
         $this->client_name = $this->file_name;
@@ -230,6 +235,51 @@ class EE_Upload
             }
         }
 
+        // Check to see if strip_image_metadata is enabled
+        if (ee()->config->item('strip_image_metadata') == 'y' && $this->is_image()) {
+            ee()->load->library('image_lib');
+            ee()->image_lib->clear();
+            ee()->image_lib->initialize([
+                'source_image' => $this->file_temp,
+                'image_library' => 'imagemagick',
+            ]);
+            ee()->image_lib->strip_metadata();
+        }
+
+        // Are the image dimensions within the allowed size?
+        // Note: This can fail if the server has an open_basedir restriction.
+        if (! $this->is_allowed_dimensions()) {
+            //try to resize, if configured
+            if ($this->auto_resize) {
+                ee()->load->library('filemanager');
+                $file_data = [
+                    'max_width' => $this->max_width,
+                    'max_height' => $this->max_height,
+                    'width' => $this->image_width,
+                    'height' => $this->image_height,
+                    'filesystem' => null,
+                ];
+
+                $orientation = ee()->filemanager->orientation_check($this->file_temp, $file_data);
+
+                if (!empty($orientation)) {
+                    $file_data = $orientation;
+                }
+
+                $auto_resize = ee()->filemanager->max_hw_check($this->file_temp, $file_data);
+
+                if ($auto_resize === false) {
+                    $this->set_error('upload_invalid_dimensions');
+                    return false;
+                }
+                $this->file_size = filesize($this->file_temp);
+            } else {
+                $this->set_error('upload_invalid_dimensions');
+                return false;
+            }
+            $this->image_processed = true;
+        }
+
         // Convert the file size to kilobytes
         if ($this->file_size > 0) {
             $this->file_size = round($this->file_size / 1024, 2);
@@ -243,23 +293,8 @@ class EE_Upload
             return false;
         }
 
-        // Are the image dimensions within the allowed size?
-        // Note: This can fail if the server has an open_basdir restriction.
-        if (! $this->is_allowed_dimensions()) {
-
-            //try to resize, if configured
-            if ($this->auto_resize) {
-                ee()->load->library('filemanager');
-                $auto_resize = ee()->filemanager->max_hw_check($this->file_temp, ['max_width' => $this->max_width, 'max_height' => $this->max_height]);
-                if ($auto_resize === false) {
-                    $this->set_error('upload_invalid_dimensions');
-                    return false;
-                }
-            } else {
-                $this->set_error('upload_invalid_dimensions');
-                return false;
-            }
-        }
+        // Remove invisible control characters
+        $this->file_name = preg_replace('#\\p{C}+#u', '', $this->file_name);
 
         // Truncate the file name if it's too long
         if ($this->max_filename > 0) {
@@ -280,7 +315,7 @@ class EE_Upload
         $this->orig_name = $this->file_name;
 
         if ($this->overwrite == false) {
-            $this->file_name = $this->set_filename($this->upload_path, $this->file_name);
+            $this->file_name = $this->set_filename($this->upload_path, $this->file_name, $this->upload_destination);
 
             if ($this->file_name === false) {
                 return false;
@@ -311,13 +346,25 @@ class EE_Upload
         }
 
         /*
+         * Set the finalized image dimensions
+         * This sets the image width/height (assuming the file was an image).
+         * We use this information in the "data" function.
+         */
+        $this->set_image_properties($this->file_temp);
+
+        /*
          * Move the file to the final destination
          * To deal with different server configurations
          * we'll attempt to use copy() first.  If that fails
          * we'll use move_uploaded_file().  One of the two should
          * reliably work in most environments
          */
-        if (! @copy($this->file_temp, $this->upload_path . $this->file_name)) {
+        $result = true;
+
+        if ($this->upload_destination) {
+            $stream = fopen($this->file_temp, 'r+');
+            $result = $this->upload_destination->getFilesystem()->writeStream($this->upload_path . $this->file_name, $stream);
+        } elseif (! @copy($this->file_temp, $this->upload_path . $this->file_name)) {
             if (! @move_uploaded_file($this->file_temp, $this->upload_path . $this->file_name)) {
                 $this->set_error('upload_destination_error');
 
@@ -325,17 +372,11 @@ class EE_Upload
             }
         }
 
-        @chmod($this->upload_path . $this->file_name, FILE_WRITE_MODE);
+        if (!$this->upload_destination || $this->upload_destination->getFilesystem()->isLocal()) {
+            @chmod($this->upload_path . $this->file_name, FILE_WRITE_MODE);
+        }
 
-        /*
-         * Set the finalized image dimensions
-         * This sets the image width/height (assuming the
-         * file was an image).  We use this information
-         * in the "data" function.
-         */
-        $this->set_image_properties($this->upload_path . $this->file_name);
-
-        return true;
+        return $result;
     }
 
     /**
@@ -351,6 +392,7 @@ class EE_Upload
         return array(
             'file_name' => $this->file_name,
             'file_type' => $this->file_type,
+            'file_temp' => $this->file_temp,
             'file_path' => $this->upload_path,
             'full_path' => $this->upload_path . $this->file_name,
             'raw_name' => str_replace($this->file_ext, '', $this->file_name),
@@ -363,6 +405,7 @@ class EE_Upload
             'image_height' => $this->image_height,
             'image_type' => $this->image_type,
             'image_size_str' => $this->image_size_str,
+            'image_processed' => $this->image_processed,
         );
     }
 
@@ -375,7 +418,18 @@ class EE_Upload
     public function set_upload_path($path)
     {
         // Make sure it has a trailing slash
-        $this->upload_path = rtrim($path, '/') . '/';
+        $this->upload_path = (empty($path)) ? $path : rtrim($path, '/') . '/';
+    }
+
+    /**
+     * Set Upload Destination
+     *
+     * @param   string
+     * @return  void
+     */
+    public function set_upload_destination($destination = null)
+    {
+        $this->upload_destination = $destination;
     }
 
     /**
@@ -389,18 +443,20 @@ class EE_Upload
      * @param   string
      * @return  string
      */
-    public function set_filename($path, $filename)
+    public function set_filename($path, $filename, $upload_destination = null)
     {
         if ($this->encrypt_name == true) {
             mt_srand();
             $filename = md5(uniqid(mt_rand())) . $this->file_ext;
         }
 
-        if (! file_exists($path . $filename)) {
+        $filesystem = ($upload_destination) ? $upload_destination->getFilesystem() : ee('Filesystem');
+
+        if (! $filesystem->exists($path . $filename)) {
             return $filename;
         }
 
-        $new_filename = ee('Filesystem')->getUniqueFilename($path . $filename);
+        $new_filename = $filesystem->getUniqueFilename($path . $filename);
         $new_filename = str_replace($path, '', $new_filename);
 
         if ($new_filename == '') {
@@ -519,7 +575,7 @@ class EE_Upload
      */
     public function is_image()
     {
-        return ee()->mime_type->fileIsImage($this->file_temp);
+        return ee('MimeType')->fileIsImage($this->file_temp);
     }
 
     /**
@@ -544,10 +600,10 @@ class EE_Upload
         }
 
         if ($this->is_image) {
-            return ee()->mime_type->fileIsImage($this->file_temp);
+            return ee('MimeType')->fileIsImage($this->file_temp);
         }
 
-        return ee()->mime_type->fileIsSafeForUpload($this->file_temp);
+        return ee('MimeType')->fileIsSafeForUpload($this->file_temp);
     }
 
     /**
@@ -575,8 +631,9 @@ class EE_Upload
             return true;
         }
 
-        if (function_exists('getimagesize')) {
-            $D = @getimagesize($this->file_temp);
+        if (function_exists('getimagesize') && $D = @getimagesize($this->file_temp)) {
+            $this->image_width = $D['0'];
+            $this->image_height = $D['1'];
 
             if ($this->max_width > 0 && $D['0'] > $this->max_width) {
                 return false;
@@ -699,7 +756,7 @@ class EE_Upload
         // _except_ an attempted XSS attack.
 
         if (function_exists('getimagesize') && ($image = getimagesize($file)) !== false) {
-            if (ee()->mime_type->fileIsSafeForUpload($file) === false) {
+            if (ee('MimeType')->fileIsSafeForUpload($file) === false) {
                 return false; // tricky tricky
             }
 
@@ -729,6 +786,11 @@ class EE_Upload
         $checkAsImage = true;
         if (strpos($this->file_type, 'image/svg') === 0) {
             $checkAsImage = false;
+
+            // if it's an SVG, we need to check for XSS in the SVG itself
+            if ($data !== ee('Security/XSS')->clean($data)) {
+                return false;
+            }
         }
 
         return ee('Security/XSS')->clean($data, $checkAsImage);
@@ -748,9 +810,19 @@ class EE_Upload
             return false;
         }
 
-        // We can't simply check for `<?` because that's valid XML and is
-        // allowed in files.
-        return (stripos($data, '<?php') === false);
+        // Check for various PHP opening tags and their variations
+        $php_opening_tags = [
+            '<?php',
+            '<?/*',
+        ];
+
+        foreach ($php_opening_tags as $tag) {
+            if (stripos($data, $tag) !== false) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -804,9 +876,7 @@ class EE_Upload
      */
     public function mimes_types($mime)
     {
-        ee()->load->library('mime_type');
-
-        return ee()->mime_type->isSafeForUpload($mime);
+        return ee('MimeType')->isSafeForUpload($mime);
     }
 
     /**
@@ -878,23 +948,29 @@ class EE_Upload
             }
         }
 
-        if ($this->upload_path == '') {
-            $this->set_error('upload_no_filepath');
+        $fs = (!empty($this->upload_destination)) ? $this->upload_destination->getFilesystem() : ee('Filesystem');
 
-            return false;
+        if ($fs->isLocal()) {
+            if ($this->upload_path == '') {
+                $this->set_error('upload_no_filepath');
+
+                return false;
+            }
+
+            // If realpath() is available and expands the upload_path into a
+            // path that exists within the filesystem we'll use that instead
+            if (function_exists('realpath') && @realpath($this->upload_path) !== false && $fs->exists(realpath($this->upload_path))) {
+                $this->upload_path = str_replace("\\", "/", realpath($this->upload_path));
+            }
         }
 
-        if (function_exists('realpath') && @realpath($this->upload_path) !== false) {
-            $this->upload_path = str_replace("\\", "/", realpath($this->upload_path));
-        }
+        // if (! $this->upload_destination->getFilesystem()->isDir()) {
+        //     $this->set_error('upload_no_filepath');
 
-        if (! @is_dir($this->upload_path)) {
-            $this->set_error('upload_no_filepath');
+        //     return false;
+        // }
 
-            return false;
-        }
-
-        if (! is_really_writable($this->upload_path)) {
+        if (! $fs->isWritable($this->upload_path)) {
             $this->set_error('upload_not_writable');
 
             return false;
@@ -931,6 +1007,7 @@ class EE_Upload
             'file_size' => "",
             'file_ext' => "",
             'upload_path' => "",
+            'upload_destination' => null,
             'overwrite' => false,
             'encrypt_name' => false,
             'is_image' => false,

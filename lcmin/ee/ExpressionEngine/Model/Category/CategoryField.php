@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -33,6 +33,9 @@ class CategoryField extends FieldModel
     );
 
     protected static $_relationships = array(
+        'Site' => array(
+            'type' => 'belongsTo'
+        ),
         'CategoryGroup' => array(
             'type' => 'belongsTo'
         )
@@ -94,6 +97,24 @@ class CategoryField extends FieldModel
         return $this;
     }
 
+    /**
+     * Overridable setter for unserialization
+     *
+     * @param Mixed $data Data returned from `getSerializedData`
+     * @return void
+     */
+    public function setSerializeData($data)
+    {
+        // Make sure that field_settings are set back on the root $data array that gets set() on this model and
+        // ultimately goes to a fieldtype's save_settings($data) method.  The fieldtype is not expecting the
+        // settings to be nested under a 'field_settings' key at this point
+        if (array_key_exists('field_settings', $data['values'] ?? []) && is_array($data['values']['field_settings'])) {
+            $data['values'] = array_merge($data['values']['field_settings'], $data['values']);
+        }
+
+        parent::setSerializeData($data);
+    }
+
     public function getContentType()
     {
         return 'category';
@@ -144,18 +165,6 @@ class CategoryField extends FieldModel
     public function getDataTable()
     {
         return 'category_field_data';
-    }
-
-    /**
-     * Validate the field name to avoid variable name collisions
-     */
-    public function validateNameIsNotReserved($key, $value, $params, $rule)
-    {
-        if (in_array($value, ee()->cp->invalid_custom_field_names())) {
-            return lang('reserved_word');
-        }
-
-        return true;
     }
 }
 

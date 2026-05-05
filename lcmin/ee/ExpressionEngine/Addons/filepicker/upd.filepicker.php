@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -54,25 +54,16 @@ class Filepicker_upd
         $member_directories['Avatars'] = array(
             'server_path' => $member_prefs['avatar_path'],
             'url' => $member_prefs['avatar_url'],
-            'allowed_types' => 'img',
+            'allowed_types' => ['img'],
             'max_width' => $member_prefs['avatar_max_width'],
             'max_height' => $member_prefs['avatar_max_height'],
             'max_size' => $member_prefs['avatar_max_kb'],
         );
 
-        $member_directories['Member Photos'] = array(
-            'server_path' => $member_prefs['photo_path'],
-            'url' => $member_prefs['photo_url'],
-            'allowed_types' => 'img',
-            'max_width' => $member_prefs['photo_max_width'],
-            'max_height' => $member_prefs['photo_max_height'],
-            'max_size' => $member_prefs['photo_max_kb'],
-        );
-
         $member_directories['Signature Attachments'] = array(
             'server_path' => $member_prefs['sig_img_path'],
             'url' => $member_prefs['sig_img_url'],
-            'allowed_types' => 'img',
+            'allowed_types' => ['img'],
             'max_width' => $member_prefs['sig_img_max_width'],
             'max_height' => $member_prefs['sig_img_max_height'],
             'max_size' => $member_prefs['sig_img_max_kb'],
@@ -81,14 +72,14 @@ class Filepicker_upd
         $member_directories['PM Attachments'] = array(
             'server_path' => $member_prefs['prv_msg_upload_path'],
             'url' => str_replace('avatars', 'pm_attachments', $member_prefs['avatar_url']),
-            'allowed_types' => 'img',
+            'allowed_types' => ['img'],
             'max_size' => $member_prefs['prv_msg_attach_maxsize']
         );
 
         $existing = ee('Model')->get('UploadDestination')
             ->fields('name')
             ->filter('name', 'IN', array_keys($member_directories))
-            ->filter('site_id', $site_id)
+            ->filter('site_id', 'IN', [0, $site_id])
             ->all()
             ->pluck('name');
 

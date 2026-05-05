@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -23,6 +23,8 @@ class Slider_ft extends Text_ft
     protected $default_field_content_type = 'numeric';
 
     public $settings_form_field_name = 'slider';
+
+    public $stub = 'slider';
 
     /**
      * A list of operators that this fieldtype supports
@@ -66,9 +68,17 @@ class Slider_ft extends Text_ft
             $field['value'] = $field['max'];
         }
 
-        if (REQ == 'CP') {
-            return ee('View')->make('slider:single')->render($field);
-        }
+        ee()->javascript->output("
+            $('.ee-slider-field.range-slider').each(function() {
+                var minValue = $(this).find('input[type=range]').attr('min');
+                var maxValue = $(this).find('input[type=range]').attr('max');
+
+                $(this).attr('data-min', minValue);
+                $(this).attr('data-max', maxValue);
+            });
+        ");
+
+        return ee('View')->make('slider:single')->render($field);
 
         return form_range($field);
     }

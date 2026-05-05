@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -37,7 +37,7 @@ class LocalPath extends SerializedType
     }
 
     /**
-     * readPath will instatiate a collection of file models for every file in
+     * readPath will instantiate a collection of file models for every file in
      * this column's path.
      *
      * @return Collection  A Collection of File objects
@@ -49,7 +49,6 @@ class LocalPath extends SerializedType
         if (is_dir($path)) {
             $files = array();
             $directory = ee('Model')->get('UploadDestination')->fields('id')->filter('server_path', $this->path)->first();
-            $mime = new \ExpressionEngine\Library\Mime\MimeType();
             $exclude = array('index.html');
 
             if ($dh = opendir($path)) {
@@ -61,7 +60,7 @@ class LocalPath extends SerializedType
                             'title' => $file,
                             'file_name' => $file,
                             'file_size' => filesize($path),
-                            'mime_type' => $mime->ofFile($path),
+                            'mime_type' => ee('MimeType')->ofFile($path),
                             'upload_location_id' => $directory->id
                         );
 

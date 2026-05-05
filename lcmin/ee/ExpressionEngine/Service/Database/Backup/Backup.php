@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -176,8 +176,12 @@ class Backup
     public function startFile()
     {
         // Make sure we have enough space first
+        $freeSpace = $this->filesystem->getFreeDiskSpace(dirname($this->file_path));
+        if ($freeSpace === false) {
+            throw new \Exception("Could not determine free disk space", 1);
+        }
         $db_size = $this->getDatabaseSize();
-        if ($db_size > $this->filesystem->getFreeDiskSpace(dirname($this->file_path))) {
+        if ($db_size > $freeSpace) {
             $db_size = round($db_size / 1048576, 1);
 
             throw new \Exception("There is not enough free disk space to write your backup. {$db_size}MB needed.", 1);

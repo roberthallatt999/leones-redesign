@@ -3,13 +3,14 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
 (function($) {
 
 $(document).ready(function() {
+	window.prevFocus = false;
 	EE.cp.formValidation.init();
 });
 
@@ -42,8 +43,10 @@ EE.cp.formValidation = {
 			that = this;
 
 		// These are the text input selectors we listen to for activity
-		this._textInputSelectors = 'input[type=text], input[type=number], input[type=password], textarea, div.redactor-styles, div.ck-content, div.condition-rule-field-wrap';
+		this._textInputSelectors = 'input[type=text], input[type=number], input[type=password], textarea:not(.wygwam-textarea), div.redactor-styles, div.ck-content, div.condition-rule-field-wrap';
 		this._buttonSelector = '.form-btns .button';
+
+		this._wygwamTextarea = 'textarea.wygwam-textarea';
 
 		form.each(function(index, el) {
 			that._bindButtonStateChange($(el));
@@ -79,25 +82,56 @@ EE.cp.formValidation = {
 
 		// Don't fire AJAX when submit button pressed
 		$(container).on('mousedown', this._buttonSelector, function() {
-			that.pause()
+			that.pause();
+			window.prevFocus = false;
+		})
+
+		$(this._wygwamTextarea, container)
+			.not('*[data-ajax-validate=no]')
+			.blur(function() {
+				var textArea = $(this);
+
+			if (document.activeElement.classList.contains('cke_wysiwyg_frame')) {
+				window.prevFocus = textArea;
+			}
+		});
+
+		$('body').on('click', function() {
+			if (window.prevFocus) {
+				var element = $(window.prevFocus);
+				that._sendAjaxRequest(element);
+
+				window.prevFocus = false;
+			}
 		})
 
 		$(this._textInputSelectors, container)
 			.not('*[data-ajax-validate=no]')
 			.blur(function() {
 
-			// Unbind keydown validation when the invalid field loses focus
-			$(this).data('validating', false);
+				// Unbind keydown validation when the invalid field loses focus
+				$(this).data('validating', false);
+				var element = $(this);
+				window.prevFocus = false;
+
+				setTimeout(function() {
+					that._sendAjaxRequest(element);
+				}, 0);
+		});
+
+		$(container).on('focusout', 'div.redactor-styles, div.ck-content', function() {
 			var element = $(this);
+			window.prevFocus = false;
 
 			setTimeout(function() {
 				that._sendAjaxRequest(element);
 			}, 0);
 		});
 
-		$(container).on('change', 'input[type=checkbox], input[type=radio], input[type=hidden], input[type=range], select', function() {
+		$(container).on('change', 'input[type=checkbox], input[type=radio], input[type=hidden], input[type=range], select, textarea.rte-textarea', function() {
 
 			var element = $(this);
+			window.prevFocus = false;
 
 			if (element.data('ajaxValidate') == 'no') return
 
@@ -109,7 +143,7 @@ EE.cp.formValidation = {
 		// Upon loading the page with invalid fields, bind the text field
 		// timer to correct the validation as the user types (for AJAX
 		// validation only)
-		$('form.ajax-validate .fieldset-invalid, form.ajax-validate div.grid-publish:has(div.invalid)').each(function() {
+		$('form.ajax-validate .fieldset-invalid, form.ajax-validate div.grid-publish:has(div.invalid), form.ajax-validate div.grid-field:has(.invalid)').each(function() {
 			that._bindTextFieldTimer($(this));
 		});
 	},
@@ -146,7 +180,7 @@ EE.cp.formValidation = {
 			.first();
 
 		// Bail if no field to focus
-		if (textInput.size() == 0)
+		if (textInput.length == 0)
 		{
 			return;
 		}
@@ -169,7 +203,7 @@ EE.cp.formValidation = {
 
 		var inputContainer = $('.invalid').has('input, select, textarea').first();
 
-		if (inputContainer.parents('.grid-publish').size() > 0)
+		if (inputContainer.parents('.grid-publish').length > 0)
 		{
 			var position = inputContainer.position();
 			inputContainer.parents('.tbl-wrap').scrollLeft(position.left);
@@ -190,10 +224,11 @@ EE.cp.formValidation = {
 		// Bind form submission to update button text
 		form.submit(function(event) {
 
-			if ($button.size() > 0)
+			if ($button.length > 0)
 			{
 				// Add "work" class to make the buttons pulsate
 				$button.addClass('work');
+				$button.addClass('not-click');
 
 				// If the submit was trigger by a button click, disable it to prevent futher clicks
 				$button.each(function(index, el) {
@@ -248,7 +283,7 @@ EE.cp.formValidation = {
 	 * @param	{jQuery object}	form	jQuery object of form
 	 */
 	_errorsExist: function(form) {
-		return ($('.fieldset-invalid:visible, td.invalid:visible, div.invalid:visible', form).size() != 0);
+		return ($('.fieldset-invalid:visible, td.invalid:visible, div.invalid:visible', form).length != 0);
 	},
 
 	/**
@@ -259,6 +294,8 @@ EE.cp.formValidation = {
 	 * @param	{jQuery object}	field	jQuery object of field validating
 	 */
 	_sendAjaxRequest: function(field) {
+		field = this._resolveFieldForValidation(field);
+
 		if (this.paused || field.attr('name') === undefined) {
 			return;
 		}
@@ -317,6 +354,30 @@ EE.cp.formValidation = {
 	},
 
 	/**
+	 * For rich text editors, interaction events can come from wrapper elements
+	 * that do not have a field name. Resolve those to the underlying textarea.
+	 *
+	 * @param	{jQuery object}	field	jQuery object of interacted element
+	 * @return	{jQuery object}			jQuery object of field used for validation
+	 */
+	_resolveFieldForValidation: function(field) {
+		if ( ! field || field.length === 0 || field.attr('name') !== undefined) {
+			return field;
+		}
+
+		if (field.is('div.redactor-styles, div.ck-content') || field.closest('.redactor-box, .ck-editor').length) {
+			var container = field.closest('.field-control, td, .grid-field'),
+				rteTextarea = container.find('textarea.rte-textarea[name]').first();
+
+			if (rteTextarea.length > 0) {
+				return rteTextarea;
+			}
+		}
+
+		return field;
+	},
+
+	/**
 	 * Given a field, marks the field as valid in the UI
 	 *
 	 * @param	{jQuery object}	field	jQuery object of field
@@ -350,16 +411,16 @@ EE.cp.formValidation = {
 
 		var form = field.parents('form'),
 			container = field.parents('.field-control'),
-			fieldset = (container.parents('fieldset').size() > 0) ? container.parents('fieldset') : container.parent(),
+			fieldset = (container.parents('fieldset').length > 0) ? container.parents('fieldset') : container.parent(),
 			errorClass = 'em.ee-form-error-message',
 			grid = false;
 
 		// Tabs
 		var tab_container = field.parents('.tab'),
-			tab_rel = (tab_container.size() > 0) ? tab_container.attr('class').match(/t-\d+/) : '', // Grabs the tab identifier (ex: t-2)
+			tab_rel = (tab_container.length > 0) ? tab_container.attr('class').match(/t-\d+/) : '', // Grabs the tab identifier (ex: t-2)
 			tab = $(tab_container).parents('.tab-wrap').find('a[rel="'+tab_rel+'"]'), // Tab link
 			// See if this tab has its own submit button
-			tab_has_own_button = (tab_container.size() > 0 && tab_container.find(this._buttonSelector).size() > 0),
+			tab_has_own_button = (tab_container.length > 0 && tab_container.find(this._buttonSelector).length > 0),
 			// Finally, grab the button of the current form
 			button = (tab_has_own_button) ? tab_container.find(this._buttonSelector) : form.find(this._buttonSelector),
 			tab_button = $(tab_container).parents('.tab-wrap').find('button[rel="'+tab_rel+'"]');
@@ -373,7 +434,7 @@ EE.cp.formValidation = {
 			grid = true;
 		}
 
-		if (fieldset.find('.grid-field').size() > 0)
+		if (fieldset.find('.grid-field').length > 0)
 		{
 			container = field.parents('td');
 			grid = true;
@@ -394,14 +455,14 @@ EE.cp.formValidation = {
 
 				// For Grid, only remove the invalid class from the label if no
 				// more errors exist in the Grid
-				if (fieldset.parent().find('td.invalid').size() == 0) {
+				if (fieldset.parent().find('td.invalid').length == 0) {
 					fieldset.removeClass('fieldset-invalid');
 
 					// Remove error message below Grid field
 					container.parents('div.field-control').find('> ' + errorClass).remove();
 				}
 
-				if (fieldset.find('.fluid').size() > 0 && !this._errorsExist(container)) {
+				if (fieldset.find('.fluid').length > 0 && !this._errorsExist(container)) {
 					fieldset.parent().find(errorClass).remove();
 				}
 
@@ -412,13 +473,13 @@ EE.cp.formValidation = {
 			container.find('> ' + errorClass).remove();
 
 			// If no more errors on this tab, remove invalid class from tab
-			if (tab.size() > 0 &&  ! this._errorsExist(tab_container))
+			if (tab.length > 0 &&  ! this._errorsExist(tab_container))
 			{
 				tab.removeClass('invalid'); 
 			}
 
 			// If no more errors on this tab, remove invalid class from tab
-			if (tab_button.size() > 0 &&  ! this._errorsExist(tab_container))
+			if (tab_button.length > 0 &&  ! this._errorsExist(tab_container))
 			{
 				tab_button.removeClass('invalid'); 
 			}
@@ -477,7 +538,7 @@ EE.cp.formValidation = {
 			container.append(errorElement);
 
 			// Mark tab as invalid
-			if (tab.size() > 0)
+			if (tab.length > 0)
 			{
 				tab.addClass('invalid');
 			}
@@ -529,8 +590,8 @@ EE.cp.formValidation = {
 			return;
 		}
 
-		// Bind the timer on keydown and change
-		inputs.data('validating', true).on('keydown change', function() {
+		// Bind the timer while typing/changing
+		inputs.data('validating', true).on('keydown input change', function() {
 
 			// Reset the timer, no need to validate if user is still typing
 			if (timer !== undefined) {
@@ -542,7 +603,17 @@ EE.cp.formValidation = {
 			// Wait half a second, then clear the timer and send the AJAX request
 			timer = setTimeout(function() {
 				clearTimeout(timer);
-				that._sendAjaxRequest(field);
+				if (field.is('textarea') && field.is('textarea:not(.rte-textarea)')) {
+					return false;
+				}
+
+				// Rich text wrappers validate when focus leaves the editor so we don't
+				// fire repeated requests while typing in contenteditable areas.
+				if (field.is('div.redactor-styles, div.ck-content')) {
+					return false;
+				} else {
+					that._sendAjaxRequest(field);
+				}
 			}, 500);
 		});
 	}

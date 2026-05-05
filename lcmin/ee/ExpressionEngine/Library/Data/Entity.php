@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -34,7 +34,7 @@ abstract class Entity extends MixableImpl implements Publisher
     protected $_filters = array();
 
     /**
-     * @var Backup of clean values
+     * @var Array Backup of clean values
      */
     protected $_clean_backups = array();
 
@@ -130,6 +130,16 @@ abstract class Entity extends MixableImpl implements Publisher
             }
         }
 
+        // special case for custom fields
+        // if those don't exist, don't try to query
+        // less JOINs, faster EE!
+        if ($key == 'field_data' && isset($result['field_model']) && $result['field_model'] != 'ChannelField') {
+            $fieldsExist = ee('Model')->get($result['field_model'])->count(true);
+            if ($fieldsExist == 0) {
+                return $cached_values[$class][$key] = null;
+            }
+        }
+
         return $cached_values[$class][$key] = $result;
     }
 
@@ -158,8 +168,10 @@ abstract class Entity extends MixableImpl implements Publisher
             }
 
             $child = $class;
-        } while (($class = get_parent_class($class))
-            && $child != 'ExpressionEngine\Service\Model\Model');
+        } while (
+            ($class = get_parent_class($class))
+            && $child != 'ExpressionEngine\Service\Model\Model'
+        );
 
         return array_reverse($values);
     }

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -37,9 +37,9 @@ class Login extends CP_Controller
         // has their session Timed out and they are requesting a page?
         // Grab the URL, base64_encode it and send them to the login screen.
         $safe_refresh = ee()->cp->get_safe_refresh();
-        $return_url = ($safe_refresh == 'C=homepage') ? '' : AMP . 'return=' . urlencode(ee('Encrypt')->encode($safe_refresh));
+        $return = (empty($safe_refresh) || $safe_refresh == 'C=homepage') ? [] : ['return' => ee('Encrypt')->encode($safe_refresh)];
 
-        ee()->functions->redirect(BASE . AMP . 'C=login' . $return_url);
+        ee()->functions->redirect(ee('CP/URL')->make('login', $return)->compile());
     }
 
     public function mfa()
@@ -48,7 +48,7 @@ class Login extends CP_Controller
             return $this->authenticate();
         }
 
-        ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
+        ee()->lang->load('pro');
 
         $redirect = '';
         if ($this->input->post('return_path')) {
@@ -63,7 +63,7 @@ class Login extends CP_Controller
             if (strpos($return_path, '{') === 0) {
                 $uri_elements = json_decode($return_path, true);
                 $return_path = ee('CP/URL')->make($uri_elements['path'], $uri_elements['arguments'])->compile();
-                if (IS_PRO && isset($uri_elements['arguments']['hide_closer']) && $uri_elements['arguments']['hide_closer'] == 'y') {
+                if (isset($uri_elements['arguments']['hide_closer']) && $uri_elements['arguments']['hide_closer'] == 'y') {
                     $this->view->hide_topbar = true;
                     $this->view->pro_class = 'pro-frontend-modal';
                 }
@@ -72,8 +72,7 @@ class Login extends CP_Controller
         if (empty($return_path)) {
             $return_path = ee()->session->getMember()->getCPHomepageURL();
         }
-
-        if (!IS_PRO || (ee()->config->item('enable_mfa') !== false && ee()->config->item('enable_mfa') !== 'y') || ee()->session->userdata('mfa_flag') == 'skip') {
+        if ((ee()->config->item('enable_mfa') !== false && ee()->config->item('enable_mfa') !== 'y') || ee()->session->userdata('mfa_flag') == 'skip') {
             $return_path = $return_path . (ee()->input->get_post('after') ? '&after=' . ee()->input->get_post('after') : '');
 
             // If there is a URL= parameter in the return URL folks could end up anywhere
@@ -174,11 +173,11 @@ class Login extends CP_Controller
         $member = ee()->session->getMember();
         $return_path = $member->getCPHomepageURL();
 
-        if (!IS_PRO || !ee('pro:Access')->hasValidLicense() || (ee()->config->item('enable_mfa') !== false && ee()->config->item('enable_mfa') !== 'y') || ee()->session->userdata('mfa_flag') == 'skip') {
+        if (!ee('pro:Access')->hasRequiredLicense() || (ee()->config->item('enable_mfa') !== false && ee()->config->item('enable_mfa') !== 'y') || ee()->session->userdata('mfa_flag') == 'skip') {
             $this->functions->redirect($return_path);
         }
 
-        ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
+        ee()->lang->load('pro');
 
         if (!empty($_POST)) {
             if (md5(ee('Security/XSS')->clean(ee('Request')->post('backup_mfa_code'))) == $member->backup_mfa_code) {
@@ -285,7 +284,6 @@ class Login extends CP_Controller
 
         // If an ajax request ends up here the user is probably logged out
         if (AJAX_REQUEST) {
-            //header('X-EERedirect: C=login');
             header('X-EE-Broadcast: modal');
             die('Logged out');
         }
@@ -390,7 +388,7 @@ class Login extends CP_Controller
             $this->view->return_path = ee('Security/XSS')->clean($return);
 
             $return = json_decode(ee('Encrypt')->decode(str_replace(' ', '+', ee()->input->get('return'))));
-            if (IS_PRO && isset($return->arguments->hide_closer) && $return->arguments->hide_closer == 'y') {
+            if (isset($return->arguments->hide_closer) && $return->arguments->hide_closer == 'y') {
                 $view = 'pro:account/login';
                 $this->view->hide_topbar = true;
                 $this->view->pro_class = 'pro-frontend-modal';
@@ -487,7 +485,8 @@ class Login extends CP_Controller
             } else {
                 $return_path = ee()->uri->reformat($base . AMP . $return_path, $base);
             }
-        } else {
+        }
+        if (!isset($return_path) || empty($return_path)) {
             $return_path = ee()->session->getMember()->getCPHomepageURL();
         }
 
@@ -499,6 +498,8 @@ class Login extends CP_Controller
             || strpos($return_path, '?URL=') !== false) {
             $return_path = ee('CP/URL')->make('/')->compile();
         }
+
+        ee('pro:Access')->expireAcknowledgement();
 
         $this->functions->redirect($return_path);
     }
@@ -617,14 +618,14 @@ class Login extends CP_Controller
 
         // Load it up with the information needed
         $data = array(
-                'val_type' => 'new',
-                'fetch_lang' => true,
-                'require_cpw' => false,
-                'enable_log' => false,
-                'username' => $new_un,
-                'password' => $new_pw,
-                'password_confirm' => $new_pwc,
-                'cur_password' => $this->input->post('password')
+            'val_type' => 'new',
+            'fetch_lang' => true,
+            'require_cpw' => false,
+            'enable_log' => false,
+            'username' => $new_un,
+            'password' => $new_pw,
+            'password_confirm' => $new_pwc,
+            'cur_password' => $this->input->post('password')
         );
 
         $un_exists = false;
@@ -674,7 +675,7 @@ class Login extends CP_Controller
         if ($updated) {
             $this->session->set_flashdata('message', lang('unpw_updated'));
         }
-        $this->functions->redirect(BASE . AMP . 'C=login');
+        $this->functions->redirect(ee('CP/URL', 'login')->compile());
     }
 
     /**
@@ -689,7 +690,7 @@ class Login extends CP_Controller
         ee()->session->lock_cp();
 
         if (! AJAX_REQUEST) {
-            $this->functions->redirect(BASE . AMP . 'C=login');
+            $this->functions->redirect(ee('CP/URL', 'login')->compile());
         }
 
         $this->output->send_ajax_response(array(
@@ -706,7 +707,7 @@ class Login extends CP_Controller
     public function logout()
     {
         if ($this->session->userdata('group_id') == 3) {
-            $this->functions->redirect(BASE . AMP . 'C=login');
+            $this->functions->redirect(ee('CP/URL', 'login')->compile());
         }
 
         $this->db->where('ip_address', $this->input->ip_address());
@@ -716,11 +717,12 @@ class Login extends CP_Controller
         $this->session->destroy();
 
         $this->input->delete_cookie('read_topics');
+        ee('pro:Access')->expireAcknowledgement();
 
         $this->logger->log_action(lang('member_logged_out'));
 
         if ($this->input->get('auto_expire')) {
-            $this->functions->redirect(BASE . AMP . 'C=login&auto_expire=true');
+            $this->functions->redirect(ee('CP/URL')->make('login', ['auto_expire' => 'true'])->compile());
         }
 
         /* -------------------------------------------
@@ -735,7 +737,7 @@ class Login extends CP_Controller
         /*
         /* -------------------------------------------*/
 
-        $this->functions->redirect(BASE . AMP . 'C=login');
+        $this->functions->redirect(ee('CP/URL', 'login')->compile());
     }
 
     /**
@@ -780,10 +782,18 @@ class Login extends CP_Controller
         }
 
         if (! $address = $this->input->post('email')) {
-            $this->functions->redirect(BASE . AMP . 'C=login' . AMP . 'M=forgotten_password_form');
+            $this->functions->redirect(ee('CP/URL')->make('login/forgotten_password_form')->compile());
         }
 
         $address = strip_tags($address);
+
+        // cp_member_send_reset_token_start hook allows overriding posted email address from cp password reset form
+        if (ee()->extensions->active_hook('cp_member_send_reset_token_start')) {          
+            $address = ee()->extensions->call('cp_member_send_reset_token_start', $address);
+            if (ee()->extensions->end_script === true) {
+                return;
+            }
+        }
 
         // Fetch user data
         $this->db->select('member_id, username, screen_name');
@@ -830,7 +840,7 @@ class Login extends CP_Controller
         $swap = array(
             'name' => $name,
             'username' => $username,
-            'reset_url' => reduce_double_slashes($this->config->item('cp_url') . "?S=0&D=cp&C=login&M=reset_password&resetcode=" . $rand),
+            'reset_url' => reduce_double_slashes($this->config->item('cp_url') . "?/cp/login/reset_password&resetcode=" . $rand),
             'site_name' => stripslashes($this->config->item('site_name')),
             'site_url' => $this->config->item('site_url')
         );
@@ -898,7 +908,7 @@ class Login extends CP_Controller
         // In any case, the resetcode could be in either post or get, so
         // check both.  If we don't find it, send them away, quietly.
         if (! ($resetcode = $this->input->get_post('resetcode'))) {
-            return $this->functions->redirect(BASE . AMP . 'c=login');
+            return $this->functions->redirect(ee('CP/URL')->make('login')->compile());
         }
 
         // Validate their reset code.  Make sure it matches a valid
@@ -944,6 +954,18 @@ class Login extends CP_Controller
                     ->or_where('member_id', $member_id)
                     ->delete('reset_password');
 
+		        /* -------------------------------------------
+		        /* 'cp_member_reset_password' hook.
+		        /*  - Additional processing after user resets password
+		        /*  - Added EE 2.9.3
+		        */
+		        $this->extensions->call('cp_member_reset_password');
+		        if ($this->extensions->end_script === true) {
+		            return;
+		        }
+		        /*
+		        /* -------------------------------------------*/
+
                 ee('CP/Alert')
                     ->makeInline()
                     ->asSuccess()
@@ -954,18 +976,6 @@ class Login extends CP_Controller
                 return $this->index();
             }
         }
-
-        /* -------------------------------------------
-        /* 'cp_member_reset_password' hook.
-        /*  - Additional processing after user resets password
-        /*  - Added EE 2.9.3
-        */
-        $this->extensions->call('cp_member_reset_password');
-        if ($this->extensions->end_script === true) {
-            return;
-        }
-        /*
-        /* -------------------------------------------*/
 
         $alert = ee('CP/Alert')
             ->makeInline()
@@ -980,7 +990,6 @@ class Login extends CP_Controller
         if (form_error('password_confirm')) {
             $alert->addToBody(strip_tags(form_error('password_confirm')))->now();
         }
-
 
         $this->view->cp_page_title = lang('enter_new_password');
         $this->view->resetcode = $resetcode;
@@ -1049,16 +1058,16 @@ class Login extends CP_Controller
 
         $this->session->set_flashdata('message', lang($lang_key));
 
-        $redirect = 'C=login';
+        $redirect = [];
 
         // If we have a return argument, keep it
         if (ee()->input->post('return_path')) {
-            $redirect .= AMP . 'return=' . ee()->input->post('return_path');
+            $redirect = ['return' => ee()->input->post('return_path')];
         } elseif (ee()->input->get('return')) {
-            $redirect .= AMP . 'return=' . ee('Encrypt')->encode(ee()->input->get('return'));
+            $redirect = ['return' => ee('Encrypt')->encode(ee()->input->get('return'))];
         }
 
-        $this->functions->redirect(BASE . AMP . $redirect);
+        $this->functions->redirect(ee('CP/URL')->make('login', $redirect)->compile());
     }
 
     /**

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -77,7 +77,7 @@ class Query
             $parsed = ee()->TMPL->parse_variables(ee()->TMPL->tagdata, $results);
         }
 
-        if (get_bool_from_string(ee()->TMPL->fetch_param('parse_files', config_item('parse_variables_query_results_by_default'))) && strpos($parsed, LD . 'filedir_') !== false) {
+        if (get_bool_from_string(ee()->TMPL->fetch_param('parse_files', config_item('parse_variables_query_results_by_default'))) && (strpos($parsed, LD . 'filedir_') !== false || strpos($parsed, LD . 'file:') !== false)) {
             ee()->load->library('file_field');
             $parsed = ee()->file_field->parse_string($parsed);
         }

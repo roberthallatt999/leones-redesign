@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -145,7 +145,8 @@ class Design extends AbstractDesignController
         $group = ee('Model')->get('TemplateGroup')
             ->fields('group_id', 'group_name')
             ->filter('site_id', ee()->config->item('site_id'))
-            ->order('group_name', 'asc');
+            ->order('group_name', 'asc')
+            ->order('group_id', 'asc'); //get the older group
 
         if ($group_name) {
             $group->filter('group_name', $group_name);

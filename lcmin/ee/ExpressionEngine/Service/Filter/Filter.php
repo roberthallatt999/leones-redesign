@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -27,7 +27,7 @@ abstract class Filter
     /**
      * @var stirng A language key to use for the display label
      */
-    protected $label;
+    public $label;
 
     /**
      * @var mixed The default value to use for this filter when no value is
@@ -58,7 +58,7 @@ abstract class Filter
     /**
      * @var string The value to use for the custom input's placeholder="" attribute
      */
-    protected $placeholder;
+    protected $placeholder = '';
 
     /**
      * @var bool Whether or not this filter has a custom <input> element
@@ -98,6 +98,12 @@ abstract class Filter
 
         if (! $this->has_custom_value) {
             $value = $this->isValid() ? $value : null;
+        }
+
+        if (is_array($value)) {
+            return array_map(function ($value) {
+                return htmlentities($value, ENT_NOQUOTES, 'UTF-8');
+            }, $value);
         }
 
         return is_null($value) ? null : htmlentities($value, ENT_NOQUOTES, 'UTF-8');
@@ -169,7 +175,7 @@ abstract class Filter
         $options = $this->prepareOptions($url);
 
         if (empty($options)) {
-            return;
+            //return;
         }
 
         $value = $this->display_value;
@@ -219,9 +225,17 @@ abstract class Filter
         $options = array();
         $base_url->removeQueryStringVariable('columns');
         foreach ($this->options as $show => $label) {
+            $label = !is_null($label) ? $label : $show;
             $url = clone $base_url;
             $url->setQueryStringVariable($this->name, $show);
-            $options[$url->compile()] = htmlentities($label, ENT_QUOTES, 'UTF-8');
+
+            if(is_array($label) && isset($label['label'])) {
+                $label['label'] = htmlentities($label['label'], ENT_QUOTES, 'UTF-8');
+            } else {
+                $label = htmlentities($label, ENT_QUOTES, 'UTF-8');
+            }
+
+            $options[$url->compile()] = $label;
         }
 
         return $options;

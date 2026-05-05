@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -17,6 +17,7 @@ class Gateway
 {
     protected static $_field_list_cache;
     protected $_values = array();
+    protected static $_gateway_model;
 
     /**
      *
@@ -73,6 +74,14 @@ class Gateway
     public function getPrimaryKey()
     {
         return static::$_primary_key;
+    }
+
+    /**
+     * model that defines elements fetched by this gateway
+     */
+    public function getGatewayModel()
+    {
+        return static::$_gateway_model;
     }
 
     /**

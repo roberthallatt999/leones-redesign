@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -555,7 +555,7 @@ class Channel_model extends CI_Model
                 $search_sql .= ' (' . $col_name . ($not ? '!' : '') . '=""';
                 // IS (NOT) NULL
                 $search_sql .= $not ? ' AND ' : ' OR ';
-                $search_sql .= $col_name . ' IS ' . ($not ?: '') . ' NULL) ';
+                $search_sql .= $col_name . str_replace('  ', ' ', ' IS ' . ($not ?: '') . ' NULL) ');
             } elseif (strpos($term, '\W') !== false) { // full word only, no partial matches
                 // Note: MySQL's nutty POSIX regex word boundary is [[:>:]]
                 $term = '([[:<:]]|^)' . preg_quote(str_replace('\W', '', $term)) . '([[:>:]]|$)';

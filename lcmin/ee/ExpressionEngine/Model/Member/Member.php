@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -74,6 +74,15 @@ class Member extends ContentModel
             'type' => 'hasMany',
             'model' => 'ChannelEntry',
             'to_key' => 'author_id'
+        ),
+        'RelatedChannelEntries' => array(
+            'type' => 'hasAndBelongsToMany',
+            'model' => 'ChannelEntry',
+            'pivot' => array(
+                'table' => 'member_relationships',
+                'left' => 'child_id',
+                'right' => 'parent_id'
+            )
         ),
         'LastAuthoredSpecialtyTemplates' => array(
             'type' => 'hasMany',
@@ -221,7 +230,7 @@ class Member extends ContentModel
         'role_id' => 'required|isNatural|validateRoles',
         'username' => 'required|unique|validUsername|validateWhenIsNew|notBanned',
         'screen_name' => 'validScreenName|notBanned',
-        'email' => 'required|email|uniqueEmail|max_length[' . USERNAME_MAX_LENGTH . ']|notBanned',
+        'email' => 'required|email|uniqueEmail|max_length[254]|notBanned',
         'password' => 'required|validPassword|passwordMatchesSecurityPolicy',
         'timezone' => 'validateTimezone',
         'date_format' => 'validateDateFormat',
@@ -294,6 +303,7 @@ class Member extends ContentModel
     protected $timezone;
     protected $time_format;
     protected $date_format;
+    protected $week_start;
     protected $include_seconds;
     protected $profile_theme;
     protected $forum_theme;
@@ -698,7 +708,7 @@ class Member extends ContentModel
     /**
      * Modify the default layout for member fields
      */
-    public function getDisplay(LayoutInterface $layout = null)
+    public function getDisplay(?LayoutInterface $layout = null)
     {
         $layout = $layout ?: new MemberFieldLayout();
 
@@ -956,7 +966,7 @@ class Member extends ContentModel
         $roles = ($cache == true) ? $this->getFromCache($cache_key) : false;
 
         if ($roles === false) {
-            $roles = $this->Roles->indexBy('name');
+            $roles = $this->Roles->filter('role_id', '!=', 0)->indexBy('name');
             if (is_object($this->PrimaryRole)) {
                 $roles[$this->PrimaryRole->name] = $this->PrimaryRole;
             }

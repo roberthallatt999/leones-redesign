@@ -3,7 +3,7 @@
 /**
  * ExpressionEngine Pro
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
 */
 
 namespace ExpressionEngine\Addons\Pro\Service\Dock;
@@ -61,7 +61,7 @@ class DockFactory
                     - Member has access to frontedit feature
                 */
                 $proAccess = ee('pro:Access');
-                if ($proAccess->hasValidLicense() && $proAccess->hasDockPermission()) {
+                if ((!ee('pro:Access')->requiresValidLicense() || $proAccess->hasValidLicense()) && $proAccess->hasDockPermission()) {
                     // enable frontedit and load required assets
                     ee('pro:FrontEdit')->ensureEntryId();
                     if (ee()->input->cookie('frontedit') != 'off' && $proAccess->hasAnyFrontEditPermission()) {
@@ -90,7 +90,7 @@ class DockFactory
     {
         ee()->TMPL->log_item("Pro: Building the Dock.");
         ee()->lang->load('cp');
-        ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
+        ee()->lang->load('pro');
 
         // Get version of asset cache busting
         $addon = ee('Addon')->get('pro');
@@ -98,6 +98,7 @@ class DockFactory
         $cacheBuster = time();
 
         $assets = '<style type="text/css">[v-cloak]{display: none;}</style>';
+        $assets = '<style type="text/css">@media print {div[id^="ee-pro"],span.eeFrontEdit {display: none !important;}}</style>';
         $assets .= '<div id="ee-44E4F0E59DFA295EB450397CA40D1169" v-cloak></div>';
         $assets .= '<script type="text/javascript" src="' . URL_PRO_THEMES . 'js/fronteditor.min.js?v=' . $version . '-' . $cacheBuster .'"></script>';
         $assets .= '<link rel="stylesheet" type="text/css"  media="screen" href="' . URL_PRO_THEMES . 'css/fronteditor.min.css?v=' . $version . '-' . $cacheBuster .'" />';
@@ -141,6 +142,7 @@ class DockFactory
                 'cancel' => lang('cancel'),
                 'save_without_reload' => lang('save_without_reload'),
                 'login' => lang('login'),
+                'drag_handle_icon' => lang('drag_handle_icon'),
             ],
             'pro.prolets'=> [],
             'pro.actions'=> []

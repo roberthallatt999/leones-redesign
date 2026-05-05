@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -103,6 +103,9 @@ class Javascript extends CI_Controller
 
         if ($package && $loadfile) {
             $file = PATH_THIRD . $package . '/javascript/' . $loadfile . '.js';
+            if (! file_exists($file)) {
+                $file = PATH_ADDONS . $package . '/javascript/' . $loadfile . '.js';
+            }
         } elseif ($loadfile == '') {
             if (($plugin = $this->input->get_post('plugin')) !== false) {
                 $plugin = ee()->security->sanitize_filename($plugin);

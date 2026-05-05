@@ -4,7 +4,7 @@
 <div class="panel-heading">
   <div class="app-notice-wrap"><?=ee('CP/Alert')->getAllInlines()?></div>
   <div class="form-btns form-btns-top">
-    <div class="title-bar js-filters-collapsable title-bar--large">
+    <div class="title-bar js-filters-collapsible title-bar--large">
       <h3 class="title-bar__title">
     		<?php echo isset($cp_heading) ? $cp_heading : $cp_page_title?>
     	</h3>
@@ -32,12 +32,12 @@
 						<?php if ($file->isEditableImage() || $file->isSVG()): ?>
 							<img src="<?=ee('Thumbnail')->get($file)->url?>" alt="<?=$file->file_name?>">
 						<?php else: ?>
-							<?php if ($file->mime_type == 'text/plain'): ?>
-								<i class="fas fa-file-alt fa-5x"></i>
+							<?php if (in_array($file->mime_type, ['text/plain', 'text/markdown'])): ?>
+								<i class="fal fa-file-alt fa-5x"></i>
 							<?php elseif ($file->mime_type == 'application/zip'): ?>
-								<i class="fas fa-file-archive fa-5x"></i>
+								<i class="fal fa-file-archive fa-5x"></i>
 							<?php else: ?>
-								<i class="fas fa-file fa-5x"></i>
+								<i class="fal fa-file fa-5x"></i>
 							<?php endif; ?>
 							<span class="file-thumb"><b><?=$file->file_name?></b></span>
 						<?php endif; ?>
@@ -54,10 +54,10 @@
       <?php $this->embed('ee:_shared/table', $table); ?>
     <?php endif; ?>
 
-	<?php 
+	<?php
 	if (! empty($pagination)) {
     	echo $pagination;
-	} 
+	}
 	?>
 	<?php if (! empty($upload) && is_numeric($dir)): ?>
 		<div class="panel-footer">

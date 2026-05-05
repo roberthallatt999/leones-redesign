@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -14,6 +14,7 @@
 class EE_URI
 {
     public $uri_string;
+    public $config;
 
     public $keyval = array();
     public $segments = array();
@@ -22,7 +23,6 @@ class EE_URI
     public $query_string = 'index';  // Only the query segment of the URI: 124
     public $page_query_string = '';       // For a Pages request, this contains the Entry ID for the Page
     public $session_id = '';
-    public $config;
 
     // These are reserved words that have special meaning when they are the first
     // segment of a URI string.  Template groups can not be named any of these words
@@ -305,7 +305,12 @@ class EE_URI
 
         if (! isset($base)) {
             if (!defined('BASE')) {
-                define('BASE', EESELF . '?S=' . ee()->session->session_id() . '&amp;D=cp');
+                $base = EESELF . '?/cp';
+                $session_id = ee()->session->session_id();
+                if (!empty($session_id)) {
+                    $base .= '&amp;S=' . $session_id;
+                }
+                define('BASE', $base); // cp url
             }
             $base = BASE;
         }

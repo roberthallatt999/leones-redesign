@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -320,11 +320,15 @@ class Addons_installer
                         }
                     }
                 } else {
-                    ee()->load->add_package_path(ee()->addons->_packages[$addon][$type]['path'], false);
+                    if (isset(ee()->addons->_packages[$addon][$type])) {
+                        ee()->load->add_package_path(ee()->addons->_packages[$addon][$type]['path'], false);
+                    }
 
                     $this->$method($addon);
 
-                    ee()->load->remove_package_path(ee()->addons->_packages[$addon][$type]['path']);
+                    if (isset(ee()->addons->_packages[$addon][$type])) {
+                        ee()->load->remove_package_path(ee()->addons->_packages[$addon][$type]['path']);
+                    }
                 }
             }
         }

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -434,6 +434,7 @@ class CI_DB_active_record extends CI_DB_driver
             }
 
             $where = $boolean_operator_prefix . $binary_prefix . $k . $v;
+
             $this->ar_where[] = $where;
 
             if ($this->ar_caching === true) {
@@ -1697,7 +1698,7 @@ class CI_DB_active_record extends CI_DB_driver
                     && strpos($trace['class'], 'CI_DB_') === false) {
                     $addon_name = explode(DIRECTORY_SEPARATOR, substr($trace['file'], strpos($trace['file'], $marker) + strlen($marker)));
                     $addon = ee('Addon')->get($addon_name[0]);
-                    $message = $addon->getName() . ' is making a call to `exp_' . $table . '` database table, which is non-existent in ExpressionEngine 6. If you are site owner, try upgrading ' . $addon->getName() . ' to latest available version. If you are the add-on developer, update your ' . $trace['class'] . ' class to use <a href="https://docs.expressionengine.com/v6/development/v6-add-on-migration.html#required-changes">Role model</a>.';
+                    $message = $addon->getName() . ' is making a call to `exp_' . $table . '` database table, which is non-existent in ExpressionEngine 6. If you are site owner, try upgrading ' . $addon->getName() . ' to latest available version. If you are the add-on developer, update your ' . $trace['class'] . ' class to use <a href="https://docs.expressionengine.com/latest/development/v6-add-on-migration.html#required-changes">Role model</a>.';
 
                     ee()->load->library('logger');
                     ee()->logger->developer($message, true);

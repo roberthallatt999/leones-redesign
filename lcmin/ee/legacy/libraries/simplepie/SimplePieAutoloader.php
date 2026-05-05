@@ -56,7 +56,7 @@ if (!class_exists('SimplePie')) {
  */
 class SimplePie_Autoloader
 {
-    public $path;
+    protected $path;
 
     /**
      * Constructor

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -72,6 +72,23 @@ class LivePreview
     }
 
     /**
+     * Determine whether the LivePreview is for a specific Entry
+     *
+     * @param int $id
+     * @return boolean
+     */
+    public function forEntryId($id)
+    {
+        if (!$this->hasEntryData()) {
+            return false;
+        }
+
+        $entryId = $this->getEntryData()['entry_id'] ?? null;
+
+        return $entryId === (int) $id;
+    }
+
+    /**
      * generate and display the live preview
      */
     public function preview($channel_id, $entry_id = null, $preview_url = null, $prefer_system_preview = false)
@@ -118,7 +135,7 @@ class LivePreview
                     if (!empty($saved)) {
                         $data[$key] = $saved;
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     // `save` code might be too complex, so if it errors, silently continue
                 }
             }
@@ -143,8 +160,9 @@ class LivePreview
 
         $template_id = null;
 
-        if (! empty($_POST['pages__pages_uri'])
-                && ! empty($_POST['pages__pages_template_id'])) {
+        if (! empty($_POST['pages__pages_uri']) &&
+            ! empty($_POST['pages__pages_template_id'])
+           ) {
             //pages data passed with POST
             $values = [
                 'pages_uri' => $_POST['pages__pages_uri'],

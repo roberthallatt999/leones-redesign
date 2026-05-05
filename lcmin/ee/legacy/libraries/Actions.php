@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -18,7 +18,7 @@
  * - Logging in
  * - Logging out
  * - New member registration
- *	etc...
+ *  etc...
  *
  * In these examples, information submitted from a user needs to be received and processed.  Since
  * ExpressionEngine uses only one execution file (index.php) we need a way to know that an
@@ -68,6 +68,7 @@ class EE_Actions
             $query = ee()->db->get('actions');
 
             if ($query->num_rows() == 0) {
+                ee()->output->set_status_header(406);
                 if (ee()->config->item('debug') >= 1) {
                     ee()->output->fatal_error(ee()->lang->line('invalid_action'));
                 } else {
@@ -76,7 +77,7 @@ class EE_Actions
             }
 
             $class = ucfirst($query->row('class'));
-            $method = strtolower($query->row('method'));
+            $method = $query->row('method');
             $csrf_exempt = (bool) $query->row('csrf_exempt');
         } else {
             // If the ID is not numeric we'll invoke the class/method manually
@@ -94,6 +95,7 @@ class EE_Actions
             $query = ee()->db->get('modules');
 
             if ($query->num_rows() == 0) {
+                ee()->output->set_status_header(406);
                 if (ee()->config->item('debug') >= 1) {
                     ee()->output->fatal_error(ee()->lang->line('invalid_action'));
                 } else {
@@ -131,6 +133,7 @@ class EE_Actions
         $addon = ee('Addon')->get($base_class);
 
         if (! $addon) {
+            ee()->output->set_status_header(406);
             if (ee()->config->item('debug') >= 1) {
                 ee()->output->fatal_error(ee()->lang->line('invalid_action'));
             } else {
@@ -160,7 +163,14 @@ class EE_Actions
         ee()->core->process_secure_forms($flags);
 
         if ($method != '') {
+            // If the stored method name is not callable, we use the snakecase version
             if (! is_callable(array($ACT, $method))) {
+                $method = ee('Str')->snakecase($method);
+            }
+
+            // If it's still not callable, stop here
+            if (! is_callable(array($ACT, $method))) {
+                ee()->output->set_status_header(406);
                 if (ee()->config->item('debug') >= 1) {
                     ee()->output->fatal_error(ee()->lang->line('invalid_action'));
                 } else {

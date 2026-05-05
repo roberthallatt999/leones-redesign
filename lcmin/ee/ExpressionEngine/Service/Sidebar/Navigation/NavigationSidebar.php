@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -57,7 +57,7 @@ class NavigationSidebar extends AbstractSidebar
                 $list = $section->addList(lang('menu_entries'));
 
                 if (count($channels)) {
-                    $list->addItem('<i class="fas fa-eye"></i> ' . lang('view_all'), ee('CP/URL', 'publish/edit'))->withDivider();
+                    $list->addItem('<i class="fal fa-eye"></i> ' . lang('view_all'), ee('CP/URL', 'publish/edit'))->withDivider();
                 }
 
                 foreach ($channels as $channel) {
@@ -90,29 +90,30 @@ class NavigationSidebar extends AbstractSidebar
                 }
             }
             if (ee('Permission')->has('can_access_files')) {
-                $section->addItem(lang('menu_files'), ee('CP/URL', 'files'))->withIcon('folder');
+                $section->addItem(lang('menu_files'), ee('CP/URL', 'files'))->withIcon('archive');
             }
             if (ee('Permission')->has('can_admin_channels') && ee('Permission')->hasAny('can_create_categories', 'can_edit_categories', 'can_delete_categories')) {
                 $section->addItem(lang('categories'), ee('CP/URL', 'categories'))->withIcon('tags');
             }
         }
 
-        if (ee('Permission')->hasAny('can_access_members', 'can_create_roles', 'can_edit_roles', 'can_delete_roles')) {
+        if (ee('Permission')->has('can_access_members')) {
             $section = $this->addSection(lang('members'));
-            if (ee('Permission')->has('can_access_members')) {
-                $item = $section->addItem(lang('members'), ee('CP/URL', 'members'))->withIcon('users');
-                if (ee()->uri->segment(3) == 'roles') {
-                    $item->isInactive();
-                }
+
+            $item = $section->addItem(lang('members'), ee('CP/URL', 'members'))->withIcon('users');
+
+            if (ee()->uri->segment(3) == 'roles') {
+                $item->isInactive();
             }
-            if (ee('Permission')->hasAny('can_create_roles', 'can_edit_roles', 'can_delete_roles')) {
+
+            if (ee('Permission')->has('can_admin_roles') && ee('Permission')->hasAny('can_create_roles', 'can_edit_roles', 'can_delete_roles')) {
                 $section->addItem(lang('roles'), ee('CP/URL', 'members/roles'))->withIcon('user-tag');
             }
         }
 
         $this->addCustomSection();
 
-        if (ee('Permission')->hasAny('can_access_design', 'can_access_addons', 'can_access_utilities', 'can_access_logs', 'can_access_sys_prefs') || (ee('Permission')->has('can_admin_channels') && ee('Permission')->hasAny('can_create_channels', 'can_edit_channels', 'can_delete_channels')) || (ee()->config->item('multiple_sites_enabled') == 'y' && ee('Permission')->has('can_admin_sites'))) {
+        if (ee('Permission')->hasAny('can_access_design', 'can_access_addons', 'can_access_utilities', 'can_access_logs', 'can_access_sys_prefs', 'can_create_channel_fields', 'can_edit_channel_fields', 'can_delete_channel_fields') || (ee('Permission')->has('can_admin_channels') && ee('Permission')->hasAny('can_create_channels', 'can_edit_channels', 'can_delete_channels')) || (ee()->config->item('multiple_sites_enabled') == 'y' && ee('Permission')->has('can_admin_sites'))) {
             $section = $this->addSection(lang('nav_developer'), 'dev');
 
             if (ee()->config->item('multiple_sites_enabled') == 'y' && ee('Permission')->has('can_admin_sites')) {
@@ -137,11 +138,11 @@ class NavigationSidebar extends AbstractSidebar
                     'can_delete_channel_fields'
                 )
             ) {
-                $section->addItem(lang('fields'), ee('CP/URL')->make('fields'))->withIcon('i-cursor');
+                $section->addItem(lang('fields'), ee('CP/URL')->make('fields'))->withIcon('pen-field');
             }
 
             if (ee('Permission')->has('can_access_design')) {
-                $section->addItem(lang('templates'), ee('CP/URL')->make('design'))->withIcon('file');
+                $section->addItem(lang('templates'), ee('CP/URL')->make('design'))->withIcon('file-code');
             }
 
             $tools = [];

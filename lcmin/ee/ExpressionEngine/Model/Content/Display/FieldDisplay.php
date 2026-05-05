@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -19,6 +19,7 @@ class FieldDisplay
     protected $collapsed = false;
     protected $visible = true;
     protected $conditional = false;
+    protected $width = 100;
 
     public function __construct($field)
     {
@@ -55,6 +56,11 @@ class FieldDisplay
     public function getName()
     {
         return $this->field->getName();
+    }
+
+    public function getNameBadge(array $options = [])
+    {
+        return $this->field->getNameBadge($options);
     }
 
     public function getShortName()
@@ -117,6 +123,18 @@ class FieldDisplay
         return (bool) $this->getSetting('field_hide_publish_layout_collapse');
     }
 
+    public function setWidth($field_width)
+    {
+        $this->width = $field_width;
+
+        return $this;
+    }
+
+    public function getWidth()
+    {
+        return (float) $this->width;
+    }
+
     public function hide()
     {
         $this->visible = false;
@@ -144,6 +162,18 @@ class FieldDisplay
     public function isConditionallyHidden()
     {
         return get_bool_from_string($this->field->getHidden());
+    }
+
+    public function renderAlert()
+    {
+        if (!empty($this->field->getAlertText())) {
+            return ee('CP/Alert')->makeInline('__inline_alert_' . $this->getShortName())
+                ->asWarning()
+                ->cannotClose()
+                ->addToBody($this->field->getAlertText())
+                ->render();
+        }
+        return '';
     }
 
     public function getSetting($item)

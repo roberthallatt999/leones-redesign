@@ -11,7 +11,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 var MutableSelectField =
@@ -41,7 +41,7 @@ function () {
     value: function toggleAddButton() {
       var addButtons = this.field.parent().find(this.addButton);
 
-      if (this.field.find('.field-no-results').size()) {
+      if (this.field.find('.field-no-results').length) {
         addButtons.filter(function (i, el) {
           return $(el).hasClass('btn');
         }).hide();
@@ -118,7 +118,7 @@ function () {
         // field upon reload. Checkboxes for server-rendered fields, hidden
         // inputs for the React fields.
 
-        $('input[type=checkbox][name="' + this.fieldName + '[]"]:checked, input[type=hidden][name="' + this.fieldName + '[]"]').each(function () {
+        $('input[type=checkbox][name="' + this.fieldName + '[]"]:checked, input[type=radio][name="' + this.fieldName + '"], input[type=hidden][name="' + this.fieldName + '[]"]').each(function () {
           selected.push($(this).val());
         });
         var postdata = {};

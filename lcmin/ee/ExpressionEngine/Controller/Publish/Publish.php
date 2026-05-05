@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -90,6 +90,62 @@ class Publish extends AbstractPublishController
     }
 
     /**
+     * AJAX endpoint for member relationships filter
+     *
+     * @return void
+     */
+    public function memberRelationshipFilter()
+    {
+        $settings = ee('Encrypt')->decode(
+            ee('Request')->get('settings'),
+            ee()->config->item('session_crypt_key')
+        );
+        $settings = json_decode($settings, true);
+
+        if (empty($settings)) {
+            show_error(lang('unauthorized_access'), 403);
+        }
+
+        $settings['search'] = ee('Request')->isPost() ? ee('Request')->post('search') : ee('Request')->get('search');
+        $settings['channel_id'] = ee('Request')->isPost() ? ee('Request')->post('channel_id') : ee('Request')->get('channel_id');
+        $settings['selected'] = ee('Request')->isPost() ? ee('Request')->post('selected') : ee('Request')->get('selected');
+
+        if (! AJAX_REQUEST or ! ee()->session->userdata('member_id')) {
+            show_error(lang('unauthorized_access'), 403);
+        }
+
+        $response = array();
+        $members = ee('Model')->get('Member')->with('PrimaryRole');
+        if (!empty($settings['limit'])) {
+            $members->limit((int) $settings['limit']);
+        }
+        if (!empty($settings['selected'])) {
+            $members->filter('member_id', 'NOT IN', explode('|', $settings['selected']));
+        }
+        if (!empty($settings['channel_id'])) {
+            $members->filter('PrimaryRole.role_id', $settings['channel_id']);
+        } elseif (!empty($settings['roles'])) {
+            $members->filter('PrimaryRole.role_id', 'IN', $settings['roles']);
+        }
+        if (!empty($settings['search'])) {
+            $members->search(['screen_name', 'username', 'email', 'member_id'], $settings['search']);
+        }
+        if (!empty($settings['order_field'])) {
+            $members->order($settings['order_field'], $settings['order_dir'] == 'asc' ? 'asc' : 'desc');
+        }
+        foreach ($members->all() as $member) {
+            $response[] = [
+                'value' => $member->getId(),
+                'label' => !empty($member->screen_name) ? $member->screen_name : $member->username,
+                'instructions' => $member->PrimaryRole->name,
+                'channel_id' => $member->role_id
+            ];
+        }
+
+        ee()->output->send_ajax_response($response);
+    }
+
+    /**
      * Autosaves a channel entry
      *
      * @param int $channel_id The Channel ID
@@ -103,11 +159,15 @@ class Publish extends AbstractPublishController
 
         $site_id = ee()->config->item('site_id');
 
-        $autosave = ee('Model')->get('ChannelEntryAutosave')
+        $autosaveQuery = ee('Model')->get('ChannelEntryAutosave')
             ->filter('original_entry_id', $entry_id)
             ->filter('site_id', $site_id)
-            ->filter('channel_id', $channel_id)
-            ->first();
+            ->filter('channel_id', $channel_id);
+        // for new entries, use author as extra identifier
+        if (empty($entry_id)) {
+            $autosaveQuery->filter('author_id', ee()->input->post('author_id', ee()->session->userdata('member_id')));
+        }
+        $autosave = $autosaveQuery->first();
 
         if (! $autosave) {
             $autosave = ee('Model')->make('ChannelEntryAutosave');
@@ -149,6 +209,90 @@ class Publish extends AbstractPublishController
             'autosave_entry_id' => $autosave->entry_id,
             'original_entry_id' => $entry_id
         ));
+    }
+
+    /**
+     * Issues a fresh Live Preview token for the current entry.
+     *
+     * @param int $channel_id The Channel ID
+     * @param int $entry_id The Entry ID
+     * @return void
+     */
+    public function livePreviewToken($channel_id, $entry_id)
+    {
+        $channel_id = (int) $channel_id;
+        $entry_id = (int) $entry_id;
+        $entry_id = $entry_id ?: null;
+
+        if ($channel_id <= 0) {
+            ee()->lang->load('content');
+            ee()->output->set_status_header(403);
+            ee()->output->send_ajax_response(['error' => lang('unauthorized_to_edit')]);
+            return;
+        }
+
+        $member_id = (int) ee()->session->userdata('member_id');
+        if (empty($member_id)) {
+            ee()->lang->load('content');
+            ee()->output->set_status_header(403);
+            ee()->output->send_ajax_response(['error' => lang('unauthorized_to_edit')]);
+            return;
+        }
+
+        $entry_author_id = null;
+        if (!empty($entry_id)) {
+            $entry_row = ee()->db->select('channel_id, author_id')
+                ->where('entry_id', $entry_id)
+                ->get('channel_titles');
+            if ($entry_row->num_rows() == 0) {
+                ee()->lang->load('content');
+                ee()->output->set_status_header(403);
+                ee()->output->send_ajax_response(['error' => lang('unauthorized_to_edit')]);
+                return;
+            }
+            $entry_channel_id = (int) $entry_row->row('channel_id');
+            $entry_author_id = (int) $entry_row->row('author_id');
+            if ($entry_channel_id !== $channel_id) {
+                ee()->lang->load('content');
+                ee()->output->set_status_header(403);
+                ee()->output->send_ajax_response(['error' => lang('unauthorized_to_edit')]);
+                return;
+            }
+        }
+
+        $permission = ee('Permission');
+        $can_edit = $permission->isSuperAdmin() ? true : $permission->can('edit_other_entries_channel_id_' . $channel_id);
+        if (! $can_edit) {
+            if (! empty($entry_id)) {
+                if (!is_null($entry_author_id) && $entry_author_id === $member_id) {
+                    $can_edit = $permission->can('edit_self_entries_channel_id_' . $channel_id);
+                }
+            } else {
+                $can_edit = $permission->can('create_entries_channel_id_' . $channel_id);
+            }
+        }
+
+        if (! $can_edit) {
+            ee()->lang->load('content');
+            ee()->output->set_status_header(403);
+            ee()->output->send_ajax_response(['error' => lang('unauthorized_to_edit')]);
+            return;
+        }
+
+        $return_param = ee()->input->get_post('return');
+        $from_param = ee()->input->get_post('from');
+
+        $token = ee('LivePreviewToken')->issueFromRequest(
+            $member_id,
+            $channel_id,
+            $entry_id,
+            $from_param,
+            $return_param,
+            null,
+            (int) ee()->config->item('site_id')
+        );
+
+        ee()->output->send_ajax_response(['token' => $token]);
     }
 
     /**
@@ -243,7 +387,7 @@ class Publish extends AbstractPublishController
             ],
         );
 
-        if (ee('Request')->get('modal_form') == 'y') {
+        if (ee('Request')->get('modal_form') == 'y' || ! ee('Permission')->can('edit_self_entries_channel_id_' . $entry->channel_id)) {
             $vars['buttons'] = [[
                 'name' => 'submit',
                 'type' => 'submit',
@@ -320,7 +464,11 @@ class Publish extends AbstractPublishController
                 'ee_fileuploader',
             ),
             'ui' => ['draggable'],
-            'file' => array('cp/publish/publish', 'cp/channel/category_edit')
+            'file' => array(
+                'cp/publish/publish', 
+                'cp/publish/entry-list',
+                'cp/channel/category_edit',
+            )
         ));
 
         ee()->view->cp_breadcrumbs = array(

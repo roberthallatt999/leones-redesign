@@ -4,13 +4,14 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
 use ExpressionEngine\Addons\FilePicker\FilePicker;
 use ExpressionEngine\Library\CP\EntryManager\ColumnInterface;
 use ExpressionEngine\Library\CP\Table;
+use ExpressionEngine\Library\Filesystem\FilesystemException;
 
 /**
  * File Fieldtype
@@ -24,6 +25,8 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
 
     public $has_array_data = true;
 
+    public $can_be_cloned = true;
+
     public $supportedEvaluationRules = ['isEmpty', 'isNotEmpty', 'contains'];
 
     public $defaultEvaluationRule = 'isNotEmpty';
@@ -33,7 +36,7 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
     /**
      * Constructor
      *
-     * @access	public
+     * @access  public
      */
     public function __construct()
     {
@@ -44,90 +47,83 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
     /**
      * Validate the upload
      *
-     * @access	public
+     * @access  public
      */
     public function validate($data)
     {
         // Is it required but empty?
-        if (($this->settings['field_required'] === true
+        if (
+            ($this->settings['field_required'] === true
             || $this->settings['field_required'] == 'y')
-                && empty($data)) {
+                && empty($data)
+        ) {
             return array('value' => '', 'error' => lang('required'));
         }
 
         // Is it optional and empty?
-        if (($this->settings['field_required'] === false
+        if (
+            ($this->settings['field_required'] === false
             || $this->settings['field_required'] == 'n')
-                && empty($data)) {
+                && empty($data)
+        ) {
             return array('value' => '');
         }
 
-        // Does it look like '{filedir_n}file_name.ext'?
-        if (preg_match('/^{filedir_(\d+)}/', $data, $matches)) {
-            $upload_location_id = $matches[1];
-            $file_name = str_replace($matches[0], '', $data);
+        $file = ee()->file_field->getFileModelForFieldData($data);
 
-            $file = ee('Model')->get('File')
-                ->with('UploadDestination')
-                ->filter('site_id', ee()->config->item('site_id'))
-                ->filter('upload_location_id', $upload_location_id)
-                ->filter('file_name', $file_name)
-                ->first();
+        if ($file) {
+            $check_permissions = false;
 
-            if ($file) {
-                $check_permissions = false;
+            // Is this an edit?
+            if ($this->content_id) {
+                // Are we validating on grid data?
+                if (isset($this->settings['grid_row_id']) || isset($this->settings['grid_row_name'])) {
+                    $fluid_field_data_id = (isset($this->settings['fluid_field_data_id'])) ? $this->settings['fluid_field_data_id'] : 0;
 
-                // Is this an edit?
-                if ($this->content_id) {
-                    // Are we validating on grid data?
-                    if (isset($this->settings['grid_row_id']) || isset($this->settings['grid_row_name'])) {
-                        $fluid_field_data_id = (isset($this->settings['fluid_field_data_id'])) ? $this->settings['fluid_field_data_id'] : 0;
+                    ee()->load->model('grid_model');
+                    $rows = ee()->grid_model->get_entry_rows(
+                        $this->content_id,
+                        $this->settings['grid_field_id'],
+                        $this->settings['grid_content_type'],
+                        array(),
+                        false,
+                        $fluid_field_data_id
+                    );
 
-                        ee()->load->model('grid_model');
-                        $rows = ee()->grid_model->get_entry_rows(
-                            $this->content_id,
-                            $this->settings['grid_field_id'],
-                            $this->settings['grid_content_type'],
-                            array(),
-                            false,
-                            $fluid_field_data_id
-                        );
-
-                        // If this filed was we need to check permissions.
-                        if (! isset($this->settings['grid_row_id']) || $rows[$this->content_id][$this->settings['grid_row_id']] != $data) {
-                            $check_permissions = true;
-                        }
-                    } else {
-                        $entry = ee('Model')->get('ChannelEntry', $this->content_id)->first();
-                        $field_name = $this->name();
-
-                        // If this filed was we need to check permissions.
-                        if ($entry && $entry->$field_name != $data) {
-                            $check_permissions = true;
-                        }
+                    // If this filed was we need to check permissions.
+                    if (! isset($this->settings['grid_row_id']) || $rows[$this->content_id][$this->settings['grid_row_id']] != $data) {
+                        $check_permissions = true;
                     }
                 } else {
-                    $check_permissions = true;
-                }
+                    $entry = ee('Model')->get('ChannelEntry', $this->content_id)->first();
+                    $field_name = $this->name();
 
-                if ($check_permissions) {
-                    $member = ee()->session->getMember();
-                    if (!$member && isset(ee()->channel_form)) {
-                        ee()->load->add_package_path(PATH_ADDONS . 'channel');
-                        ee()->load->library('channel_form/channel_form_lib');
-                        ee()->channel_form_lib->fetch_logged_out_member();
-                        if (!empty(ee()->channel_form_lib->logged_out_member_id)) {
-                            $member = ee('Model')->get('Member', ee()->channel_form_lib->logged_out_member_id)->first();
-                        }
-                        ee()->load->remove_package_path(PATH_ADDONS . 'channel');
-                    }
-                    if (!$member || $file->memberHasAccess($member) == false) {
-                        return array('value' => '', 'error' => lang('directory_no_access'));
+                    // If this filed was we need to check permissions.
+                    if ($entry && $entry->$field_name != $data) {
+                        $check_permissions = true;
                     }
                 }
-
-                return array('value' => $data);
+            } else {
+                $check_permissions = true;
             }
+
+            if ($check_permissions) {
+                $member = ee()->session->getMember();
+                if (!$member && isset(ee()->channel_form)) {
+                    ee()->load->add_package_path(PATH_ADDONS . 'channel');
+                    ee()->load->library('channel_form/channel_form_lib');
+                    ee()->channel_form_lib->fetch_logged_out_member();
+                    if (!empty(ee()->channel_form_lib->logged_out_member_id)) {
+                        $member = ee('Model')->get('Member', ee()->channel_form_lib->logged_out_member_id)->first();
+                    }
+                    ee()->load->remove_package_path(PATH_ADDONS . 'channel');
+                }
+                if (!$member || $file->memberHasAccess($member) == false) {
+                    return array('value' => '', 'error' => lang('directory_no_access'));
+                }
+            }
+
+            return array('value' => $data);
         }
 
         return array('value' => '', 'error' => lang('invalid_selection'));
@@ -136,7 +132,7 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
     /**
      * Save the correct value {fieldir_\d}filename.ext
      *
-     * @access	public
+     * @access  public
      */
     public function save($data)
     {
@@ -147,19 +143,28 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
     /**
      * Show the publish field
      *
-     * @access	public
+     * @access  public
      */
     public function display_field($data)
     {
         $allowed_file_dirs = (isset($this->settings['allowed_directories']) && $this->settings['allowed_directories'] != 'all')
             ? $this->settings['allowed_directories']
-            : '';
+            : 'all';
         $content_type = (isset($this->settings['field_content_type'])) ? $this->settings['field_content_type'] : 'all';
         $existing_limit = (isset($this->settings['num_existing'])) ? $this->settings['num_existing'] : 0;
         $show_existing = (isset($this->settings['show_existing'])) ? $this->settings['show_existing'] : 'n';
         $filebrowser = (REQ == 'CP');
 
+        ee()->javascript->set_global([
+            'file.publishCreateUrl' => ee('CP/URL')->make('files/file/view/###', ['modal_form' => 'y'])->compile(),
+        ]);
+
         if (REQ == 'CP') {
+            ee()->cp->add_js_script(array(
+                'file' => array(
+                    'cp/publish/entry-list',
+                ),
+            ));
             return ee()->file_field->dragAndDropField($this->field_name, $data, $allowed_file_dirs, $content_type);
         }
 
@@ -176,6 +181,15 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
     }
 
     /**
+     * Display the field for Pro Variables
+     *
+     */
+    public function var_display_field($data)
+    {
+        return $this->display_field($data);
+    }
+
+    /**
      * Return a status of "warning" if the file is missing, otherwise "ok"
      *
      * @return string "warning" if the file is missing, "ok" otherwise
@@ -184,7 +198,7 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
     {
         $status = 'ok';
 
-        $file = $this->_parse_field($data);
+        $file = ee()->file_field->getFileModelForFieldData($data);
 
         if ($file && ! $file->exists()) {
             $status = 'warning';
@@ -193,34 +207,10 @@ class File_ft extends EE_Fieldtype implements ColumnInterface
         return $status;
     }
 
-    private function _parse_field($data)
-    {
-        $file = null;
-
-        // If the file field is in the "{filedir_n}image.jpg" format
-        if (preg_match('/^{filedir_(\d+)}/', $data, $matches)) {
-            // Set upload directory ID and file name
-            $dir_id = $matches[1];
-            $file_name = str_replace($matches[0], '', $data);
-
-            $file = ee('Model')->get('File')
-                ->filter('file_name', $file_name)
-                ->filter('upload_location_id', $dir_id)
-                ->filter('site_id', ee()->config->item('site_id'))
-                ->first();
-        }
-        // If file field is just a file ID
-        elseif (! empty($data) && is_numeric($data)) {
-            $file = ee('Model')->get('File', $data)->first();
-        }
-
-        return $file;
-    }
-
     /**
      * Basic javascript interaction on the frontend
      *
-     * @access	public
+     * @access  public
      */
     protected function _frontend_js()
     {
@@ -290,7 +280,7 @@ JSC;
     /**
      * Prep the publish data
      *
-     * @access	public
+     * @access  public
      */
     public function pre_process($data)
     {
@@ -300,7 +290,7 @@ JSC;
     /**
      * Runs before the channel entries loop on the front end
      *
-     * @param array $data	All custom field data about to be processed for the front end
+     * @param array $data   All custom field data about to be processed for the front end
      * @return void
      */
     public function pre_loop($data)
@@ -311,7 +301,7 @@ JSC;
     /**
      * Replace frontend tag
      *
-     * @access	public
+     * @access  public
      */
     public function replace_tag($data, $params = array(), $tagdata = false)
     {
@@ -339,7 +329,20 @@ JSC;
             return ee()->TMPL->parse_variables($tagdata, array($data));
         }
 
-        if (! empty($data['path']) && ! empty($data['filename']) && $data['extension'] !== false) {
+        // first just try to parse tag data as string
+        if (!empty($data['url'])) {
+            ee()->load->library('file_field');
+            $full_path = ee()->file_field->parse_string($data['url']);
+
+            if (isset($params['wrap'])) {
+                return $this->_wrap_it($data, $params['wrap'], $full_path);
+            }
+
+            return $full_path;
+        }
+
+        //legacy old code, probably never used
+        if (! empty($data['path']) && ! empty($data['file_id']) && $data['extension'] !== false) {
             $full_path = $data['path'] . $data['filename'] . '.' . $data['extension'];
 
             if (isset($params['wrap'])) {
@@ -350,6 +353,23 @@ JSC;
         }
 
         return '';
+    }
+
+    /**
+     * Display the field for Pro Variables
+     *
+     */
+    public function var_replace_tag($data, $params = array(), $tagdata = false)
+    {
+        $data = $this->pre_process($data);
+        if ($tagdata === '') {
+            $tagdata = false;
+        }
+        $fn = 'replace_' . ee()->TMPL->fetch_param('modifier', 'tag');
+        if (! method_exists($this, $fn)) {
+            $fn = 'replace_tag';
+        }
+        return $this->$fn($data, $params, $tagdata);
     }
 
     /**
@@ -372,10 +392,9 @@ JSC;
         if (empty($data) || !isset($data['model_object'])) {
             return $this->replace_tag($data, $params, $tagdata);
         }
-        $data['filename'] = $data['model_object']->file_name;
-        $data['directory_path'] = $data['model_object']->UploadDestination->server_path;
-        $data['directory_url'] = $data['model_object']->UploadDestination->url;
-        $data['source_image'] = $data['model_object']->getAbsolutePath();
+        $data['fs_filename'] = $data['fs_filename'] ?? $data['model_object']->file_name;
+        $data['filesystem'] = $data['filesystem'] ?? $data['model_object']->UploadDestination->getFilesystem();
+        $data['source_image'] = $data['source_image'] ?? $data['model_object']->getAbsolutePath();
 
         return $this->process_image('resize', $data, $params, $tagdata);
     }
@@ -401,10 +420,9 @@ JSC;
         if (empty($data) || !isset($data['model_object'])) {
             return $this->replace_tag($data, $params, $tagdata);
         }
-        $data['filename'] = $data['model_object']->file_name;
-        $data['directory_path'] = $data['model_object']->UploadDestination->server_path;
-        $data['directory_url'] = $data['model_object']->UploadDestination->url;
-        $data['source_image'] = $data['model_object']->getAbsolutePath();
+        $data['fs_filename'] = $data['fs_filename'] ?? $data['model_object']->file_name;
+        $data['filesystem'] = $data['filesystem'] ?? $data['model_object']->UploadDestination->getFilesystem();
+        $data['source_image'] = $data['source_image'] ?? $data['model_object']->getAbsolutePath();
 
         return $this->process_image('crop', $data, $params, $tagdata);
     }
@@ -432,10 +450,9 @@ JSC;
         }
         $params['function'] = 'resize_crop';
 
-        $data['filename'] = $data['model_object']->file_name;
-        $data['directory_path'] = $data['model_object']->UploadDestination->server_path;
-        $data['directory_url'] = $data['model_object']->UploadDestination->url;
-        $data['source_image'] = $data['model_object']->getAbsolutePath();
+        $data['fs_filename'] = $data['fs_filename'] ?? $data['model_object']->file_name;
+        $data['filesystem'] = $data['filesystem'] ?? $data['model_object']->UploadDestination->getFilesystem();
+        $data['source_image'] = $data['source_image'] ?? $data['model_object']->getAbsolutePath();
 
         $params_copy = $params;
         foreach ($params as $key => $val) {
@@ -475,10 +492,9 @@ JSC;
         if (empty($data) || !isset($data['model_object'])) {
             return $this->replace_tag($data, $params, $tagdata);
         }
-        $data['filename'] = $data['model_object']->file_name;
-        $data['directory_path'] = $data['model_object']->UploadDestination->server_path;
-        $data['directory_url'] = $data['model_object']->UploadDestination->url;
-        $data['source_image'] = $data['model_object']->getAbsolutePath();
+        $data['fs_filename'] = $data['fs_filename'] ?? $data['model_object']->file_name;
+        $data['filesystem'] = $data['filesystem'] ?? $data['model_object']->UploadDestination->getFilesystem();
+        $data['source_image'] = $data['source_image'] ?? $data['model_object']->getAbsolutePath();
 
         return $this->process_image('rotate', $data, $params, $tagdata);
     }
@@ -493,12 +509,28 @@ JSC;
         if (empty($data) || !isset($data['model_object'])) {
             return $this->replace_tag($data, $params, $tagdata);
         }
-        $data['filename'] = $data['model_object']->file_name;
-        $data['directory_path'] = $data['model_object']->UploadDestination->server_path;
-        $data['directory_url'] = $data['model_object']->UploadDestination->url;
-        $data['source_image'] = $data['model_object']->getAbsolutePath();
+        $data['fs_filename'] = $data['fs_filename'] ?? $data['model_object']->file_name;
+        $data['filesystem'] = $data['filesystem'] ?? $data['model_object']->UploadDestination->getFilesystem();
+        $data['source_image'] = $data['source_image'] ?? $data['model_object']->getAbsolutePath();
 
         return $this->process_image('webp', $data, $params, $tagdata);
+    }
+
+    /**
+     * Convert to AVIF
+     *
+     * Supported parameters same as for resize
+     */
+    public function replace_avif($data, $params = array(), $tagdata = false)
+    {
+        if (empty($data) || !isset($data['model_object'])) {
+            return $this->replace_tag($data, $params, $tagdata);
+        }
+        $data['fs_filename'] = $data['fs_filename'] ?? $data['model_object']->file_name;
+        $data['filesystem'] = $data['filesystem'] ?? $data['model_object']->UploadDestination->getFilesystem();
+        $data['source_image'] = $data['source_image'] ?? $data['model_object']->getAbsolutePath();
+
+        return $this->process_image('avif', $data, $params, $tagdata);
     }
 
     /**
@@ -506,49 +538,75 @@ JSC;
      */
     private function process_image($function = 'resize', $data = [], $params = array(), $tagdata = false, $return_as_path = false)
     {
-        if (!in_array($function, ['resize', 'crop', 'rotate', 'webp'])) {
+        if (!in_array($function, ['resize', 'crop', 'rotate', 'webp', 'avif'])) {
             return false;
         }
 
         if (!$data['model_object']->isImage()) {
-            return ee()->TMPL->no_results();
-        }
-
-        ee()->load->library('image_lib');
-        $filename = ee()->image_lib->explode_name($data['filename']);
-        if ($function == 'webp') {
-            $filename['ext'] = '.webp';
-        }
-        $new_image = $filename['name'] . '_' . $function . '_' . md5(serialize($params)) . $filename['ext'];
-        $new_image_dir = rtrim($data['directory_path'], '/') . '/_' . $function . DIRECTORY_SEPARATOR;
-        if (!is_dir($new_image_dir)) {
-            mkdir($new_image_dir);
-            if (!file_exists($new_image_dir . 'index.html')) {
-                $f = fopen($new_image_dir . 'index.html', FOPEN_READ_WRITE_CREATE_DESTRUCTIVE);
-                fwrite($f, 'Directory access is forbidden.');
-                fclose($f);
-            }
-        } elseif (!is_really_writable($new_image_dir)) {
             return false;
         }
 
-        $new_image_path = $new_image_dir . $new_image;
-        $new_image_url = rtrim($data['directory_url'], '/') . '/_' . $function . '/' . rawurlencode($new_image);
-        if (!file_exists($new_image_path)) {
+        if (!$data['model_object']->isEditableImage()) {
+            if (is_null($tagdata)) {
+                return $data; // allow chaining modifiers
+            }
+            return $this->replace_tag($data, $params, $tagdata);
+        }
+
+        ee()->load->library('image_lib');
+        $filename = ee()->image_lib->explode_name($data['fs_filename']);
+        if ($function == 'webp' || $function == 'avif') {
+            $filename['name'] = $filename['name'] . '_' . $filename['ext'];
+            $filename['ext'] = '.' . $function;
+        }
+        $new_image = substr($filename['name'], 0, 150) . '_' . $function . '_' . md5(serialize($params)) . $filename['ext'];
+        $data['fs_filename'] = $filename['name'] . '_' . $function . $filename['ext'];
+
+        $new_image_dir = rtrim($data['model_object']->getBaseServerPath() . $data['model_object']->getSubfoldersPath(), '/') . '/_' . $function . DIRECTORY_SEPARATOR;
+        if (! $data['filesystem']->isDir($new_image_dir)) {
+            $data['filesystem']->mkdir($new_image_dir);
+            $data['filesystem']->addIndexHtml($new_image_dir);
+        } elseif (!$data['filesystem']->isWritable($new_image_dir)) {
+            return false;
+        }
+
+        $destination_path = $new_image_dir . $new_image;
+        $props = null;
+
+        if (!$data['filesystem']->exists($destination_path)) {
+            // We need to get a temporary local copy of the file in case it's stored
+            // on another filesystem.
+            try {
+                $source = $data['filesystem']->copyToTempFile($data['source_image']);
+            } catch (FilesystemException $e) {
+                // if the file does not exist (e.g. we run a local copy without all files)
+                // just return the original URL
+                log_message('debug', $e->getMessage());
+                return $data['model_object']->getAbsoluteURL();
+            }
+            $new = $data['filesystem']->createTempFile();
+
+            // If no per-tag quality is provided, use the configured default
+            // while preserving the historical 75 fallback.
+            $imageQuality = 75;
+            if (is_int(ee()->config->item('image_manipulation_quality')) && 0 < ee()->config->item('image_manipulation_quality') && ee()->config->item('image_manipulation_quality') <= 100) {
+                $imageQuality = ee()->config->item('image_manipulation_quality');
+            }
+
             $imageLibConfig = array(
                 'image_library' => ee()->config->item('image_resize_protocol'),
                 'library_path' => ee()->config->item('image_library_path'),
-                'source_image' => $data['source_image'],
-                'new_image' => $new_image_path,
+                'source_image' => $source['path'],
+                'new_image' => $new['path'],
                 'maintain_ratio' => isset($params['maintain_ratio']) ? get_bool_from_string($params['maintain_ratio']) : true,
                 'master_dim' => (isset($params['master_dim']) && in_array($params['master_dim'], ['auto', 'width', 'height'])) ? $params['master_dim'] : 'auto',
 
-                'quality' => isset($params['quality']) ? (int) $params['quality'] : 75,
+                'quality' => isset($params['quality']) ? (int) $params['quality'] : $imageQuality,
                 'x_axis' => isset($params['x']) ? (int) $params['x'] : 0,
                 'y_axis' => isset($params['y']) ? (int) $params['y'] : 0,
                 'rotation_angle' => (isset($params['angle']) && in_array($params['angle'], ['90', '180', '270', 'vrt', 'hor'])) ? $params['angle'] : null,
             );
-            //techically, both dimentions are always required, so we'll set defaults
+            //technically, both dimensions are always required, so we'll set defaults
             if ($imageLibConfig['master_dim'] != 'auto') {
                 $imageLibConfig['width'] = 100;
                 $imageLibConfig['height'] = 100;
@@ -568,6 +626,17 @@ JSC;
                 }
             }
 
+            // if position parameter is provided, use it to calculate x and y
+            if ($function == 'crop' && isset($params['position'])) {
+                $props = ee()->image_lib->get_image_properties($source['path'], true);
+                if (isset($params['width'])) {
+                    $imageLibConfig['x_axis'] += floor(($props['width'] - (int) $params['width']) / 2);
+                }
+                if (isset($params['height'])) {
+                    $imageLibConfig['y_axis'] += floor(($props['height'] - (int) $params['height']) / 2);
+                }
+            }
+
             ee()->image_lib->clear();
             if (!isset($imageLibConfig['width'])) {
                 ee()->image_lib->width = '';
@@ -584,18 +653,51 @@ JSC;
 
                 return ee()->TMPL->no_results();
             }
+
+            // Write transformed file into correct location
+            $data['filesystem']->writeStream($destination_path, fopen($new['path'], 'r+'));
+            $data['filesystem']->ensureCorrectAccessMode($destination_path);
+
+            // Get image properties before we destroy local file
+            $props = ee()->image_lib->get_image_properties($new['path'], true);
+
+            // Clean up temporary files
+            fclose($new['file']);
+            fclose($source['file']);
         }
 
-        if (!$tagdata) {
+        $fileNameOnModel = $data['model_object']->file_name;
+        $data['model_object']->file_name = $new_image;
+        $destination_url = $data['model_object']->getAbsoluteManipulationURL($function);
+        $data['model_object']->file_name = $fileNameOnModel;
+
+        if (!$props) {
+            $tmp = $data['filesystem']->copyToTempFile($destination_path);
+            $props = ee()->image_lib->get_image_properties($tmp['path'], true);
+            fclose($tmp['file']);
+        }
+
+        if ($tagdata === null) {
+            // called when chaining modifiers
+            $vars = array_merge($data, [
+                'url' => $destination_url,
+                'source_image' => $destination_path,
+                'width' => $props['width'],
+                'height' => $props['height']
+            ]);
+
+            return $vars;
+        } elseif ($tagdata === false) {
+            // single tag or call from resize_crop
             if (isset($params['wrap'])) {
-                return $this->_wrap_it($data, $params['wrap'], $new_image_url);
+                return $this->_wrap_it($data, $params['wrap'], $destination_url);
             }
 
-            return ($return_as_path ? $new_image_path : $new_image_url);
+            return ($return_as_path ? $destination_path : $destination_url);
         } else {
-            $props = ee()->image_lib->get_image_properties($new_image_path, true);
+            // tag pair
             $vars = [
-                'url' => $new_image_url,
+                'url' => $destination_url,
                 'width' => $props['width'],
                 'height' => $props['height']
             ];
@@ -689,7 +791,11 @@ JSC;
      */
     public function replace_replace($data, $params = array(), $tagdata = false)
     {
-        return parent::replace_replace($data['url'], $params, $tagdata);
+        $url = parent::replace_replace($data['url'], $params, $tagdata);
+        if (isset($params['wrap'])) {
+            return $this->_wrap_it($data, $params['wrap'], $url);
+        }
+        return $url;
     }
 
     /**
@@ -714,7 +820,7 @@ JSC;
      * Here, the modifier is the short name of the image manipulation,
      * e.g. "small" in {about_image:small}
      *
-     * @access	public
+     * @access  public
      */
     public function replace_tag_catchall($data = [], $params = array(), $tagdata = false, $modifier = '')
     {
@@ -735,6 +841,17 @@ JSC;
                 $full_path = $data[$key];
             }
 
+            if (is_null($tagdata)) {
+                // null means we're chaning modifier to pre-defined manipulation
+                // need to set some data and return array instead of string
+                if (is_array($data) && array_key_exists('path:' . $modifier, $data)) {
+                    $data['fs_filename'] = $modifier . '_' . ($data['fs_filename'] ?? $data['model_object']->file_name);
+                    $data['source_image'] = $data['path:' . $modifier];
+                    $data['url'] = $full_path;
+                }
+                return $data;
+            }
+
             if (empty($data)) {
                 return $tagdata;
             }
@@ -750,7 +867,7 @@ JSC;
     /**
      * Wrap it helper function
      *
-     * @access	private
+     * @access  private
      */
     public function _wrap_it($data, $type, $full_path)
     {
@@ -774,7 +891,8 @@ JSC;
     /**
      * Display settings screen
      *
-     * @access	public
+     * @return array
+     * @access  public
      */
     public function display_settings($data)
     {
@@ -794,10 +912,10 @@ JSC;
 
         $directory_choices += ee('Model')->get('UploadDestination')
             ->fields('id', 'name')
-            ->filter('site_id', ee()->config->item('site_id'))
+            ->filter('site_id', 'IN', [0, ee()->config->item('site_id')])
             ->filter('module_id', 0)
             ->order('name', 'asc')
-            ->all()
+            ->all(true)
             ->getDictionary('id', 'name');
 
         $settings = array(
@@ -902,9 +1020,9 @@ JSC;
         if (empty($directories)) {
             $directories = ee('Model')->get('UploadDestination')
                 ->fields('id', 'name')
-                ->filter('site_id', ee()->config->item('site_id'))
+                ->filter('site_id', 'IN', [0, ee()->config->item('site_id')])
                 ->filter('module_id', 0)
-                ->all()
+                ->all(true)
                 ->getDictionary('id', 'name');
         }
 
@@ -925,11 +1043,11 @@ JSC;
      * Help simplify the form building and enforces a strict layout. If
      * you think this table needs to look different, go bug James.
      *
-     * @param	left cell content
-     * @param	right cell content
-     * @param	vertical alignment of left column
+     * @param string  left cell content
+     * @param string  right cell content
+     * @param string  vertical alignment of left column
      *
-     * @return	void - adds a row to the EE table class
+     * @return  void - adds a row to the EE table class
      */
     protected function _row($cell1, $cell2 = '', $valign = 'center')
     {
@@ -966,6 +1084,17 @@ JSC;
             'field_fmt' => 'none'
         );
 
+        if (empty($data)) {
+            // for Pro vars, go directly into POST
+            $data = array(
+                'field_content_type' => ee('Request')->post('field_content_type', 'all'),
+                'allowed_directories' => ee('Request')->post('allowed_directories', ''),
+                'show_existing' => ee('Request')->post('show_existing', ''),
+                'num_existing' => ee('Request')->post('num_existing', 0),
+                'field_fmt' => ee('Request')->post('field_fmt', 'none')
+            );
+        }
+
         $all = array_merge($defaults, $data);
 
         return array_intersect_key($all, $defaults);
@@ -974,7 +1103,7 @@ JSC;
     /**
      * Form Validation callback
      *
-     * @return	boolean	Whether or not to pass validation
+     * @return  boolean Whether or not to pass validation
      */
     public function _validate_file_settings($key, $value, $params, $rule)
     {
@@ -1016,9 +1145,57 @@ JSC;
             return '';
         }
         $field_data = $this->pre_process($data);
+        if (!isset($field_data['title'])) {
+            return '';
+        }
         $out = '<a href="' . $this->replace_tag($field_data) . '" target="_blank">' . $field_data['title'] . '</a>';
 
         return $out;
+    }
+
+    /**
+     * Some modifiers that are set on the field, require array of data on input,
+     * while the modifiers in ModifiableTrait require string
+     * The modifiers always return string, so this created problems when chaining modifiers
+     * By adding this param we ask the code to return array (not string) from previous modifier when chaining
+     *
+     * @var array
+     */
+    public function getChainableModifiersThatRequireArray($data = [])
+    {
+
+        $modifiers = ['resize', 'crop', 'rotate', 'webp', 'avif', 'resize_crop', 'length', 'raw_content', 'attr_safe', 'limit', 'form_prep', 'rot13', 'encrypt', 'url_slug', 'censor', 'json', 'replace', 'url_encode', 'url_decode'];
+        return $modifiers;
+    }
+
+    /**
+     * Prepare data for Pro Search
+     *
+     * @param array $data Field value
+     * @return string File name and title
+     */
+    public function third_party_search_index($data)
+    {
+        if (!is_string($data)) {
+            return '';
+        }
+        if (preg_match('/^{file\:(\d+)\:url}/', $data, $matches)) {
+            // If the file field is in the "{file:XX:url}" format
+            $file = ee('Model')->get('File', $matches[1])->first(true);
+            if (!is_null($file)) {
+                if ($file->file_name != $file->title) {
+                    return $file->file_name . ' ' . $file->title;
+                }
+                return $file->file_name;
+            } else {
+                return '';
+            }
+        } elseif (preg_match('/^{filedir_(\d+)}/', $data, $matches)) {
+            // If the file field is in the "{filedir_n}image.jpg" format
+            $file_name = str_replace($matches[0], '', $data);
+            return $file_name;
+        }
+        return $data;
     }
 }
 

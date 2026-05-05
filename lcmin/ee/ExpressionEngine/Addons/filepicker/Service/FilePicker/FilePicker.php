@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -50,10 +50,12 @@ class FilePicker
      */
     public function getUrl()
     {
-        $qs = array('directories' => $this->directories);
+        $qs = array('requested_directory' => $this->directories);
 
         if (is_numeric($this->directories)) {
-            $qs['directory'] = $this->directories;
+            $qs['field_upload_locations'] = $this->directories;
+        } else {
+            $qs['field_upload_locations'] = 'all';
         }
 
         return $this->url->make(static::CONTROLLER, $qs);

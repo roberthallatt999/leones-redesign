@@ -3,7 +3,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license
  */
 
@@ -11,6 +11,7 @@ namespace ExpressionEngine\Model\Role;
 
 use ExpressionEngine\Service\Model\Model;
 use ExpressionEngine\Service\Model\Collection;
+use ExpressionEngine\Service\Member\Member;
 
 /**
  * Role Model
@@ -139,8 +140,46 @@ class Role extends Model
     protected $name;
     protected $short_name;
     protected $description;
+    protected $highlight;
     protected $total_members;
     protected $is_locked;
+
+    /**
+     * Getter for highlight property
+     * Will ensure default colors for built-in roles
+     *
+     * @return string
+     */
+    public function get__highlight()
+    {
+        $highlight = $this->getRawProperty('highlight');
+        if (empty($highlight)) {
+            switch ($this->role_id) {
+                case Member::SUPERADMIN:
+                    $highlight = '00C571'; //--ee-brand-success
+                    break;
+                case Member::BANNED:
+                    $highlight = 'FA5252'; //--ee-brand-danger
+                    break;
+                case Member::GUESTS:
+                    $highlight = '8F90B0'; //--ee-text-secondary
+                    break;
+                case Member::PENDING:
+                    $highlight = 'FFB40B'; //--ee-brand-warning
+                    break;
+                case Member::MEMBERS:
+                default:
+                    $highlight = '5D63F1'; //--ee-brand-primary
+                    break;
+            }
+        }
+        return $highlight;
+    }
+
+    public function set__highlight($highlight)
+    {
+        $this->setRawProperty('highlight', ltrim((string) $highlight, '#'));
+    }
 
     /**
      * Get all members that are assigned to this role (as primary or extra one)
@@ -202,26 +241,33 @@ class Role extends Model
      */
     public function getAllMembersData($field = 'member_id')
     {
-        $query = ee('db')
-            ->select("members." . $field)
-            ->distinct()
-            ->from('members AS members')
-            ->join('members_roles', 'members_roles.member_id=members.member_id', 'left')
-            ->join('members_role_groups', 'members_role_groups.member_id=members.member_id', 'left')
-            ->where('members.role_id', $this->getId())
-            ->or_where('members_roles.role_id', $this->getId());
-        foreach ($this->RoleGroups as $role_group) {
-            $query->or_where('members_role_groups.group_id', $role_group->getId());
+        $cache_key = "Roles/{$this->getId()}/AllMembersData/{$field}";
+        $data = $this->getFromCache($cache_key);
+
+        if ($data === false) {
+            $query = ee('db')
+                ->select("members." . $field)
+                ->distinct()
+                ->from('members AS members')
+                ->join('members_roles', 'members_roles.member_id=members.member_id', 'left')
+                ->join('members_role_groups', 'members_role_groups.member_id=members.member_id', 'left')
+                ->where('members.role_id', $this->getId())
+                ->or_where('members_roles.role_id', $this->getId());
+            foreach ($this->RoleGroups as $role_group) {
+                $query->or_where('members_role_groups.group_id', $role_group->getId());
+            }
+
+            $result = $query->get();
+            $data = [];
+            if ($result->num_rows() > 0) {
+                $data = $result->result_array();
+                array_walk($data, function (&$row, $key, $field) {
+                    $row = $row[$field];
+                }, $field);
+            }
+            $this->saveToCache($cache_key, $data);
         }
 
-        $result = $query->get();
-        $data = [];
-        if ($result->num_rows() > 0) {
-            $data = $result->result_array();
-            array_walk($data, function (&$row, $key, $field) {
-                $row = $row[$field];
-            }, $field);
-        }
         return $data;
     }
 

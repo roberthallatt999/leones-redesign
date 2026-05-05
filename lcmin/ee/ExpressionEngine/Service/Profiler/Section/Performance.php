@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -53,7 +53,7 @@ class Performance extends ProfilerSection
 
         $data = array();
         if (function_exists('memory_get_usage') && ($usage = memory_get_usage()) != '') {
-            $data[lang('profiler_memory')] = $this->fmt_factory->make('Number', $usage)->bytes() . ' of ' . ini_get('memory_limit');
+            $data[lang('profiler_memory')] = $this->fmt_factory->make('Number', $usage)->bytes() . ' ' . lang('of') . ' ' . ini_get('memory_limit');
         } else {
             $data[lang('profiler_memory')] = lang('profiler_no_memory_usage');
         }

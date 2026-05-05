@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -16,11 +16,13 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
     // bring in the :modifier methods
     use ExpressionEngine\Service\Template\Variables\ModifiableTrait;
 
+    public $conditional_vars = array();
+
     /**
      * There are always simple variables. Let me tell you ...
      *
-     * @param array		A list of "disabled" features
-     * @return Boolean	Is disabled?
+     * @param array     A list of "disabled" features
+     * @return Boolean  Is disabled?
      */
     public function disabled(array $disabled, EE_Channel_preparser $pre)
     {
@@ -30,26 +32,26 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
     /**
      * Parse out $search_link for the {member_search_path} variable
      *
-     * @param String	The tagdata to be parsed
-     * @param Object	The preparser object.
-     * @return String	The $search_link path
+     * @param String    The tagdata to be parsed
+     * @param Object    The preparser object.
+     * @return String   The $search_link path
      */
     public function pre_process($tagdata, EE_Channel_preparser $pre)
     {
         $result_path = (preg_match("/" . LD . $pre->prefix() . "member_search_path\s*=(.*?)" . RD . "/s", $tagdata, $match)) ? $match[1] : 'search/results';
         $result_path = str_replace(array('"',"'"), "", $result_path);
 
-        return (strpos($tagdata, 'member_search_path') !== false ) ? ee()->functions->fetch_site_index(0, 0) . QUERY_MARKER . 'ACT=' . ee()->functions->fetch_action_id('Search', 'do_search') . '&amp;result_path=' . $result_path . '&amp;mbr=' : '';
+        return (strpos($tagdata, 'member_search_path') !== false) ? ee()->functions->fetch_site_index(0, 0) . QUERY_MARKER . 'ACT=' . ee()->functions->fetch_action_id('Search', 'do_search') . '&amp;result_path=' . $result_path . '&amp;mbr=' : '';
     }
 
     /**
      * Replace all variables.
      *
-     * @param String	The tagdata to be parsed
-     * @param Object	The channel parser object
-     * @param Mixed		The results from the preparse method
+     * @param String    The tagdata to be parsed
+     * @param Object    The channel parser object
+     * @param Mixed     The results from the preparse method
      *
-     * @return String	The processed tagdata
+     * @return String   The processed tagdata
      */
     public function replace($tagdata, EE_Channel_data_parser $obj, $search_link)
     {
@@ -59,7 +61,11 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
         $data = $obj->row();
         $prefix = $obj->prefix();
 
-        $overrides = ee()->config->get_cached_site_prefs($data['entry_site_id']);
+		// If parsing the member tags-profile in particular- the entry_site_id is null
+		// Getting the cached prefs of null can end up with the wrong site id and then the wrong config values
+		$data['entry_site_id'] = (empty($data['entry_site_id'])) ? ee()->config->item('site_id') : $data['entry_site_id'];
+
+        $overrides = ee()->config->get_cached_site_prefs($data['entry_site_id']);	
         $data['channel_url'] = parse_config_variables($data['channel_url'], $overrides);
         $data['comment_url'] = parse_config_variables($data['comment_url'], $overrides);
 
@@ -76,16 +82,14 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
         // @todo remove
         $key = $tag;
         $val = $tag_options;
-        if (strpos($key, 'disable') !== false && strpos($key, 'frontedit') !== false ) {
+        if (strpos($key, 'disable') !== false && strpos($key, 'frontedit') !== false) {
             $key = trim(str_replace(['disable="frontedit"', "disable='frontedit'"], '', $key));
             $tagdata = str_replace($tag, $key, $tagdata);
         }
 
         if ($key == $prefix . 'title:frontedit') {
-            if (IS_PRO) {
-                $frontEditLink = ee('pro:FrontEdit')->entryFieldEditLink($data['site_id'], $data['channel_id'], $data['entry_id'], 'title');
-                $tagdata = str_replace(LD . $key . RD, $frontEditLink, $tagdata);
-            }
+            $frontEditLink = ee('pro:FrontEdit')->entryFieldEditLink($data['site_id'], $data['channel_id'], $data['entry_id'], 'title');
+            $tagdata = str_replace(LD . $key . RD, $frontEditLink, $tagdata);
         }
         //  parse {title}
         if ($key == $prefix . 'title') {
@@ -145,14 +149,14 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
     /**
      * Handle variables that end in _path or contain "permalink".
      *
-     * @param Array		The row data
-     * @param String	The template text
-     * @param String	The var_single key (tag name)
-     * @param String	The var_single value
-     * @param String	The current parsing prefix
-     * @param String	The search link for search paths
+     * @param Array     The row data
+     * @param String    The template text
+     * @param String    The var_single key (tag name)
+     * @param String    The var_single value
+     * @param String    The current parsing prefix
+     * @param String    The search link for search paths
      *
-     * @return String	The processed tagdata
+     * @return String   The processed tagdata
      */
     protected function _paths($data, $tagdata, $key, $val, $prefix, $search_link)
     {
@@ -262,13 +266,13 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
     /**
      * Handle variables that end in _url.
      *
-     * @param Array		The row data
-     * @param String	The template text
-     * @param String	The var_single key (tag name)
-     * @param String	The var_single value
-     * @param String	The current parsing prefix
+     * @param Array     The row data
+     * @param String    The template text
+     * @param String    The var_single key (tag name)
+     * @param String    The var_single value
+     * @param String    The current parsing prefix
      *
-     * @return String	The processed tagdata
+     * @return String   The processed tagdata
      */
     protected function _urls($data, $tagdata, $key, $val, $prefix, $mfields)
     {
@@ -345,8 +349,8 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
             }
 
             $tagdata = str_replace(LD . $key . RD, $avatar_url, $tagdata);
-            $tagdata = str_replace(LD . $prefix . 'avatar_image_width' . RD, $data['avatar_width'], $tagdata);
-            $tagdata = str_replace(LD . $prefix . 'avatar_image_height' . RD, $data['avatar_height'], $tagdata);
+            $tagdata = str_replace(LD . $prefix . 'avatar_image_width' . RD, (string) $data['avatar_width'], $tagdata);
+            $tagdata = str_replace(LD . $prefix . 'avatar_image_height' . RD, (string) $data['avatar_height'], $tagdata);
         } elseif ($key == $prefix . "photo_url") {
             if (ee()->session->userdata('display_photos') == 'n' or $data['photo_filename'] == '' or ee()->session->userdata('display_photos') == 'n') {
                 $tagdata = str_replace(LD . $key . RD, '', $tagdata);
@@ -371,13 +375,13 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
      * presets. We fallback on urls and paths because third parties can add
      * anything they want to the entry data. (@see bug #19337)
      *
-     * @param Array		The row data
-     * @param String	The template text
-     * @param String	The var_single key (tag name)
-     * @param String	The var_single value
-     * @param String	The current parsing prefix
+     * @param Array     The row data
+     * @param String    The template text
+     * @param String    The var_single key (tag name)
+     * @param String    The var_single value
+     * @param String    The current parsing prefix
      *
-     * @return String	The processed tagdata
+     * @return String   The processed tagdata
      */
     protected function _basic($data, $tagdata, $key, $val, $prefix)
     {
@@ -390,22 +394,49 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
                 $tagdata = str_replace(LD . $val . RD, $data[$raw_val], $tagdata);
             } else {
                 $field = ee('Variables/Parser')->parseVariableProperties($key, $prefix);
-                $method = 'replace_' . $field['modifier'];
-
-                if (! method_exists($this, $method)) {
-                    return $tagdata;
-                }
 
                 // some variables like {channel_short_name} don't directly map to the schema, so we can define
                 // methods here like getChannelShortName() to provide the correct content
                 $mismatch_getter = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', $field['field_name'])));
 
-                if (array_key_exists($field['field_name'], $data)) {
-                    $content = $this->$method($data[$field['field_name']], $field['params']);
-                } elseif (method_exists($this, $mismatch_getter)) {
-                    $content = $this->$method($this->$mismatch_getter($data), $field['params']);
+                if (isset($field['all_modifiers']) && !empty($field['all_modifiers'])) {
+                    foreach ($field['all_modifiers'] as $modifier => $params) {
+                        $method = 'replace_' . $modifier;
+
+                        if (! method_exists($this, $method) && ! ee('Variables/Modifiers')->has($modifier)) {
+                            continue;
+                        }
+
+                        if (isset($content)) {
+                            // subsequental runs
+                            $content = $this->$method($content, $params);
+                        } elseif (array_key_exists($field['field_name'], $data)) {
+                            // first run
+                            $content = $this->$method($data[$field['field_name']], $params);
+                        } elseif (method_exists($this, $mismatch_getter)) {
+                            // first run on variable with mismatched name
+                            $content = $this->$method($this->$mismatch_getter($data), $params);
+                        }
+                    }
                 } else {
-                    // variable must not exist
+                    $method = 'replace_' . $field['modifier'];
+
+                    if (! method_exists($this, $method) && ! ee('Variables/Modifiers')->has($field['modifier'])) {
+                        return $tagdata;
+                    }
+
+                    if (array_key_exists($field['field_name'], $data)) {
+                        $content = $this->$method($data[$field['field_name']], $field['params']);
+                    } elseif (method_exists($this, $mismatch_getter)) {
+                        $content = $this->$method($this->$mismatch_getter($data), $field['params']);
+                    } else {
+                        // variable must not exist
+                        return $tagdata;
+                    }
+                }
+
+                // no matches, return unparsed
+                if (!isset($content)) {
                     return $tagdata;
                 }
 
@@ -416,6 +447,11 @@ class EE_Channel_simple_variable_parser implements EE_Channel_parser_component
         }
 
         return $tagdata;
+    }
+
+    private function _apply_modifiers($data, $tagdata, $modifier, $field_name, $params)
+    {
+
     }
 
     /**

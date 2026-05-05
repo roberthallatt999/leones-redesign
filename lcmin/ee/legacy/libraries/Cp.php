@@ -5,7 +5,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -66,7 +66,6 @@ class Cp
 
         // Javascript Path Constants
         define('PATH_JQUERY', PATH_THEMES_GLOBAL_ASSET . 'javascript/' . PATH_JS . '/jquery/');
-        define('PATH_JAVASCRIPT', PATH_THEMES_GLOBAL_ASSET . 'javascript/' . PATH_JS . '/');
         define('JS_FOLDER', PATH_JS);
 
         ee()->load->library('javascript', array('autoload' => false));
@@ -109,7 +108,7 @@ class Cp
             'cp_current_site_label' => ee()->config->item('site_name'),
             'cp_screen_name' => ee('Format')->make('Text', $member->screen_name)->attributeSafe(),
             'cp_member_primary_role_title' => $member->PrimaryRole ? $member->PrimaryRole->name : '',
-            'cp_avatar_path' => ($member->avatar_filename) ? ee()->config->slash_item('avatar_url') . $member->avatar_filename : (URL_THEMES . 'asset/img/default-avatar.png'),
+            'cp_avatar_path' => ($member->avatar_filename) ? rtrim(ee()->config->slash_item('avatar_url'), '/') . '/' . ltrim($member->avatar_filename, '/') : (URL_THEMES . 'asset/img/default-avatar.png'),
             'cp_avatar_width' => ($member->avatar_filename) ? $member->avatar_width : '',
             'cp_avatar_height' => ($member->avatar_filename) ? $member->avatar_height : '',
             'cp_quicklinks' => $this->_get_quicklinks($member->getQuicklinks()),
@@ -151,6 +150,8 @@ class Cp
             'searching' => lang('searching'),
             'dark_theme' => lang('dark_theme'),
             'light_theme' => lang('light_theme'),
+            'slate_theme' => lang('slate_theme'),
+            'snow_theme' => lang('snow_theme'),
             'many_jump_results' => lang('many_jump_results'),
             'password_icon' => lang('password_icon')
         );
@@ -174,12 +175,23 @@ class Cp
             'hasRememberMe' => (bool) ee()->remember->exists(),
             'cp.updateCheckURL' => ee('CP/URL', 'settings/general/version-check')->compile(),
             'cp.accessResponseURL' => ee('CP/URL', 'license/handleAccessResponse')->compile(),
+            'cp.exampleTemplateUrls' => [
+                'default' => ee('CP/URL', 'design/copy/fields/{id}')->compile(),
+                'fields' => ee('CP/URL', 'design/copy/fields/{id}')->compile(),
+                'field_groups' => ee('CP/URL', 'design/copy/fieldgroups/{id}')->compile(),
+                'channels' => ee('CP/URL', 'design/copy/channels/{id}')->compile(),
+                'fluid_field' => ee('CP/URL', 'design/copy/fluid/{fluid_id}/field/{id}')->compile(),
+                'fluid_fieldgroup' => ee('CP/URL', 'design/copy/fluid/{fluid_id}/group/{id}')->compile(),
+            ],
             'cp.lastUpdateCheck' => $lastUpdateCheck,
             'site_id' => ee()->config->item('site_id'),
             'site_name' => ee()->config->item('site_name'),
             'site_url' => ee()->config->item('site_url'),
             'cp.collapseNavURL' => ee('CP/URL', 'homepage/toggle-sidebar-nav')->compile(),
             'cp.dismissBannerURL' => ee('CP/URL', 'homepage/dismiss-banner')->compile(),
+            'cp.acknowledgeLicenseNoticeURL' => ee('CP/URL', 'homepage/acknowledge-license-notice')->compile(),
+            'cp.collapseSecondaryNavURL' => ee('CP/URL', 'homepage/toggle-secondary-sidebar-nav')->compile(),
+            'fileManagerCompatibilityMode' => bool_config_item('file_manager_compatibility_mode'),
         ));
 
         if (ee()->session->flashdata('update:completed')) {
@@ -249,6 +261,7 @@ class Cp
             'cp.appVer' => APP_VER,
             'cp.licenseKey' => ee()->config->item('site_license_key'),
             'cp.lvUrl' => 'https://updates.expressionengine.com/check',
+            'cp.usesPro' => ee('pro:Access')->requiresValidLicense(),
             'cp.installedAddons' => json_encode($installed_modules_js)
         ));
 
@@ -296,21 +309,23 @@ class Cp
         }
 
         ee()->view->pro_license_status = '';
-        if (IS_PRO) {
-            $pro_status = (string) ee('Addon')->get('pro')->checkCachedLicenseResponse();
-            switch ($pro_status) {
-                case 'update_available':
-                    ee()->view->pro_license_status = 'valid';
-                    break;
 
-                case '':
-                    ee()->view->pro_license_status = 'na';
-                    break;
+        $pro_status = !ee('pro:Access')->requiresValidLicense() ? 'skip' : (string) ee('Addon')->get('pro')->checkCachedLicenseResponse();
+        switch ($pro_status) {
+            case 'update_available':
+                ee()->view->pro_license_status = 'valid';
 
-                default:
-                    ee()->view->pro_license_status = $pro_status;
-                    break;
-            }
+                break;
+
+            case '':
+                ee()->view->pro_license_status = 'na';
+
+                break;
+
+            default:
+                ee()->view->pro_license_status = $pro_status;
+
+                break;
         }
 
         $this->_notices();
@@ -332,6 +347,7 @@ class Cp
 
         if (! empty($sidebar)) {
             ee()->view->left_nav = $sidebar;
+            ee()->view->left_nav_collapsed = ee('CP/Sidebar')->collapsedState;
         }
 
         return ee()->view->render($view, $data, $return);
@@ -648,7 +664,8 @@ class Cp
                 'file' => array(),
                 'package' => array(),
                 'fp_module' => array(),
-                'pro_file' => array()
+                'pro_file' => array(),
+                'template' => array()
             );
 
             $this->requests[] = $str . AMP . 'v=' . max($mtimes);
@@ -680,18 +697,26 @@ class Cp
         switch ($type) {
             case 'ui':
                 $file = PATH_THEMES_GLOBAL_ASSET . 'javascript/' . PATH_JS . '/jquery/ui/jquery.ui.' . $name . '.js';
+
                 break;
 
             case 'plugin':
                 $file = PATH_THEMES_GLOBAL_ASSET . 'javascript/' . PATH_JS . '/jquery/plugins/' . $name . '.js';
+
                 break;
 
             case 'file':
+                $file = PATH_JAVASCRIPT_BUILD . $name . '.js';
+                if (file_exists($file)) {
+                    return filemtime($file);
+                }
                 $file = PATH_THEMES_GLOBAL_ASSET . 'javascript/' . PATH_JS . '/' . $name . '.js';
+
                 break;
 
             case 'pro_file':
                 $file = PATH_PRO_THEMES . 'js/' . $name . '.js';
+
                 break;
 
             case 'package':
@@ -702,11 +727,24 @@ class Cp
                 }
 
                 $file = PATH_THIRD . $package . '/javascript/' . $name . '.js';
+
                 break;
 
             case 'fp_module':
                 $file = PATH_ADDONS . $name . '/javascript/' . $name . '.js';
+
                 break;
+
+            case 'template':
+                // edit date from database should be sufficient;
+                // in some cases the file might have more recent edits, but skipping the check here
+                // to reduce the load
+                $templateModel = ee('Model')->get('Template', $name)->with('TemplateGroup')->filter('template_type', 'js')->first(true);
+                if (! empty($templateModel)) {
+                    return $templateModel->edit_date;
+                }
+
+                return 0;
 
             default:
                 return 0;
@@ -855,7 +893,7 @@ class Cp
     public function load_package_js($file)
     {
         $current_top_path = ee()->load->first_package_path();
-        $package = trim(str_replace(array(PATH_THIRD, 'views'), '', $current_top_path), '/');
+        $package = trim(str_replace(array(PATH_THIRD, PATH_ADDONS, 'views'), '', $current_top_path), '/');
 
         $this->add_js_script(array('package' => $package . ':' . $file));
     }
@@ -871,7 +909,7 @@ class Cp
     public function load_package_css($file)
     {
         $current_top_path = ee()->load->first_package_path();
-        $package = trim(str_replace(array(PATH_THIRD, 'views'), '', $current_top_path), '/');
+        $package = trim(str_replace(array(PATH_THIRD, PATH_ADDONS, 'views'), '', $current_top_path), '/');
 
         if (REQ == 'CP') {
             $url = BASE . AMP . 'C=css' . AMP . 'M=third_party' . AMP . 'package=' . $package . AMP . 'file=' . $file;
@@ -1014,59 +1052,7 @@ class Cp
             return $invalid_fields;
         }
 
-        $channel_vars = array(
-            'author', 'author_id', 'avatar_image_height',
-            'avatar_image_width', 'avatar_url', 'comment_auto_path',
-            'comment_entry_id_auto_path', 'comment_total', 'comment_url_title_path', 'count',
-            'edit_date', 'email', 'entry_date', 'entry_id',
-            'entry_id_path', 'expiration_date', 'forum_topic_id',
-            'gmt_edit_date', 'gmt_entry_date',
-            'ip_address', 'member_search_path', 'month',
-            'permalink', 'photo_image_height',
-            'photo_image_width', 'photo_url', 'profile_path',
-            'recent_comment_date', 'relative_date', 'relative_url',
-            'screen_name', 'signature', 'signature_image_height',
-            'signature_image_url', 'signature_image_width', 'status',
-            'switch', 'title', 'title_permalink', 'total_results',
-            'trimmed_url', 'url_as_email_as_link', 'url_or_email',
-            'url_or_email_as_author', 'url_title', 'url_title_path',
-            'username', 'channel', 'channel_id', 'year', 'content'
-        );
-
-        $global_vars = array(
-            'app_version', 'captcha', 'charset', 'current_time',
-            'debug_mode', 'elapsed_time', 'email', 'embed', 'encode',
-            'group_description', 'group_id', 'gzip_mode', 'hits',
-            'homepage', 'ip_address', 'ip_hostname', 'lang',
-            'member_group', 'member_id', 'member_profile_link', 'path',
-            'private_messages', 'screen_name', 'site_index', 'site_name',
-            'site_url', 'stylesheet', 'total_comments', 'total_entries',
-            'total_forum_posts', 'total_forum_topics', 'total_queries',
-            'username', 'webmaster_email', 'version'
-        );
-
-        $orderby_vars = array(
-            'comment_total', 'date', 'edit_date', 'expiration_date',
-            'most_recent_comment', 'random', 'screen_name', 'title',
-            'url_title', 'username', 'view_count_four', 'view_count_one',
-            'view_count_three', 'view_count_two'
-        );
-
-        $prefixes = array(
-            'parents', 'siblings'
-        );
-
-        $control_structures = array(
-            'if', 'else', 'elseif'
-        );
-
-        return array_unique(array_merge(
-            $channel_vars,
-            $global_vars,
-            $orderby_vars,
-            $prefixes,
-            $control_structures
-        ));
+        return $invalid_fields = array_unique(ee()->config->loadFile('reserved_field_names'));
     }
 
     /**

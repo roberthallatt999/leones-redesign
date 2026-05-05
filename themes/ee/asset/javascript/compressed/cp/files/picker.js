@@ -3,7 +3,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -15,6 +15,7 @@
 
 (function ($) {
 	var bind_modal = function(url, options) {
+		window.globalDropzone = options.input_value;
 		var modal = $("." + options.rel),
 			callback = function(data) {
 				var picker = {
@@ -35,6 +36,10 @@
 		$.get(url, function(data) {
 			modal.find('div.box').html(data);
 
+			// function that is responsible for the correct working of 
+			// the search inside filter-search-bar__item 
+			$.fuzzyFilter()
+
 			if (typeof options.selected != 'undefined') {
 				var selected = modal.find('tbody *[data-id="' + options.selected + '"]');
 				selected.addClass('selected');
@@ -45,12 +50,16 @@
 					selected.parents('tr').addClass('selected');
 				}
 			}
+
+			if ($('div[data-file-field-react]').length) {
+				FileField.renderFields();
+			}
 		});
 
 		$('.modal-file').off('click', '.filepicker-item, tbody > tr:not(.tbl-action)');
 		$('.modal-file').on('click', '.filepicker-item, tbody > tr:not(.tbl-action)', function(e) {
 
-			if ($(e.target).is('a[rel=external]')) {
+			if ($(e.target).is('a[rel=external]') || $(this).is('[data-filter-url]')) {
 				return true;
 			}
 
@@ -83,6 +92,8 @@
 					dataType: 'json'
 				});
 			}
+
+			return false;
 		});
 
 		$('.modal-file').on('click', '.filters a:not([href=""]), .filter-bar a:not([href=""]), .paginate a:not([href=""], .pagination a:not([href=""]), thead a:not([href=""])', function(e) {
@@ -100,7 +111,7 @@
 				payload_elements = $('.filter-bar input', this);
 
 			// Only do this if we're on the file listing screen
-			if (payload_elements.size() == 0) {
+			if (payload_elements.length == 0) {
 				return;
 			}
 
@@ -140,7 +151,7 @@
 				});
 			}
 
-			frame.load(function (e) {
+			frame.on('load', function (e) {
 				
 				$(modal).off('modal:close', cancelOnClose);
 
@@ -201,6 +212,14 @@
 				options.rel = $(this).attr('rel');
 				options.source = $(this);
 
+				var iframeParentList = $('div[class^="popup-modal-ee-"]', window.parent.document);
+				if (iframeParentList.length) {
+					$(iframeParentList[0]).css({
+						'height': '60vh',
+						'width': '60vw',
+					})
+				}
+
 				if (options.input_value) {
 					options.input_value = $(options.input_value);
 				} else {
@@ -222,6 +241,7 @@
 				if ( ! ('selected' in options)) {
 					options.selected = $(this).data('selected');
 				}
+
 				if (options.input_value.prop("selectionStart")) {
 					localStorage.setItem('caretPosition', options.input_value.prop("selectionStart"));
 				}

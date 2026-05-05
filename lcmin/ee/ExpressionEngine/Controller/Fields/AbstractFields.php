@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -18,13 +18,19 @@ use CP_Controller;
 abstract class AbstractFields extends CP_Controller
 {
     protected $validationResult;
-    
+
+    protected $hasUngroupedFields;
+
     /**
      * Constructor
      */
     public function __construct()
     {
         parent::__construct();
+
+        if (! ee('Permission')->has('can_admin_channels')) {
+            show_error(lang('unauthorized_access'), 403);
+        }
 
         if (! ee('Permission')->hasAny(
             'can_create_channel_fields',
@@ -68,9 +74,9 @@ abstract class AbstractFields extends CP_Controller
 
         $sidebar = ee('CP/Sidebar')->makeNew();
 
-        $all_fields = $sidebar->addItem(lang('all_fields'), ee('CP/URL')->make('fields'));
+        $all_fields = $sidebar->addItem(lang('all_fields'), ee('CP/URL')->make('fields'))->withIcon('pen-field');
 
-        if ($active) {
+        if (!is_null($active)) {
             $all_fields->isInactive();
         }
 
@@ -92,6 +98,22 @@ abstract class AbstractFields extends CP_Controller
             ->filter('site_id', 'IN', [ee()->config->item('site_id'), 0])
             ->order('group_name')
             ->all();
+
+        // if there are fields that are not in any group, show a separate link
+        $ungroupedQuery = ee('db')->query('SELECT COUNT(exp_channel_fields.field_id) AS missing FROM exp_channel_fields WHERE NOT EXISTS (SELECT field_id FROM exp_channel_field_groups_fields WHERE exp_channel_fields.field_id=exp_channel_field_groups_fields.field_id)');
+        if ($ungroupedQuery->row('missing') > 0) {
+            $this->hasUngroupedFields = true;
+            $item = $list->addItem(
+                lang('ungrouped'),
+                ee('CP/URL')->make('fields', ['group_id' => 0])
+            );
+            if ((string) ee('Request')->get('group_id') === '0') {
+                $item->isActive();
+            } else {
+                $item->isInactive();
+            }
+        }
+
 
         foreach ($field_groups as $group) {
             $group_name = ee('Format')->make('Text', $group->group_name)->convertToEntities();
@@ -125,6 +147,7 @@ abstract class AbstractFields extends CP_Controller
         }
 
         ee()->view->left_nav = $sidebar->render();
+        ee()->view->left_nav_collapsed = $sidebar->collapsedState;
     }
 
     protected function prepareFieldConditions()
@@ -133,6 +156,10 @@ abstract class AbstractFields extends CP_Controller
         $conditions = [];
         $set_index = 0;
         foreach (ee('Request')->post('condition_set') as $condition_set_id => $condition_set_data) {
+            $orig_condition_set_id = $condition_set_id;
+            if (defined('CLONING_MODE') && CLONING_MODE === true) {
+                $condition_set_id = 'new_set_' . $condition_set_id;
+            }
             if (!is_numeric($condition_set_id)) {
                 $fieldConditionSet = ee('Model')->make('FieldConditionSet');
             } else {
@@ -157,8 +184,11 @@ abstract class AbstractFields extends CP_Controller
 
             $rule_index = 0;
             $postedConditions = ee('Request')->post('condition');
-            if (!empty($postedConditions) && isset($postedConditions[$condition_set_id])) {
-                foreach ($postedConditions[$condition_set_id] as $condition_id => $condition_data) {
+            if (!empty($postedConditions) && isset($postedConditions[$orig_condition_set_id])) {
+                foreach ($postedConditions[$orig_condition_set_id] as $condition_id => $condition_data) {
+                    if (defined('CLONING_MODE') && CLONING_MODE === true) {
+                        $condition_id = 'new_row_' . $condition_id;
+                    }
                     if (!is_numeric($condition_id)) {
                         $fieldCondition = ee('Model')->make('FieldCondition');
                     } else {
@@ -176,7 +206,7 @@ abstract class AbstractFields extends CP_Controller
                         $errors = $fieldConditionValidation->getFailed();
                         foreach ($errors as $piece => $rules) {
                             foreach ($rules as $rule) {
-                                $errorName = 'condition[' . $condition_set_id . '][' . $condition_id . '][' . $piece . ']';
+                                $errorName = 'condition[' . $orig_condition_set_id . '][' . $condition_id . '][' . $piece . ']';
                                 $this->validationResult->addFailed($errorName, $rule);
                             }
                         }

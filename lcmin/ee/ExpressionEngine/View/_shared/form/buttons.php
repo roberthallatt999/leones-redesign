@@ -80,7 +80,7 @@
 		<?php if ($i == 0 && count($submits) > 1) : ?>
 		<button type="button" class="<?=$class?> dropdown-toggle js-dropdown-toggle saving-options" data-dropdown-pos="bottom-end">
             <span class="sr-only"><?=lang('save_btn')?></span>
-			<i class="fas fa-angle-down"></i>
+			<i class="fal fa-angle-down"></i>
 		</button>
 		<div class="dropdown">
 			<div class="dropdown__scroll">

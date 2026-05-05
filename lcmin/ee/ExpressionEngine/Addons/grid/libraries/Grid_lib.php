@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -22,6 +22,7 @@ class Grid_lib
     public $fluid_field_data_id = 0;
     public $in_modal_context = false;
     public $settings_form_field_name; //grid or file_grid
+    public $field_short_name;
     public $field_required = false;
 
     protected $_fieldtypes = [];
@@ -72,12 +73,17 @@ class Grid_lib
 
         $column_headings = array();
         $blank_column = array();
+        $i = 0;
         foreach ($columns as $column) {
-            $column_headings[] = array(
+            $column_headings[$i] = array(
                 'label' => $column['col_label'],
                 'desc' => $column['col_instructions'],
                 'required' => ($column['col_required'] == 'y')
             );
+
+            if (ee()->session->userdata('member_id') !== 0 && ee()->session->getMember()->PrimaryRole->RoleSettings->filter('site_id', ee()->config->item('site_id'))->first()->show_field_names == 'y' && !empty($this->field_short_name)) {
+                $column_headings[$i]['badge'] = ee('View')->make('publish/partials/name_badge_copy')->render(['name' => (empty($this->fluid_field_data_id) ? $this->field_short_name : 'content') . ':' . $column['col_name']]);
+            }
 
             $attrs = array(
                 'class' => $this->get_class_for_column($column),
@@ -93,6 +99,7 @@ class Grid_lib
                 'html' => $this->_publish_field_cell($column),
                 'attrs' => $attrs
             );
+            $i++;
         }
         $grid->setColumns($column_headings);
         $grid->setBlankRow($blank_column);
@@ -720,6 +727,9 @@ class Grid_lib
         foreach ($settings['grid']['cols'] as $col_field => $column) {
             // Attempt to get the column ID; if the field name contains 'new_',
             // it's a new field, otherwise extract column ID
+            if (defined('CLONING_MODE') && CLONING_MODE === true) {
+                $col_field = 'new_' . str_replace('col_id_', '', $col_field);
+            }
             $column['col_id'] = (strpos($col_field, 'new_') === false)
                 ? str_replace('col_id_', '', $col_field) : false;
 
