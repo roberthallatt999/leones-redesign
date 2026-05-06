@@ -14,13 +14,13 @@ use Solspace\Addons\FreeformNext\Utilities\ControlPanel\View;
 
 class DemoTemplatesController extends Controller
 {
-    const FLASH_VAR_KEY = 'codepack_prefix';
+    public const FLASH_VAR_KEY = 'codepack_prefix';
 
     /**
      * Show CodePack contents
      * Provide means to prefix the CodePack
      */
-    public function index()
+    public function index(): RedirectView|CpView
     {
         $codepack = $this->getCodepack();
 
@@ -103,7 +103,7 @@ class DemoTemplatesController extends Controller
      * @return View
      * @throws CodepackException
      */
-    private function install()
+    private function install(): RedirectView|CpView
     {
         $codepack = $this->getCodepack();
         $prefix   = ee()->input->post('prefix');
@@ -142,15 +142,13 @@ class DemoTemplatesController extends Controller
      * @return CodePack
      * @throws ManifestNotPresentException
      */
-    private function getCodepack()
+    private function getCodepack(): Codepack
     {
         return new Codepack(__DIR__ . '/../codepack');
     }
 
     /**
-     * @param Codepack $codepack
      * @param string   $prefix
-     *
      * @return array
      */
     private function getPostInstallTable(Codepack $codepack, $prefix)

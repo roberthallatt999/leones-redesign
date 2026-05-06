@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -53,15 +53,13 @@ class Consent extends Logs
             'form_url' => $this->base_url->compile()
         ];
 
-        if (IS_PRO && ee('pro:Access')->hasValidLicense() && ee('Permission')->canUsePro()) {
-            ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
-            $header['toolbar_items'] = [
-                'export' => [
-                    'href' => ee('CP/URL', 'logs/pro/consent/export')->addQueryStringVariables($this->params),
-                    'title' => lang('export_consent_log')
-                ]
-            ];
-        }
+        ee()->lang->load('pro');
+        $header['toolbar_items'] = [
+            'export' => [
+                'href' => ee('CP/URL', 'logs/pro/consent/export')->addQueryStringVariables($this->params),
+                'title' => lang('export_consent_log')
+            ]
+        ];
 
         ee()->view->header = $header;
 

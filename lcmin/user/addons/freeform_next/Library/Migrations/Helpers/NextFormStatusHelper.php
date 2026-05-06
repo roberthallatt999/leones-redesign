@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -39,7 +39,7 @@ use Symfony\Component\Config\Definition\Exception\Exception;
 
 class NextFormStatusHelper
 {
-    const STRICT_MODE = true;
+    public const STRICT_MODE = true;
 
     /** @var array */
     public $errors;
@@ -89,7 +89,7 @@ class NextFormStatusHelper
     /**
      * Sets the isDefault to TRUE for the first entry found if no isDefault is set
      */
-    private function updateDefaults()
+    private function updateDefaults(): void
     {
         $hasDefault = ee()
             ->db

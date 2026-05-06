@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -25,6 +25,15 @@ class Select extends Query
     protected $model_fields = array();
     protected $searched_fields = array();
     protected $additional_search = array();
+
+    /**
+     * List of reserved MySQL functions that can be used in query
+     *
+     * @var array
+     */
+    private $reservedMysqlFunctions = [
+        'FIELD'
+    ];
 
     /**
      * @var int $table_join_limit MySQL only allows 61 tables in a single
@@ -170,14 +179,15 @@ class Select extends Query
 
         foreach ($tables as $table => $table_fields) {
             $table_alias = "{$alias}_{$table}";
+            $isMainTable = $table === $main_table;
 
             if (! $will_join) {
-                $query->from("{$table} as {$table_alias}");
-
-                if ($table != $main_table) {
-                    $query->where("{$table_alias}.{$primary_key} = {$alias}_{$main_table}.{$primary_key}", null, false);
+                if ($isMainTable) {
+                    $query->from("{$table} as {$table_alias}");
+                } else {
+                    $query->join("{$table} as {$table_alias}", "{$table_alias}.{$primary_key} = {$alias}_{$main_table}.{$primary_key}", 'LEFT');
                 }
-            } elseif ($table != $main_table) {
+            } elseif (! $isMainTable) {
                 $queued_joins[] = array(
                     "{$table} as {$table_alias}",
                     "{$table_alias}.{$primary_key} = {$alias}_{$main_table}.{$primary_key}",
@@ -186,6 +196,11 @@ class Select extends Query
             }
 
             foreach ($table_fields as $column) {
+                // Do not add selects for additional tables if that column is already selected by the main table.
+                if (! $isMainTable && array_key_exists("{$alias}__{$column}", $this->model_fields[$alias])) {
+                    continue;
+                }
+
                 // remember the name so we can translate filters and order_bys
                 $this->model_fields[$alias]["{$alias}__{$column}"] = "{$table_alias}.{$column}";
 
@@ -210,14 +225,17 @@ class Select extends Query
         $class = $meta->getClass();
 
         $fields = $this->getFields();
+        $requestedFieldIds = [];
 
         // Bail if this query is selecting specific fields and none of those
         // fields would be found in the field data tables
         if (! empty($fields)) {
             $found = false;
+            // if we need just some fields, get their IDs
             foreach ($fields as $field) {
-                if (strpos($field, 'field_id_') !== false) {
+                if (($pos = strpos($field, 'field_id_')) !== false) {
                     $found = true;
+                    $requestedFieldIds[] = substr($field, $pos + 9);
                 }
             }
 
@@ -253,38 +271,20 @@ class Select extends Query
             $fields = array();
             foreach ($structure_models as $model) {
                 foreach ($model->getAllCustomFields() as $f) {
-                    if (! $f->legacy_field_data) {
+                    // only mark for join the fields that are:
+                    // a) using their own tables
+                    // b) requested directly - or not custom fields specifically requested (which means all fields)
+                    if (! $f->legacy_field_data && (empty($requestedFieldIds) || in_array($f->field_id, $requestedFieldIds))) {
                         $fields[$f->field_id] = $f;
                     }
                 }
             }
             $fields = array_values($fields);
         } else {
-            if ($meta_field_data['field_model'] == 'MemberField' && ! empty(ee()->session)) {
-                $fields = ee()->session->cache('ExpressionEngine::MemberFieldModel', 'getCustomFields');
-
-                // might be empty, so need to be specific
-                if (! is_array($fields)) {
-                    // get ALL fields, since this cache key is shared elsewhere and expects all fields
-                    $fields = ee('Model')->get($meta_field_data['field_model'])
-                        ->all()
-                        ->asArray();
-                    ee()->session->set_cache('ExpressionEngine::MemberFieldModel', 'getCustomFields', $fields);
-                }
-
-                // filter just for non-legacy fields
-                $fields = new Collection($fields);
-                $fields = $fields->filter(function ($mfield) use ($column_prefix) {
-                    $colname = $column_prefix . 'legacy_field_data';
-
-                    return $mfield->$colname == false;
-                })->asArray();
-            } else {
-                $fields = ee('Model')->get($meta_field_data['field_model'])
-                    ->filter($column_prefix . 'legacy_field_data', 'n')
-                    ->all()
-                    ->asArray();
-            }
+            $fields = ee('Model')->get($meta_field_data['field_model'])
+                ->filter($column_prefix . 'legacy_field_data', 'n')
+                ->all(true)
+                ->asArray();
         }
 
         if (! empty($fields)) {
@@ -515,11 +515,11 @@ class Select extends Query
     protected function applyOrders($query, $orders)
     {
         foreach ($orders as $order) {
-            list($property, $direction) = $order;
+            list($property, $direction, $escape) = $order;
 
             $property = $this->translateProperty($property);
 
-            $query->order_by($property, $direction);
+            $query->order_by($property, $direction, $escape);
         }
     }
 
@@ -691,6 +691,10 @@ class Select extends Query
      */
     protected function translateProperty($property)
     {
+        if (($bracketPos = strpos($property, '(')) !== false && in_array(substr($property, 0, $bracketPos), $this->reservedMysqlFunctions, true)) {
+            return $property;
+        }
+
         if (strpos($property, '.') === false) {
             $alias = $this->root_alias;
 

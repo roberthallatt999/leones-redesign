@@ -1,26 +1,51 @@
 <?php
 
 /**
- * @author TJ Draper <tj@buzzingpixel.com>
- * @copyright 2017 BuzzingPixel, LLC
- * @license https://buzzingpixel.com/software/ansel-ee/license
- * @link https://buzzingpixel.com/software/ansel-ee
+ * @package     ExpressionEngine
+ * @subpackage  Add-ons
+ * @category    Ansel
+ * @author      Brian Litzinger
+ * @copyright   Copyright (c) 2024 - BoldMinded, LLC
+ * @link        http://boldminded.com/add-ons/ansel
+ * @license
+ *
+ * This source is commercial software. Use of this software requires a
+ * site license for each domain it is used on. Use of this software or any
+ * of its source code without express written permission in the form of
+ * a purchased commercial or other license is prohibited.
+ *
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * As part of the license agreement for this software, all modifications
+ * to this source must be submitted to the original author for review and
+ * possible inclusion in future releases. No compensation will be provided
+ * for patches, although where possible we will attribute each contribution
+ * in file revision notes. Submitting such modifications constitutes
+ * assignment of copyright to the original author (Brian Litzinger and
+ * BoldMinded, LLC) for such modifications. If you do not wish to assign
+ * copyright to the original author, your license to  use and modify this
+ * source is null and void. Use of this software constitutes your agreement
+ * to this clause.
  */
 
-namespace BuzzingPixel\Ansel\Service\Sources;
+namespace BoldMinded\Ansel\Service\Sources;
 
-use BuzzingPixel\Ansel\Model\File as FileModel;
-use BuzzingPixel\Ansel\Service\Sources\Ee as EESource;
-use BuzzingPixel\Ansel\Service\Sources\Treasury as TreasurySource;
-use BuzzingPixel\Ansel\Service\Sources\Assets as AssetsSource;
+use BoldMinded\Ansel\Model\File as FileModel;
+use BoldMinded\Ansel\Record\Image;
+use BoldMinded\Ansel\Service\Sources\Ee as EESource;
+use BoldMinded\Ansel\Service\Sources\Assets as AssetsSource;
 
 /**
  * Class SourceRouter
  *
  * @method string getFileChooserLink(mixed $identifier)
- * @method string uploadFile(mixed $identifier, string $filePath, string $subFolder = null, bool $insertTimestamp = false)
- * @method void deleteFile(mixed $identifier, string $fileName, string $subFolder = null)
- * @method FileModel addFile(mixed $identifier, string $filePath)
+ * @method string uploadFile(UploadLocation $location, string $filePath, string $subFolder = null, Image $anselRecord = null, bool $insertTimestamp = false,)
+ * @method void deleteFile(UploadLocation $location, string $fileName, string $subFolder = null, Image $anselRecord = null)
+ * @method void updateFileAttributes(int $fileId, array $attributes)
+ * @method FileModel addFile(UploadLocation $location, string $filePath, Image $anselRecord = null)
  * @method void removeFile(mixed $fileIdentifier)
  * @method string getSourceUrl(mixed $identifier)
  * @method string getFileUrl(mixed $fileIdentifier)
@@ -28,86 +53,70 @@ use BuzzingPixel\Ansel\Service\Sources\Assets as AssetsSource;
  * @method string cacheFileLocallyById(mixed $fileIdentifier)
  * @method array getSourceModels(array $ids)
  * @method array getFileModels(array $ids)
+ * @method bool isSymLink(UploadLocation $location)
  */
 class SourceRouter
 {
-	/**
-	 * @var string $source
-	 */
-	private $source = 'ee';
+    /**
+     * @var string $source
+     */
+    private $source = 'ee';
 
-	/**
-	 * @var EESource $eeSource
-	 */
-	private $eeSource;
+    /**
+     * @var EESource $eeSource
+     */
+    private $eeSource;
 
-	/**
-	 * @var TreasurySource $treasurySource
-	 */
-	private $treasurySource;
+    /**
+     * Constructor
+     *
+     * @param EESource $eeSource
+     * @param AssetsSource $assetsSource
+     */
+    public function __construct(
+        EESource $eeSource,
+    ) {
+        // Inject dependencies
+        $this->eeSource = $eeSource;
+    }
 
-	/**
-	 * @var AssetsSource $assetsSource
-	 */
-	private $assetsSource;
+    /**
+     * Call magic method
+     *
+     * @param $name
+     * @param $args
+     * @return mixed
+     */
+    public function __call($name, $args)
+    {
+        // Call the method on the source class and apply the arguments
+        return call_user_func_array(
+            array(
+                $this->{"{$this->source}Source"},
+                $name
+            ),
+            $args
+        );
+    }
 
-	/**
-	 * Constructor
-	 *
-	 * @param EESource $eeSource
-	 * @param TreasurySource $treasurySource
-	 * @param AssetsSource $assetsSource
-	 */
-	public function __construct(
-		EESource $eeSource,
-		$treasurySource,
-		$assetsSource
-	) {
-		// Inject dependencies
-		$this->eeSource = $eeSource;
-		$this->treasurySource = $treasurySource;
-		$this->assetsSource = $assetsSource;
-	}
+    /**
+     * Set the source to use
+     *
+     * @param string $source ee|assets
+     */
+    public function setSource($source)
+    {
+        // These are the accepted values of $source
+        $accepted = [
+            'ee',
+        ];
 
-	/**
-	 * Call magic method
-	 *
-	 * @param $name
-	 * @param $args
-	 * @return mixed
-	 */
-	public function __call($name, $args)
-	{
-		// Call the method on the source class and apply the arguments
-		return call_user_func_array(
-			array(
-				$this->{"{$this->source}Source"},
-				$name
-			),
-			$args
-		);
-	}
+        // Make sure the value is accepted
+        if (! in_array($source, $accepted)) {
+            return;
+        }
 
-	/**
-	 * Set the source to use
-	 *
-	 * @param string $source ee|assets|treasury
-	 */
-	public function setSource($source)
-	{
-		// These are the accepted values of $source
-		$accepted = array(
-			'ee',
-			'treasury',
-			'assets'
-		);
-
-		// Make sure the value is accepted
-		if (! in_array($source, $accepted)) {
-			return;
-		}
-
-		// Set the source
-		$this->source = $source;
-	}
+        // Set the source
+        $this->source = $source;
+    }
 }

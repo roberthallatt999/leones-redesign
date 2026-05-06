@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -16,27 +16,20 @@ use Solspace\Addons\FreeformNext\Library\Translations\TranslatorInterface;
 
 abstract class AbstractProperties
 {
-    const TYPE_STRING  = 'string';
-    const TYPE_BOOLEAN = 'boolean';
-    const TYPE_INTEGER = 'integer';
-    const TYPE_ARRAY   = 'array';
-    const TYPE_OBJECT  = 'object';
+    public const TYPE_STRING  = 'string';
+    public const TYPE_BOOLEAN = 'boolean';
+    public const TYPE_INTEGER = 'integer';
+    public const TYPE_ARRAY   = 'array';
+    public const TYPE_OBJECT  = 'object';
 
     /** @var string */
     protected $type;
 
-    /** @var TranslatorInterface */
-    private $translator;
-
     /**
      * AbstractProperties constructor.
-     *
-     * @param array               $properties
-     * @param TranslatorInterface $translator
      */
-    public final function __construct(array $properties, TranslatorInterface $translator)
+    public final function __construct(array $properties, private TranslatorInterface $translator)
     {
-        $this->translator = $translator;
         $this->validateAndSetProperties($properties);
     }
 
@@ -67,8 +60,6 @@ abstract class AbstractProperties
     protected abstract function getPropertyManifest();
 
     /**
-     * @param array $properties
-     *
      * @throws ComposerException
      */
     private function validateAndSetProperties(array $properties)

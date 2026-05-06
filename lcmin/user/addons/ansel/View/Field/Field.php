@@ -3,96 +3,178 @@
 // @codingStandardsIgnoreStart
 
 /**
- * @author TJ Draper <tj@buzzingpixel.com>
- * @copyright 2017 BuzzingPixel, LLC
- * @license https://buzzingpixel.com/software/ansel-ee/license
- * @link https://buzzingpixel.com/software/ansel-ee
+ * @package     ExpressionEngine
+ * @subpackage  Add-ons
+ * @category    Ansel
+ * @author      Brian Litzinger
+ * @copyright   Copyright (c) 2024 - BoldMinded, LLC
+ * @link        http://boldminded.com/add-ons/ansel
+ * @license
+ *
+ * This source is commercial software. Use of this software requires a
+ * site license for each domain it is used on. Use of this software or any
+ * of its source code without express written permission in the form of
+ * a purchased commercial or other license is prohibited.
+ *
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * As part of the license agreement for this software, all modifications
+ * to this source must be submitted to the original author for review and
+ * possible inclusion in future releases. No compensation will be provided
+ * for patches, although where possible we will attribute each contribution
+ * in file revision notes. Submitting such modifications constitutes
+ * assignment of copyright to the original author (Brian Litzinger and
+ * BoldMinded, LLC) for such modifications. If you do not wish to assign
+ * copyright to the original author, your license to  use and modify this
+ * source is null and void. Use of this software constitutes your agreement
+ * to this clause.
  */
 
-/** @var \BuzzingPixel\Ansel\Model\FieldSettings $fieldSettings */
+/** @var \BoldMinded\Ansel\Model\FieldSettings $fieldSettings */
 /** @var array $langArray */
 /** @var array $fieldSettingsArray */
 /** @var string $uploadKey */
 /** @var string $uploadUrl */
 /** @var string $fileChooserLink */
-/** @var \EllisLab\ExpressionEngine\Service\Model\Collection $rows */
+/** @var \ExpressionEngine\Service\Model\Collection $rows */
 
 // Check if image is going to have neighbors
-$imgHasNeighbors = $fieldSettings->show_title || $fieldSettings->show_caption;
+$imgHasNeighbors = $fieldSettings->show_title || $fieldSettings->show_description;
 
 ?>
 
+<?php echo ee('CP/Alert')->get(sprintf('ansel-field-alerts-%s-%s', $fieldSettings->type, $fieldSettings->field_id)); ?>
+
 <div
-	class="ansel-field<?php if (in_array($fieldSettings->type, array('grid', 'blocks'))) : ?> js-ansel-grid-field<?php else : ?> js-ansel-field<?php endif; ?>"
-	data-field-settings='<?=json_encode($fieldSettingsArray)?>'
-	data-lang='<?=json_encode($langArray)?>'
+    class="ansel-field<?php if (in_array($fieldSettings->type, array('grid', 'blocks'))) : ?> js-ansel-grid-field<?php else : ?> js-ansel-field<?php endif; ?>"
+    data-field-settings='<?=json_encode($fieldSettingsArray)?>'
+    data-lang='<?=json_encode($langArray)?>'
 >
-	<input
-		type="hidden"
-		name="<?=$fieldSettings->field_name?>[placeholder]"
-		value="placeholder"
-		class="js-ansel-field-input-placeholder"
-	>
+    <?php if ($shouldShowTileMetaFields && !$singleImageDisplay): ?>
+        <div class="ansel-toggle-meta">
+            <a href="#" class="button button--default button--xsmall js-ansel-show-meta">Show Meta Fields</a>
+            <a href="#" class="button button--default button--xsmall hidden js-ansel-hide-meta">Hide Meta Fields</a>
+        </div>
+    <?php endif; ?>
 
-	<div
-		class="ansel-field__dropzone ansel-dropzone dropzone js-ansel-dropzone js-ansel-hide-max"
-		data-upload-key="<?=$uploadKey?>"
-		data-upload-url="<?=$uploadUrl?>"
-	></div>
+    <?php // Temp placeholder until the JS initializes ?>
+    <label class="field-loading js-ansel-loading">
+        <?=lang('loading')?><span></span>
+    </label>
 
-	<div class="ansel-field__choose-from-file-manager js-ansel-hide-max">
-		<?=$fileChooserLink?>
-	</div>
+    <template class="js-ansel-field-template">
 
-	<div class="js-ansel-messages"></div>
+        <input
+            type="hidden"
+            name="<?=$fieldSettings->field_name?>[placeholder]"
+            value="placeholder"
+            class="js-ansel-field-input-placeholder"
+        >
 
-	<div class="ansel-field__table-wrap">
-		<table class="ansel-field__table ansel-table js-ansel-table<?php if (! $rows->count()) : ?> js-hide<?php endif; ?>">
-			<thead class="ansel-table__heading">
-				<tr class="ansel-table__row">
-					<th class="ansel-table__heading-column ansel-table__heading-column--handle"></th>
-					<?php
-					$imgClasses = 'ansel-table__heading-column';
+        <div
+            class="file-field__dropzone ansel-dropzone dropzone js-ansel-dropzone js-ansel-hide-max"
+            data-upload-key="<?=$uploadKey?>"
+            data-upload-url="<?=$uploadUrl?>"
+        >
+            <div class="file-field__dropzone-button js-ansel-hide-max">
+                <?=$fileChooserLink?>
+            </div>
+        </div>
 
-					if ($imgHasNeighbors) {
-						$imgClasses .= ' ansel-table__heading-column--image-has-neighbors';
-					}
-					?>
-					<th class="<?=$imgClasses?>"><?=lang('image')?></th>
-					<?php if ($fieldSettings->show_title) : ?>
-						<th class="ansel-table__heading-column ansel-table__heading-column--input">
-							<?=$fieldSettings->title_label ?: lang('title')?>
-						</th>
-					<?php endif; ?>
-					<?php if ($fieldSettings->show_caption) : ?>
-						<th class="ansel-table__heading-column ansel-table__heading-column--input">
-							<?=$fieldSettings->caption_label ?: lang('caption')?>
-						</th>
-					<?php endif; ?>
-					<?php if ($fieldSettings->show_cover) : ?>
-						<th class="ansel-table__heading-column ansel-table__heading-column--cover">
-							<?=$fieldSettings->cover_label ?: lang('cover')?>
-						</th>
-					<?php endif; ?>
-					<th class="ansel-table__heading-column ansel-table__heading-column--delete"></th>
-				</tr>
-			</thead>
-			<tbody class="ansel-table__body js-ansel-body">
-				<?php foreach ($rows as $row) : ?>
-					<?php $this->embed('ansel:Field/Row', array(
-						'row' => $row
-					)); ?>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-	</div>
+        <div class="js-ansel-messages"></div>
 
-	<script type="text/template" class="js-ansel-template__row">
-		<?php $this->embed('ansel:Field/Row'); ?>
-	</script>
+        <?php if ($shouldShowTile): ?>
+            <div class="ansel-grid">
+                <div class="js-ansel-table <?= ($shouldSort ? 'js-ansel-sortable-grid' : '') ?>">
+                    <div class="ansel-grid__body js-ansel-body<?= $singleImageDisplay ? ' two-columns' : '' ?>">
+                        <?php foreach ($rows as $row) : ?>
+                            <?php $this->embed('ansel:Field/RowTile', array(
+                                'row' => $row,
+                                'singleImageDisplay' => $singleImageDisplay,
+                                'shouldShowMetaButton' => $shouldShowMetaButton,
+                                'shouldSort' => $shouldSort,
+                            )); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="grid-field entry-grid">
+                <div class="table-responsive<?php if (! $rows->count()) : ?> js-hide<?php endif; ?>">
+                    <table class="grid-field__table ansel-table js-ansel-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <?=lang('image')?>
+                                    <span class="app-badge label-app-badge js-app-badge">
+                                        <span class="txt-only">{img:url}</span>
+                                        <i class="fa-light fa-copy"></i>
+                                        <i class="fa-sharp fa-solid fa-circle-check hidden"></i>
+                                    </span>
+                                </th>
+                                <?php if ($fieldSettings->show_title) : ?>
+                                    <th>
+                                        <?=$fieldSettings->getTitleColumnLabel();?>
+                                        <span class="app-badge label-app-badge js-app-badge">
+                                            <span class="txt-only">{img:title}</span>
+                                            <i class="fa-light fa-copy"></i>
+                                            <i class="fa-sharp fa-solid fa-circle-check hidden"></i>
+                                        </span>
+                                    </th>
+                                <?php endif; ?>
+                                <?php if ($fieldSettings->show_description) : ?>
+                                    <th>
+                                        <?=$fieldSettings->getDescriptionColumnLabel();?>
+                                        <span class="app-badge label-app-badge js-app-badge">
+                                            <span class="txt-only">{img:description}</span>
+                                            <i class="fa-light fa-copy"></i>
+                                            <i class="fa-sharp fa-solid fa-circle-check hidden"></i>
+                                        </span>
+                                    </th>
+                                <?php endif; ?>
+                                <?php if ($fieldSettings->show_cover && !$singleImageDisplay) : ?>
+                                    <th>
+                                        <?=$fieldSettings->getCoverColumnLabel();?>
+                                        <span class="app-badge label-app-badge js-app-badge">
+                                            <span class="txt-only">{img:cover}</span>
+                                            <i class="fa-light fa-copy"></i>
+                                            <i class="fa-sharp fa-solid fa-circle-check hidden"></i>
+                                        </span>
+                                    </th>
+                                <?php endif; ?>
+                                <th class="grid-field__column-remove"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="js-ansel-body ui-sortable">
+                            <?php foreach ($rows as $row) : ?>
+                                <?php $this->embed('ansel:Field/Row', array(
+                                    'row' => $row,
+                                    'singleImageDisplay' => $singleImageDisplay,
+                                    'shouldShowMetaButton' => $shouldShowMetaButton,
+                                    'shouldSort' => $shouldSort,
+                                )); ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php endif; ?>
 
-	<script type="text/template" class="js-ansel-template__crop-table">
-		<?php $this->embed('ansel:Field/CropTable'); ?>
-	</script>
+        <template class="js-ansel-template__row">
+            <?php if ($shouldShowTile): ?>
+                <?php $this->embed('ansel:Field/RowTile'); ?>
+            <?php else: ?>
+                <?php $this->embed('ansel:Field/Row'); ?>
+            <?php endif; ?>
+        </template>
+
+        <template class="js-ansel-template__crop-table">
+            <?php $this->embed('ansel:Field/CropTable'); ?>
+        </template>
+
+    </template>
 
 </div>

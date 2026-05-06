@@ -17,6 +17,10 @@ $lang = array(
     'rte_config_settings' => 'Configuration Settings',
     'rte_config_name' => 'Configuration Name',
     'rte_toolbar' => 'Customize the Toolbar',
+    'custom_stylesheet' => 'Custom Stylesheet',
+    'custom_stylesheet_desc' => 'CSS template with styles to be applied to fields using this tool set. All styles will be automatically prefixed with toolset class.',
+    'custom_javascript' => 'Extra JavaScript',
+    'custom_javascript_rte_desc' => 'JS template to be included with fields using this tool set. Typically used to include extra plugins when using advanced configuration.',
     'rte_min_height' => 'Minimal height',
     'rte_min_height_desc' => 'Enter the number of pixels, or leave empty',
     'rte_max_height' => 'Maximal height',
@@ -25,8 +29,15 @@ $lang = array(
     'rte_limiter_desc' => 'Limit the number of characters a user can enter.',
     'rte_upload_dir' => 'Upload Directory',
     'rte_advanced_settings' => 'Advanced Settings',
+    'rte_advanced_config' => 'Advanced configuration',
+    'rte_advanced_config_desc' => 'Edit configuration directly in JSON format',
+    'rte_config_json' => 'Configuration JSON',
+    'rte_config_json_desc' => 'Overrides visually constructed tool set',
+    'rte_advanced_config_warning' => '<p><b>Warning</b>: <b class="no">Advanced users only.</b> Please be careful with using this feature and check your work.</p><p>Providing invalid configuration can make the RTE fields inaccessible.</p><p>Consult editing engine docs: <a href="https://ckeditor.com/docs/ckeditor5/latest/installation/getting-started/configuration.html" target="_blank">CKEditor</a>, <a href="https://imperavi.com/redactor/docs/settings/" target="_blank">Redactor</a>, <a href="https://imperavi.com/redactorx/docs/settings/" target="_blank">RedactorX</a>.</p><p>Note that some options might be not available or implemented differently. We suggest using Full configuration as starting base.<p>',
     'rte_config_saved' => 'Configuration Saved!',
     'rte_config_saved_desc' => 'Your configuration saved successfully.',
+    'rte_custom_ckeditor_build' => 'Use custom CKEditor build?',
+    'rte_custom_ckeditor_build_desc' => 'Allows using custom CKEditor build with extra plugins. If enabled, RTE instances running CKEditor will be created using <code>themes/user/rte/javascript/ckeditor.js</code> script. Check the User Guide for <a href="' . DOC_URL . 'add-ons/rte.html#ckeditor" rel="external">building instructions</a>.',
 
     // Delete Config
     'rte_delete_config' => 'Delete Configuration',
@@ -149,6 +160,8 @@ $lang = array(
 
     'toolset_error_desc' => 'We were unable to save the tool set, please review and fix errors below.',
 
+    'toolset_json_error_desc' => 'The advanced configuration provided is not valid JSON.',
+
     'toolset_not_deleted' => 'Tool set could not be deleted.',
 
     'toolset_update_failed' => 'Tool set update failed. Please try again.',
@@ -196,7 +209,7 @@ $lang = array(
 
     'toolset_builder_instructions' => 'Select one or more tools and drag them to the desired location.',
 
-    'toolset_builder_label' => 'Which tools should be availble in this Tool set?',
+    'toolset_builder_label' => 'Which tools should be available in this Tool set?',
 
     'toolset_name' => 'Tool set Name',
 
@@ -226,6 +239,10 @@ $lang = array(
 
     'image_rte' => 'Image',
 
+    'imageposition_rte' => 'Image position',
+
+    'imageresize_rte' => 'Image resize',
+
     'file_rte' => 'File',
 
     'strikethrough_rte' => 'Strikethrough',
@@ -242,13 +259,21 @@ $lang = array(
 
     'code_rte' => 'Code',
 
+    'blockcode_rte' => 'Code',
+
     'blockquote_rte' => 'Block quote',
+
+    'quote_rte' => 'Quote',
 
     'heading_rte' => 'Heading',
 
     'format_rte' => 'Format',
 
+    'inlineformat_rte' => 'Format',
+
     'removeFormat_rte' => 'Remove formatting',
+
+    'removeformat_rte' => 'Remove formatting',
 
     'undo_rte' => 'Undo',
 
@@ -272,9 +297,13 @@ $lang = array(
 
     'line_rte' => 'Horizontal rule',
 
-    'filemanager_rte' => 'Image',
+    'filemanager_rte' => 'Image or File Picker',
+
+    'insertImage_rte' => 'Insert image via URL',
 
     'insertTable_rte' => 'Table',
+
+    'selector_rte' => 'Class & ID',
 
     'table_rte' => 'Table',
 
@@ -308,9 +337,17 @@ $lang = array(
 
     'fontBackgroundColor_rte' => 'Font background',
 
+    'codeBlock_rte' => 'Code block',
+
+    'sourceEditing_rte' =>  'Source editing',
+
+    'findAndReplace_rte' =>  'Find and replace',
+
     'open_in_new_tab' => 'Open in a new tab',
 
     'source_rte' => 'View Source',
+
+    'showBlocks_rte' => 'Show blocks',
 
     'video_rte' => 'Video',
 
@@ -338,6 +375,62 @@ $lang = array(
     'pages_rte' => 'Pages',
 
     'fontcolor_rte' => 'Text color',
+
+    'rte_spellcheck' => 'Spell check',
+
+    'rte_spellcheck_desc' => 'Enable spell check in the editor (needs to be enabled in browser as well)',
+
+    'browser' => 'Browser',
+
+    'grammarly' => 'Grammarly',
+
+    'rte_control_bar' => 'Show control bar?',
+
+    'rte_control_bar_desc' => 'Control bar is the collapsed menu shown at the left of focused element with some common actions',
+
+    'rte_format' => 'Formatting options',
+
+    'rte_format_desc' => 'Tags allowed in the Format dropdown',
+
+    'add_rte' => 'Add',
+
+    'shortcut_rte' => 'Shortcut',
+
+    'embed_rte' => 'Embed',
+
+    'mark_rte' => 'Mark',
+
+    'kbd_rte' => 'kbd',
+
+    'pre_rte' => 'Preformatted',
+
+    'rte_show_context' => 'Show context bar?',
+
+    'rte_show_context_desc' => 'The context bar appears when text is selected',
+
+    'rte_context' => 'Context bar',
+
+    'rte_show_addbar' => 'Show addbar?',
+
+    'rte_show_addbar_desc' => 'The addbar appears when clicking Add button',
+
+    'rte_addbar' => 'Addbar',
+
+    'rte_show_topbar' => 'Show top bar?',
+
+    'rte_show_topbar_desc' => 'Displayed to the right of main toolbar',
+
+    'rte_topbar' => 'Top bar',
+
+    'rte_toolbar_sticky' => 'Make toolbar sticky?',
+
+    'rte_show_main_toolbar_desc' => 'Keeps the toolbar always visible when scrolling',
+
+    'rte_show_main_toolbar' => 'Show main toolbar',
+
+    'rte_show_main_toolbar_desc' => 'Can be disabled while keeping the functionality accessible using other toolbars or keyboard shortcuts',
+
+    'rte_main_toolbar' => 'Main toolbar',
 
     '' => ''
 );

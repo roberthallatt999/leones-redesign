@@ -1,119 +1,134 @@
 <?php
 
 /**
- * @author TJ Draper <tj@buzzingpixel.com>
- * @copyright 2017 BuzzingPixel, LLC
- * @license https://buzzingpixel.com/software/ansel-ee/license
- * @link https://buzzingpixel.com/software/ansel-ee
+ * @package     ExpressionEngine
+ * @subpackage  Add-ons
+ * @category    Ansel
+ * @author      Brian Litzinger
+ * @copyright   Copyright (c) 2024 - BoldMinded, LLC
+ * @link        http://boldminded.com/add-ons/ansel
+ * @license
+ *
+ * This source is commercial software. Use of this software requires a
+ * site license for each domain it is used on. Use of this software or any
+ * of its source code without express written permission in the form of
+ * a purchased commercial or other license is prohibited.
+ *
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * As part of the license agreement for this software, all modifications
+ * to this source must be submitted to the original author for review and
+ * possible inclusion in future releases. No compensation will be provided
+ * for patches, although where possible we will attribute each contribution
+ * in file revision notes. Submitting such modifications constitutes
+ * assignment of copyright to the original author (Brian Litzinger and
+ * BoldMinded, LLC) for such modifications. If you do not wish to assign
+ * copyright to the original author, your license to  use and modify this
+ * source is null and void. Use of this software constitutes your agreement
+ * to this clause.
  */
 
-namespace BuzzingPixel\Ansel\Service\Sources;
+namespace BoldMinded\Ansel\Service\Sources;
 
-use BuzzingPixel\Ansel\Model\File as FileModel;
+use BoldMinded\Ansel\Record\Image;
+use ExpressionEngine\Service\Model\Model;
 
 /**
  * Class BaseSource
  */
 abstract class BaseSource
 {
-	/**
-	 * Get file chooser link
-	 *
-	 * @param mixed $identifier Source identifier
-	 * @return string
-	 */
-	abstract public function getFileChooserLink($identifier);
+    protected $isLivePreview = false;
 
-	/**
-	 * Upload file to the source storage
-	 *
-	 * @param mixed $identifier Source identifier
-	 * @param string $filePath
-	 * @param string $subFolder
-	 * @param bool $insertTimestamp
-	 * @return string Full file upload path
-	 */
-	abstract public function uploadFile(
-		$identifier,
-		$filePath,
-		$subFolder = null,
-		$insertTimestamp = false
-	);
+    public function setIsLivePreview(bool $isLivePreview): void
+    {
+        $this->isLivePreview = $isLivePreview;
+    }
 
-	/**
-	 * Delete file from source storage
-	 *
-	 * @param mixed $identifier Source identifier
-	 * @param string $fileName
-	 * @param string $subFolder
-	 */
-	abstract public function deleteFile(
-		$identifier,
-		$fileName,
-		$subFolder = null
-	);
+    /**
+     * Get file chooser link
+     */
+    abstract public function getFileChooserLink(
+        UploadLocation $location,
+        string $lang
+    ): string;
 
-	/**
-	 * Add file and record to the source
-	 *
-	 * @param mixed $identifier Source identifier
-	 * @param string $filePath
-	 * @return FileModel
-	 */
-	abstract public function addFile($identifier, $filePath);
+    /**
+     * Upload file to the source storage
+     */
+    abstract public function uploadFile(
+        UploadLocation $location,
+        string $filePath,
+        string|null $subFolder = null,
+        Image|null $anselRecord = null,
+        bool $insertTimestamp = false
+    ): string;
 
-	/**
-	 * Remove file and record from the source
-	 *
-	 * @param mixed $fileIdentifier
-	 */
-	abstract public function removeFile($fileIdentifier);
+    /**
+     * Delete file from source storage
+     */
+    abstract public function deleteFile(
+        UploadLocation $location,
+        string $fileName,
+        string|null $subFolder = null,
+    ): void;
 
-	/**
-	 * Get source URL
-	 *
-	 * @param mixed $identifier Source identifier
-	 * @return string
-	 */
-	abstract public function getSourceUrl($identifier);
+    abstract function updateFileAttributes(
+        int $fileId,
+        array $attributes
+    ): void;
 
-	/**
-	 * Get file URL
-	 *
-	 * @param mixed $fileIdentifier File identifier
-	 * @return string
-	 */
-	abstract public function getFileUrl($fileIdentifier);
+    /**
+     * Add file and record to the source
+     */
+    abstract public function addFile(
+        UploadLocation $location,
+        string $filePath,
+        Image|null $anselRecord = null
+    ): Model;
 
-	/**
-	 * Get file model
-	 *
-	 * @param mixed $fileIdentifier File identifier
-	 * @return null|FileModel
-	 */
-	abstract public function getFileModel($fileIdentifier);
+    /**
+     * Remove file and record from the source
+     */
+    abstract public function removeFile(int $fileId);
 
-	/**
-	 * Cache file locally by ID
-	 *
-	 * @param mixed $fileIdentifier File identifier
-	 * @return string
-	 */
-	abstract public function cacheFileLocallyById($fileIdentifier);
+    /**
+     * Get source URL
+     */
+    abstract public function getSourceUrl(UploadLocation $location): string;
 
-	/**
-	 * Get source models
-	 *
-	 * @param array $ids
-	 * @return array
-	 */
-	abstract public function getSourceModels($ids);
+    /**
+     * Get source server path
+     */
+    abstract public function getSourcePath(UploadLocation $location): string;
 
-	/**
-	 * Get file models
-	 *
-	 * @param array $ids
-	 * @return array
-	 */
-	abstract public function getFileModels($ids);
+    /**
+     * Get file URL
+     */
+    abstract public function getFileUrl(int $fileId): string;
+
+    /**
+     * Get file model
+     */
+    abstract public function getFileModel(int $fileId): ?Model;
+
+    /**
+     * Cache file locally by ID
+     */
+    abstract public function cacheFileLocallyById(int $fileId): ?string;
+
+    /**
+     * Get source models
+     */
+    abstract public function getSourceModels(array $ids): array;
+
+    /**
+     * Get file models
+     */
+    abstract public function getFileModels(array $ids): array;
+
+    abstract public function isSymLink(UploadLocation $location): bool;
 }

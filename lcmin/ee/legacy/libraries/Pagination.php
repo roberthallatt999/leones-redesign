@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -553,13 +553,15 @@ class Pagination_object
             }
 
             // Determine the offset
-            if ($this->offset === 0) {
+            if ($this->offset === 0 || !is_numeric($this->offset)) {
                 $query_string = (ee()->uri->page_query_string != '') ? ee()->uri->page_query_string : ee()->uri->query_string;
-                if (preg_match("#^{$this->prefix}(\d+)|/{$this->prefix}(\d+)#", $query_string, $match)) {
+                if (preg_match("#^{$this->prefix}(\d+)$|/{$this->prefix}(\d+)$#", $query_string, $match)) {
                     $this->offset = (isset($match[2])) ? (int) $match[2] : (int) $match[1];
                     $this->basepath = reduce_double_slashes(
                         str_replace($match[0], '', $this->basepath)
                     );
+                } else {
+                    $this->offset = 0;
                 }
             }
 
@@ -762,6 +764,7 @@ class Pagination_object
             $template_data = $this->_parse_conditional($template_data, 'previous', $this->_page_previous);
             $template_data = $this->_parse_conditional($template_data, 'next', $this->_page_next);
 
+            ee()->TMPL->add_data($parse_array, 'pagination');
             // Parse if total_pages conditionals
             $template_data = ee()->functions->prep_conditionals(
                 $template_data,
@@ -802,6 +805,41 @@ class Pagination_object
 
                 break;
         }
+    }
+
+    /**
+     * Get a list of pagination variables
+     *
+     * @return array
+     */
+    public function getVariables()
+    {
+        $variables = [
+                'first_url' => rtrim($this->basepath, '/'),
+                'base_url' => $this->basepath,
+                'prefix' => $this->prefix,
+                'total' => $this->total_items,
+                'per_page' => $this->per_page,
+                'from' => $this->offset * $this->per_page,
+                'to' => min($this->total_items, $this->offset + 1 * $this->per_page),
+                'current_page' => $this->offset + 1,
+                'num_links' => $this->_page_links_limit,
+                'links' => $this->_page_array,
+                'first_link' => lang('pag_first_link'),
+                'last_link' => lang('pag_last_link'),
+        ];
+
+        // Flatten named single page links
+        $links = ['next_page', 'previous_page', 'first_page', 'last_page'];
+
+        foreach($links as $link)
+        {
+            if($variables['links'][$link] ?? false) {
+                $variables['links'][$link] = $variables['links'][$link][0];
+            }
+        }
+
+        return $variables;
     }
 
     /**

@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -18,11 +18,10 @@ class StringHelper
      * with their respective value counterparts from $values array
      *
      * @param string $string
-     * @param array  $values
      *
      * @return string
      */
-    public static function replaceValues($string, $values)
+    public static function replaceValues($string, array $values)
     {
         foreach (self::flattenArrayValues($values) as $key => $value) {
             $string = preg_replace("/\{$key\}/", $value, $string);
@@ -32,11 +31,9 @@ class StringHelper
     }
 
     /**
-     * @param array $values
-     *
      * @return array
      */
-    public static function flattenArrayValues(array $values)
+    public static function flattenArrayValues(array $values): array
     {
         $return = [];
 
@@ -58,7 +55,7 @@ class StringHelper
      *
      * @return string
      */
-    public static function humanize($string)
+    public static function humanize($string): string
     {
         $string = trim(strtolower(preg_replace(['/([A-Z])/', "/[_\\s]+/"], ['_$1', ' '], $string)));
 
@@ -73,7 +70,7 @@ class StringHelper
      *
      * @return string
      */
-    public static function camelize($string, $delimiter = " ")
+    public static function camelize($string, $delimiter = " "): string
     {
         $stringParts = explode($delimiter, $string);
         $camelized   = array_map("ucwords", $stringParts);
@@ -83,11 +80,10 @@ class StringHelper
 
     /**
      * @param string $string
-     * @param array  $noStrip
      *
      * @return mixed|string
      */
-    public static function toCamelCase($string, array $noStrip = [])
+    public static function toCamelCase($string, array $noStrip = []): string
     {
         // non-alpha and non-numeric characters become spaces
         $string = preg_replace('/[^a-z0-9' . implode("", $noStrip) . ']+/i', ' ', $string);
@@ -105,11 +101,10 @@ class StringHelper
      * Returns the truncated string
      *
      * @param int    $truncateLength
-     * @param string $truncator
      *
      * @return string
      */
-    public static function truncateString($string, $truncateLength = 30, $truncator = '...')
+    public static function truncateString($string, $truncateLength = 30, string $truncator = '...'): string
     {
         $string       = trim($string);
         $stringLength = strlen($string);

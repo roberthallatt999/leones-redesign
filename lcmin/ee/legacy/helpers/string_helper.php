@@ -9,7 +9,7 @@ if (! defined('BASEPATH')) {
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -55,7 +55,7 @@ if (! function_exists('strip_slashes')) {
             foreach ($str as $key => $val) {
                 $str[$key] = strip_slashes($val);
             }
-        } else {
+        } elseif (is_string($str)) {
             $str = stripslashes($str);
         }
 

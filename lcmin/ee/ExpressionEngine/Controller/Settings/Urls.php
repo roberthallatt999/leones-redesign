@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -190,7 +190,7 @@ class Urls extends Settings
      **/
     public function _validateThemeFolderPath($path)
     {
-        if (!ee()->form_validation->file_exists(rtrim(rtrim($path, '/'), DIRECTORY_SEPARATOR) . '/ee/cp')) {
+        if (!ee()->form_validation->file_exists(rtrim((string) $path, '\\/') . '/ee/cp')) {
             ee()->form_validation->set_message('_validateThemeFolderPath', lang('invalid_theme_folder_path'));
 
             return false;

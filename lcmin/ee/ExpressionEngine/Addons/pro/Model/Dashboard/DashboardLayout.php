@@ -3,7 +3,7 @@
 /**
  * ExpressionEngine Pro
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2022, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
 */
 
 namespace ExpressionEngine\Addons\Pro\Model\Dashboard;
@@ -26,12 +26,12 @@ class DashboardLayout extends Core\DashboardLayout
             )
         ),
         'Members' => array(
-            'model' => 'Member',
+            'model' => 'ee:Member',
             'type' => 'belongsTo',
             'from_key' => 'member_id'
         ),
         'Roles' => array(
-            'model' => 'Role',
+            'model' => 'ee:Role',
             'type' => 'belongsTo',
             'from_key' => 'role_id'
         ),
@@ -43,8 +43,9 @@ class DashboardLayout extends Core\DashboardLayout
     public function generateDashboardHtml($edit_mode = false)
     {
         //if the files are here, but Pro version not installed - fallaback
-        if (!IS_PRO || !ee('pro:Access')->hasValidLicense(true)) {
+        if (!ee('pro:Access')->hasRequiredLicense()) {
             $legacy_layout = new Core\DashboardLayout();
+
             return $legacy_layout->generateDashboardHtml();
         }
 

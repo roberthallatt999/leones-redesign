@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -45,7 +45,7 @@ class Jumps extends CP_Controller
         EE.cp.JumpMenuCommands = " . json_encode($jumpMenuItems) .";";
 
         $finfo = ee()->cache->file->get_metadata('jumpmenu/' . md5(ee()->session->getMember()->getId()));
-        ee()->javascript_loader->set_headers('jumpmenu', $finfo['mtime']);
+        ee()->javascript_loader->set_headers('jumpmenu', $finfo['mtime']); 
         ee()->output->set_header('Content-Length: ' . strlen($contents));
         ee()->output->set_output($contents);
     }

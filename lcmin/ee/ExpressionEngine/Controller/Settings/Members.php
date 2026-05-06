@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -33,6 +33,7 @@ class Members extends Settings
     {
         $roles = ee('Model')->get('Role')
             ->filter('is_locked', 'n')
+            ->filter('short_name', '!=', 'pending')
             ->order('name', 'asc')
             ->all()
             ->getDictionary('role_id', 'name');
@@ -63,8 +64,36 @@ class Members extends Settings
                                 'none' => lang('req_mbr_activation_opt_none'),
                                 'email' => lang('req_mbr_activation_opt_email'),
                                 'manual' => lang('req_mbr_activation_opt_manual')
+                            ),
+                            'group_toggle' => array(
+                                'none' => 'activation_none',
+                                'email' => 'activation_email'
                             )
                         )
+                    )
+                ),
+                array(
+                    'title' => 'registration_auto_login',
+                    'desc' => 'registration_auto_login_desc',
+                    'group' => 'activation_none',
+                    'fields' => array(
+                        'registration_auto_login' => array('type' => 'yes_no')
+                    )
+                ),
+                array(
+                    'title' => 'activation_auto_login',
+                    'desc' => 'activation_auto_login_desc',
+                    'group' => 'activation_email',
+                    'fields' => array(
+                        'activation_auto_login' => array('type' => 'yes_no')
+                    )
+                ),
+                array(
+                    'title' => 'activation_redirect',
+                    'desc' => 'activation_redirect_desc',
+                    'group' => 'activation_email',
+                    'fields' => array(
+                        'activation_redirect' => array('type' => 'text')
                     )
                 ),
                 array(
@@ -87,6 +116,15 @@ class Members extends Settings
                     'fields' => array(
                         'require_terms_of_service' => array('type' => 'yes_no')
                     )
+                ),
+                array(
+                    'title' => 'enable_mfa',
+                    'desc' => 'enable_mfa_desc',
+                    'fields' => [
+                        'enable_mfa' => [
+                            'type' => 'yes_no'
+                        ]
+                    ]
                 ),
                 array(
                     'title' => 'allow_member_localization',

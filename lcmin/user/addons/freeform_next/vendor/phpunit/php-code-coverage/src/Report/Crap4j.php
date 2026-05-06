@@ -15,6 +15,7 @@ use function file_put_contents;
 use function htmlspecialchars;
 use function is_string;
 use function round;
+use function strpos;
 use DOMDocument;
 use SebastianBergmann\CodeCoverage\CodeCoverage;
 use SebastianBergmann\CodeCoverage\Driver\WriteOperationFailedException;
@@ -92,8 +93,8 @@ final class Crap4j
                     $methodNode->appendChild($document->createElement('package', $namespace));
                     $methodNode->appendChild($document->createElement('className', $className));
                     $methodNode->appendChild($document->createElement('methodName', $methodName));
-                    $methodNode->appendChild($document->createElement('methodSignature', htmlspecialchars($method['signature'])));
-                    $methodNode->appendChild($document->createElement('fullMethod', htmlspecialchars($method['signature'])));
+                    $methodNode->appendChild($document->createElement('methodSignature', htmlspecialchars($method['signature'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8')));
+                    $methodNode->appendChild($document->createElement('fullMethod', htmlspecialchars($method['signature'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8')));
                     $methodNode->appendChild($document->createElement('crap', (string) $this->roundValue((float) $method['crap'])));
                     $methodNode->appendChild($document->createElement('complexity', (string) $method['ccn']));
                     $methodNode->appendChild($document->createElement('coverage', (string) $this->roundValue($method['coverage'])));
@@ -124,7 +125,9 @@ final class Crap4j
         $buffer = $document->saveXML();
 
         if ($target !== null) {
-            Filesystem::createDirectory(dirname($target));
+            if (!strpos($target, '://') !== false) {
+                Filesystem::createDirectory(dirname($target));
+            }
 
             if (@file_put_contents($target, $buffer) === false) {
                 throw new WriteOperationFailedException($target);

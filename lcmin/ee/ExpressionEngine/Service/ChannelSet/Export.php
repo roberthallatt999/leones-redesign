@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -43,10 +43,16 @@ class Export
      * @param Array $channels List of channel instances
      * @return String Path to the generated zip file
      */
-    public function zip($channels)
+    public function zip($channels, $file_name = null)
     {
         $this->zip = new ZipArchive();
-        $location = PATH_CACHE . "cset/{$channels[0]->channel_name}.zip";
+
+        if(empty($file_name)) {
+            $location = PATH_CACHE . "cset/{$channels[0]->channel_name}.zip";
+        }
+        else {
+            $location = PATH_CACHE . "cset/$file_name.zip";
+        }
 
         if (! is_dir(PATH_CACHE . 'cset/')) {
             ee('Filesystem')->mkdir(PATH_CACHE . 'cset/');
@@ -350,6 +356,7 @@ class Export
 
         $result = new StdClass();
         $result->name = $dir->name;
+        $result->adapter = $dir->adapter;
         $result->server_path = $dir->server_path;
         $result->url = $dir->url;
 

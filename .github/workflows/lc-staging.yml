@@ -106,24 +106,7 @@ jobs:
       - name: Sync files to server
         run: |
           rsync -az --delete \
-            --exclude='.git/' \
-            --exclude='lcmin/user/cache/' \
-            --exclude='lcmin/user/config/config.local.php' \
-            --exclude='images/' \
-            --exclude='.ddev/' \
-            --exclude='.github/' \
-            --exclude='.vscode/' \
-            --exclude='node_modules/' \
-            --exclude='src/assets/certs/' \
-            --exclude='LocalValetDriver.php' \
-            --exclude='.db-backup.sql.gz' \
-            --exclude='.release-info' \
-            --exclude='docs/' \
-            --exclude='CLAUDE.md' \
-            --exclude='AGENTS.md' \
-            --exclude='MEMORY.md' \
-            --exclude='MEMORY-ARCHIVE.md' \
-            --exclude='.claude/' \
+            --exclude-from=.github/deploy-rsync-excludes.txt \
             ./ "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.STAGE_BASE_PATH }}/releases/${{ steps.release.outputs.timestamp }}/"
 
       - name: Store release info

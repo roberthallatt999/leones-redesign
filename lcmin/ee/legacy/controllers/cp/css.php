@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -47,6 +47,12 @@ class Css extends CI_Controller
 
             // There's a good chance we don't need ci_view_path
             // So try this first
+            if (file_exists($path . 'css/' . $file . '.css')) {
+                return $this->_load_css_file($path, $file);
+            }
+
+            //fallback to first-party addons
+            $path = PATH_ADDONS . $package . '/';
             if (file_exists($path . 'css/' . $file . '.css')) {
                 return $this->_load_css_file($path, $file);
             }

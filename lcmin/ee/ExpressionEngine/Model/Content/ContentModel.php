@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -156,7 +156,7 @@ abstract class ContentModel extends VariableColumnModel
     /**
      * Get the layout for this content.
      */
-    public function getDisplay(LayoutInterface $layout = null)
+    public function getDisplay(?LayoutInterface $layout = null)
     {
         $this->usesCustomFields();
 
@@ -258,7 +258,7 @@ abstract class ContentModel extends VariableColumnModel
         $facades = $this->getCustomFields();
 
         foreach ($facades as $name => $facade) {
-            // If this field is hidden by conditional logic or it is being 
+            // If this field is hidden by conditional logic or it is being
             // edited but has not changed then we are not concerned with validation
             if (get_bool_from_string($facade->getHidden()) || (!$this->isNew() && !$this->isDirty($name))) {
                 continue;
@@ -526,6 +526,20 @@ abstract class ContentModel extends VariableColumnModel
         parent::markAsDirty($name);
 
         return $this;
+    }
+
+    /**
+     * Recount stats for file usage
+     *
+     * @param array $file_ids
+     * @return void
+     */
+    protected static function updateFilesTotalRecords($file_ids = [])
+    {
+        if (!empty($file_ids)) {
+            $updateQuery = 'UPDATE exp_files SET total_records = (SELECT COUNT(exp_file_usage.file_id) FROM exp_file_usage WHERE exp_file_usage.file_id = exp_files.file_id AND exp_file_usage.file_id IN (' . implode(', ', $file_ids) . ')) WHERE exp_files.file_id IN (' . implode(', ', $file_ids) . ')';
+            ee('db')->query($updateQuery);
+        }
     }
 }
 

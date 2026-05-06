@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -37,7 +37,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
     /**
      * @return string
      */
-    public static function getFieldType()
+    public static function getFieldType(): string
     {
         return FieldInterface::TYPE_DYNAMIC_RECIPIENTS;
     }
@@ -45,7 +45,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
     /**
      * @return bool
      */
-    public function isShowAsRadio()
+    public function isShowAsRadio(): bool
     {
         return (bool) $this->showAsRadio;
     }
@@ -53,7 +53,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
     /**
      * @return bool
      */
-    public function isShowAsCheckboxes()
+    public function isShowAsCheckboxes(): bool
     {
         return (bool) $this->showAsCheckboxes;
     }
@@ -63,7 +63,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return FieldInterface::TYPE_DYNAMIC_RECIPIENTS;
     }
@@ -73,7 +73,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
      *
      * @return string
      */
-    public function getInputHtml()
+    public function getInputHtml(): string
     {
         if ($this->isShowAsRadio()) {
             return $this->renderAsRadios();
@@ -123,7 +123,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
      *
      * @return array
      */
-    public function getRecipients()
+    public function getRecipients(): array
     {
         /** @var Option[] $options */
         $options = $this->getOptions();
@@ -181,7 +181,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
      *
      * @return mixed
      */
-    public function getValueLabels($values)
+    public function getValueLabels($values): ?array
     {
         $options = $this->getOptions();
 
@@ -225,7 +225,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
     /**
      * @return string
      */
-    private function renderAsSelect()
+    private function renderAsSelect(): string
     {
         $attributes = $this->getCustomAttributes();
 
@@ -252,7 +252,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
     /**
      * @return string
      */
-    private function renderAsRadios()
+    private function renderAsRadios(): string
     {
         $attributes = $this->getCustomAttributes();
         $output     = '';
@@ -279,7 +279,7 @@ class DynamicRecipientField extends AbstractField implements RecipientInterface,
     /**
      * @return string
      */
-    private function renderAsCheckboxes()
+    private function renderAsCheckboxes(): string
     {
         $attributes = $this->getCustomAttributes();
         $output     = '';

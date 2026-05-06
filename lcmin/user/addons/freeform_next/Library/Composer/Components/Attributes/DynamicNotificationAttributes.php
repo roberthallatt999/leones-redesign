@@ -4,20 +4,23 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Composer\Components\Attributes;
 
-class DynamicNotificationAttributes extends AbstractAttributes implements \JsonSerializable
+use JsonSerializable;
+class DynamicNotificationAttributes extends AbstractAttributes implements JsonSerializable
 {
     /** @var array */
     protected $recipients;
 
     /** @var string */
     protected $template;
+
+    protected string $format = 'html';
 
     /**
      * @return array
@@ -45,6 +48,11 @@ class DynamicNotificationAttributes extends AbstractAttributes implements \JsonS
         return $this->template;
     }
 
+    public function getFormat(): string
+    {
+        return $this->format;
+    }
+
     /**
      * @inheritDoc
      */
@@ -53,6 +61,7 @@ class DynamicNotificationAttributes extends AbstractAttributes implements \JsonS
         return [
             'recipients' => $this->getRecipients(),
             'template'   => $this->getTemplate(),
+            'format'     => $this->getFormat(),
         ];
     }
 }

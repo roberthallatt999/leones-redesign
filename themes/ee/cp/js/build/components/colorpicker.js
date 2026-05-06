@@ -208,9 +208,10 @@ var ColorPicker = /** @class */ (function (_super) {
             opacitySliderPos = Math.round((1 - currentColor.rgb.a) * (this.opacitySliderRef.offsetHeight - this.opacitySliderKnobRef.offsetHeight)) + 'px';
         }
         return (React.createElement("div", { className: "colorpicker" },
-            React.createElement("input", { className: "colorpicker__input", type: "text", id: this.props.inputId, name: this.props.inputName, value: this.state.inputValue, onChange: this.onInputChange, onFocus: this.showColorPanel, onBlur: this.hideColorPanel, autoComplete: "off", "aria-label": EE.lang.colorpicker_input }),
-            React.createElement("span", { className: "colorpicker__input-color", style: { borderColor: currentColor.shade(-15).rgbaStr } },
-                React.createElement("span", { style: { background: currentColor.rgbaStr } })),
+            React.createElement("div", { className: "colorpicker__inner_wrapper" },
+                React.createElement("input", { className: "colorpicker__input js-dropdown-toggle", type: "text", id: this.props.inputId, name: this.props.inputName, value: this.state.inputValue, onChange: this.onInputChange, onFocus: this.showColorPanel, onBlur: this.hideColorPanel, autoComplete: "off", "aria-label": EE.lang.colorpicker_input }),
+                React.createElement("span", { className: "colorpicker__input-color", style: { borderColor: currentColor.shade(-15).rgbaStr } },
+                    React.createElement("span", { style: { background: currentColor.rgbaStr } }))),
             React.createElement("div", { className: "colorpicker__panel", style: { display: this.state.showPanel ? 'block' : 'none' }, onMouseDown: function (e) { e.stopPropagation(); e.preventDefault(); } },
                 (allowedColors == 'any') &&
                     React.createElement("div", { className: "colorpicker__controls" },
@@ -244,9 +245,8 @@ var ColorPicker = /** @class */ (function (_super) {
 }(React.Component));
 // TODO: The color picker overflows the grid field
 // Render color picker inputs when created:
-$(document).ready(function () {
-    // Using window.load to make sure this code gets called after all document.readys
-    $(window).load(function () {
+$(window).on('load', function () {
+    $(document).ready(function () {
         ColorPicker.renderFields();
     });
 });
@@ -269,4 +269,21 @@ FluidField.on('colorpicker', 'add', function (field) {
 // Load any color pickers when the field manager selects a fieldtype
 FieldManager.on('fieldModalDisplay', function (modal) {
     ColorPicker.renderFields(modal[0]);
+});
+$('input.color-picker').each(function () {
+    var input = this;
+    var inputName = input.name;
+    var inputValue = input.value;
+    $(input).wrap('<div>');
+    var newContainer = $(input).parent();
+    ReactDOM.render(React.createElement(ColorPicker, {
+        inputName: inputName,
+        initialColor: inputValue,
+        allowedColors: 'any',
+        swatches: ['FA5252', 'FD7E14', 'FCC419', '40C057', '228BE6', 'BE4BDB', 'F783AC'],
+        onChange: function (newColor) {
+            // Change colors
+            input.value = newColor;
+        }
+    }, null), newContainer[0]);
 });

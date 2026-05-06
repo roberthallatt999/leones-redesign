@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -31,6 +31,9 @@ class ChannelLayout extends Model implements LayoutInterface
     );
 
     protected static $_relationships = array(
+        'Site' => array(
+            'type' => 'belongsTo'
+        ),
         'Channel' => array(
             'type' => 'belongsTo',
             'key' => 'channel_id'
@@ -66,7 +69,7 @@ class ChannelLayout extends Model implements LayoutInterface
         foreach ($layout as $section) {
             // Tabs have 4 pieces of data: an id, a name, a list of fields,
             // and a visibility flag. If any of them are missing this is not
-            // a tab (but visiblity is non-essential so...) we'll skip it. This
+            // a tab (but visibility is non-essential so...) we'll skip it. This
             // is better than a PHP error.
             if (! (isset($section['id'])
                     && isset($section['name'])
@@ -77,7 +80,7 @@ class ChannelLayout extends Model implements LayoutInterface
 
             $tab = new LayoutTab($section['id'], $section['name']);
 
-            // If they don't havea 'visible' key we'll assume it is visible
+            // If they don't have 'visible' key we'll assume it is visible
             // and just move on.
             if (isset($section['visible']) && ! $section['visible']) {
                 $tab->hide();
@@ -98,6 +101,14 @@ class ChannelLayout extends Model implements LayoutInterface
                 }
 
                 $field = $fields[$field_id];
+
+                //set the width of a field
+                //if width isn't set then default is 100%
+                if (isset($field_info['width'])) {
+                    $field->setWidth($field_info['width']);
+                } else {
+                    $field->setWidth(100);
+                }
 
                 // Fields can be configured to start collapsed or expaned, but
                 // a layout should always override it.

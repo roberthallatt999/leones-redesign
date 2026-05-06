@@ -4,24 +4,16 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Composer\Components\Fields\DataContainers;
 
-class Option implements \JsonSerializable
+use JsonSerializable;
+class Option implements JsonSerializable
 {
-    /** @var string */
-    private $label;
-
-    /** @var string */
-    private $value;
-
-    /** @var bool */
-    private $checked;
-
     /**
      * Option constructor.
      *
@@ -29,17 +21,14 @@ class Option implements \JsonSerializable
      * @param string $value
      * @param bool   $checked
      */
-    public function __construct($label, $value, $checked = false)
+    public function __construct(private $label, private $value, private $checked = false)
     {
-        $this->label   = $label;
-        $this->value   = $value;
-        $this->checked = $checked;
     }
 
     /**
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return (string) $this->label;
     }
@@ -47,7 +36,7 @@ class Option implements \JsonSerializable
     /**
      * @return string
      */
-    public function getValue()
+    public function getValue(): string
     {
         return (string) $this->value;
     }

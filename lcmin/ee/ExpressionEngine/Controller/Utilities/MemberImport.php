@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -545,7 +545,7 @@ class MemberImport extends Utilities
                     if ($screen_name) {
                         $validationRules['screen_name'] = 'validScreenName|notBanned';
                     }
-                    $validationRules['email'] = 'email|uniqueEmail|max_length[' . USERNAME_MAX_LENGTH . ']|notBanned';
+                    $validationRules['email'] = 'email|uniqueEmail|max_length[254]|notBanned';
                     $validationResult = ee('Validation')->make($validationRules)->validate($validationData);
 
                     if ($validationResult->isNotValid()) {

@@ -4,34 +4,29 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\DataObjects;
 
+use JsonSerializable;
 use Solspace\Addons\FreeformNext\Library\Helpers\StringHelper;
 
-class FormTemplate implements \JsonSerializable
+class FormTemplate implements JsonSerializable
 {
-    /** @var string */
-    private $filePath;
+    private string|array $fileName;
 
-    /** @var string */
-    private $fileName;
-
-    /** @var string */
-    private $name;
+    private string $name;
 
     /**
      * FormTemplate constructor.
      *
      * @param string $filePath
      */
-    public function __construct($filePath)
+    public function __construct(private $filePath)
     {
-        $this->filePath = $filePath;
         $this->fileName = pathinfo($filePath, PATHINFO_BASENAME);
         $this->name     = StringHelper::camelize(StringHelper::humanize(pathinfo($filePath, PATHINFO_FILENAME)));
     }
@@ -47,7 +42,7 @@ class FormTemplate implements \JsonSerializable
     /**
      * @return string
      */
-    public function getFileName()
+    public function getFileName(): string|array
     {
         return $this->fileName;
     }
@@ -55,7 +50,7 @@ class FormTemplate implements \JsonSerializable
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }

@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -22,13 +22,13 @@ class SubmitField extends AbstractField implements SingleValueInterface, InputOn
 {
     use HashAsHandleTrait;
 
-    const PREVIOUS_PAGE_INPUT_NAME = "form_previous_page_button";
-    const SUBMIT_INPUT_NAME        = "form_page_submit";
+    public const PREVIOUS_PAGE_INPUT_NAME = "form_previous_page_button";
+    public const SUBMIT_INPUT_NAME        = "form_page_submit";
 
-    const POSITION_LEFT   = "left";
-    const POSITION_CENTER = "center";
-    const POSITION_RIGHT  = "right";
-    const POSITION_SPREAD = "spread";
+    public const POSITION_LEFT   = "left";
+    public const POSITION_CENTER = "center";
+    public const POSITION_RIGHT  = "right";
+    public const POSITION_SPREAD = "spread";
 
     use SingleStaticValueTrait;
 
@@ -91,7 +91,7 @@ class SubmitField extends AbstractField implements SingleValueInterface, InputOn
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_SUBMIT;
     }
@@ -101,7 +101,7 @@ class SubmitField extends AbstractField implements SingleValueInterface, InputOn
      *
      * @return string
      */
-    public function getInputHtml()
+    public function getInputHtml(): string
     {
         $attributes = $this->getCustomAttributes();
         $submitClass = $attributes->getInputClassOnly();
@@ -143,7 +143,7 @@ class SubmitField extends AbstractField implements SingleValueInterface, InputOn
     /**
      * @return bool
      */
-    private function isFirstPage()
+    private function isFirstPage(): bool
     {
         return $this->getPageIndex() === 0;
     }

@@ -6,11 +6,10 @@ class Plugin
 {
     /**
      * @param string $name
-     * @param mixed  $default
      *
      * @return mixed
      */
-    public function getParam($name, $default = null)
+    public function getParam($name, mixed $default = null)
     {
         $param = ee()->TMPL->fetch_param($name);
 
@@ -23,11 +22,10 @@ class Plugin
 
     /**
      * @param string $name
-     * @param mixed  $default
      *
      * @return mixed
      */
-    public function getPost($name, $default = null)
+    public function getPost($name, mixed $default = null)
     {
         $value = ee()->input->post($name);
 
@@ -38,10 +36,7 @@ class Plugin
         return $value;
     }
 
-    /**
-     * @param mixed $object
-     */
-    public function returnJson($object)
+    public function returnJson(mixed $object): void
     {
         echo json_encode($object);
         die();
@@ -49,10 +44,8 @@ class Plugin
 
     /**
      * Redirects to a given $url
-     *
-     * @param string $url
      */
-    public function redirect($url)
+    public function redirect(string $url): void
     {
         header('Location: ' . $url);
         die();
@@ -63,7 +56,7 @@ class Plugin
      *
      * @return string
      */
-    public function theme_folder_url()
+    public function theme_folder_url(): string
     {
         return rtrim(URL_THIRD_THEMES, '/') . '/' . $this->getAddonLowerName() . '/';
     }
@@ -93,7 +86,7 @@ class Plugin
     /**
      * @return bool
      */
-    protected function loadLanguageFiles()
+    protected function loadLanguageFiles(): bool
     {
         $lowerName       = $this->getAddonLowerName();
         $language        = ee()->lang;
@@ -122,7 +115,7 @@ class Plugin
 
         if (
             is_object($object) &&
-            strtolower(get_class($object)) === 'session' &&
+            strtolower($object::class) === 'session' &&
             $object->userdata['language']
         ) {
             $userLanguage = $object->userdata['language'];

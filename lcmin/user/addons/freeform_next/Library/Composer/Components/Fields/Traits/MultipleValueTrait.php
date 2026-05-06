@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -74,11 +74,9 @@ trait MultipleValueTrait
     }
 
     /**
-     * @param mixed $value
-     *
      * @return $this
      */
-    public function setValue($value)
+    public function setValue(mixed $value)
     {
         if ($this instanceof MultipleValueInterface && !\is_array($value)) {
             if (null === $value) {

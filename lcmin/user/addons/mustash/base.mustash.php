@@ -49,6 +49,14 @@ abstract class Mustash_base {
 	public $docs_url;
 
 	/**
+	 * Module documentation URL (assigned in __construct, line 118)
+	 *
+	 * @var        string
+	 * @access     public
+	 */
+	public $mod_docs_url;
+
+	/**
 	 * Main class shortcut
 	 *
 	 * @var        string

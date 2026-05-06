@@ -276,7 +276,7 @@ $lang = array(
 
     'mbr_may_now_log_in' => 'You may now log in and begin using it.',
 
-    'mbr_member_group' => 'Member Group:',
+    'mbr_member_group' => 'Primary Role:',
 
     'mbr_member_local_time' => 'Member Local Time',
 
@@ -405,6 +405,8 @@ $lang = array(
     'mbr_username_email_sent' => 'Forgot Username Email Sent',
 
     'mbr_username_length' => 'Usernames must be at least %x characters long',
+
+    'mbr_email_cannot_be_used_as_username' => 'Please provide a different email address or username.',
 
     'mbr_view_posts_by_member' => 'View all posts by this member',
 
@@ -624,6 +626,12 @@ We reserve the right to remove, edit, or move any messages for any reason.',
     'mbr_reset_password' => 'Please enter a new password',
 
     'mbr_successfully_changed_password' => 'You have successfully changed your password. Please login using your new password.',
+
+    /* Template Generator */
+
+    'include_navigation' => 'Include Navigation',
+
+    'include_navigation_desc' => 'Add links to navigate between generated templates',
 
 );
 

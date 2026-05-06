@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -51,6 +51,12 @@ class Provider extends InjectionBindingDecorator
     protected $config_files = array();
 
     /**
+     * Call location
+     * @var string
+     */
+    protected $callLocation;
+
+    /**
      * @param ServiceProvider $delegate The root dependencies object
      * @param String $path Core namespace path
      * @param Array $data The setup file contents
@@ -59,6 +65,13 @@ class Provider extends InjectionBindingDecorator
     {
         $this->path = $path;
         $this->data = $data;
+
+        // Set the call location
+        if (defined('REQ') && REQ === 'CLI') {
+            $this->setCallLocation('CLI');
+        } else if (defined('REQ') && REQ === 'CP') {
+            $this->setCallLocation('CP');
+        }
 
         $this->setConfigPath($path . '/config');
 
@@ -74,6 +87,24 @@ class Provider extends InjectionBindingDecorator
     public function setConfigPath($path)
     {
         $this->config_path = rtrim($path, '/');
+    }
+
+    /**
+     * Set the call location
+     */
+    public function setCallLocation($location)
+    {
+        $this->callLocation = $location;
+    }
+
+    /**
+     * Get the call location
+     *
+     * @return string
+     */
+    public function getCallLocation()
+    {
+        return $this->callLocation;
     }
 
     /**
@@ -265,7 +296,7 @@ class Provider extends InjectionBindingDecorator
      * @param Closure $map Closure to call on the data before returning
      * @return Mixed Setup value
      */
-    public function get($key, $default = null, Closure $map = null)
+    public function get($key, $default = null, ?Closure $map = null)
     {
         if (array_key_exists($key, $this->data)) {
             $data = $this->data[$key];
@@ -375,16 +406,16 @@ class Provider extends InjectionBindingDecorator
                 if (!isset($providerCookieSettings[$cookie_name])) {
                     $cookieSettings = ee('Model')->make('CookieSetting', $cookieParams);
                     switch ($cookieParams['cookie_provider']) {
+                        // first-party add-ons
                         case 'pro':
-                            ee()->lang->load('pro', ee()->lang->getIdiom(), false, true, PATH_ADDONS . 'pro/', false);
-                            break;
                         case 'comment':
-                        case 'forum':
                             ee()->lang->load($cookieParams['cookie_provider']);
                             break;
+                        // core EE
                         case 'ee':
                             ee()->lang->load('core');
                             break;
+                        // third-party add-ons
                         default:
                             ee()->lang->loadfile($cookieParams['cookie_provider'], $cookieParams['cookie_provider'], false);
                             break;
@@ -410,6 +441,55 @@ class Provider extends InjectionBindingDecorator
                 }
             }
         }
+    }
+
+    /**
+     * Registers filesystem adapters
+     *
+     * @return void
+     */
+    public function registerFilesystemAdapters()
+    {
+        $filesystem_adapters = $this->get('filesystem_adapters', array());
+        if (!empty($filesystem_adapters)) {
+            ee()->lang->loadfile($this->getPrefix());
+            foreach ($filesystem_adapters as $adapter) {
+                ee('Filesystem/Adapter')->registerAdapter($adapter);
+            }
+        }
+        unset($filesystem_adapters);
+    }
+
+    /**
+     * Register variable modifiers
+     *
+     * @return void
+     */
+    public function registerVariableModifiers()
+    {
+        $modifiers = $this->get('modifiers', array());
+        if (!empty($modifiers)) {
+            foreach ($modifiers as $modifier) {
+                ee('Variables/Modifiers')->register($modifier, $this);
+            }
+        }
+        unset($modifiers);
+    }
+
+    /**
+     * Register Template Generators
+     *
+     * @return void
+     */
+    public function registerTemplateGenerators()
+    {
+        $generators = $this->get('templateGenerators', array());
+        if (!empty($generators)) {
+            foreach ($generators as $generator) {
+                ee('TemplateGenerator')->register($generator, $this);
+            }
+        }
+        unset($generators);
     }
 
     /**

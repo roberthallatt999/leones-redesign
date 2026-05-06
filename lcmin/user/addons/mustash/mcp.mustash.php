@@ -15,6 +15,7 @@ use EllisLab\ExpressionEngine\Library\CP\Table;
 class mustash_mcp {
 
 	public $url_base = '';
+	public $settings;
 
 	protected $errors = array();
 	

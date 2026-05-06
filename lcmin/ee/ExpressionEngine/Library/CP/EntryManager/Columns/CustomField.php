@@ -4,14 +4,14 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
 namespace ExpressionEngine\Library\CP\EntryManager\Columns;
 
 use ExpressionEngine\Library\CP\EntryManager\Columns\Column;
-use ExpressionEngine\Model\Channel\ChannelField;
+use ExpressionEngine\Model\Content\FieldModel;
 use ExpressionEngine\Model\Content\FieldFacade;
 
 /**
@@ -21,7 +21,7 @@ class CustomField extends Column
 {
     private $field;
 
-    public function __construct($identifier, ChannelField $channel_field)
+    public function __construct($identifier, FieldModel $channel_field)
     {
         parent::__construct($identifier);
 

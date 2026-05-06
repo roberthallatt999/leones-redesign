@@ -31,6 +31,12 @@ class Detour_pro_ext extends Ext
         parent::__construct();
 
         $this->settings = $this->flux->getSettings(true);
+        $this->settings = $this->sanitizeSettings($this->settings);
+
+        // Ensure this hook exists for already-installed sites without forcing a reinstall.
+        if (defined('REQ') && REQ == 'CP') {
+            $this->register_extension('cp_js_end');
+        }
     }
 
     public function activateExtension()
@@ -42,6 +48,7 @@ class Detour_pro_ext extends Ext
 
         $this->register_extension('sessions_start', null, 1, 'n');
         $this->register_extension('cp_custom_menu');
+        $this->register_extension('cp_js_end');
     }
 
     public function disableExtension()
@@ -62,6 +69,12 @@ class Detour_pro_ext extends Ext
         // add cp_custom_menu hook
         if (version_compare($current, '2.0.11', "<")) {
             $this->register_extension("cp_custom_menu");
+            $updated = true;
+        }
+
+        // Add add-ons page license status adapter.
+        if (version_compare($current, '4.0.1', "<")) {
+            $this->register_extension("cp_js_end");
             $updated = true;
         }
 
@@ -117,7 +130,16 @@ class Detour_pro_ext extends Ext
                     (start_date IS NULL OR start_date <= NOW())
                     AND (end_date IS NULL OR end_date >= NOW())
                     AND ? LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
-                    AND site_id = ?";
+                    AND site_id = ?
+                ORDER BY
+                    CASE
+                        WHEN LOCATE('%', original_url) = 0 THEN 0
+                        WHEN LOCATE('%%', original_url) > 0 THEN 1
+                        ELSE 2
+                    END ASC,
+                    CHAR_LENGTH(REPLACE(original_url, '%', '')) DESC,
+                    CHAR_LENGTH(original_url) DESC,
+                    detour_id ASC";
         $detour = ee()->db->query($sql, [$url, ee()->config->item('site_id')])->row_array();
 
         if (empty($detour) && !empty($this->settings['allow_trailing_slash']) && $this->settings['allow_trailing_slash'] == 1) {
@@ -135,7 +157,16 @@ class Detour_pro_ext extends Ext
                         (start_date IS NULL OR start_date <= NOW())
                         AND (end_date IS NULL OR end_date >= NOW())
                         AND ? LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
-                        AND site_id = ?";
+                        AND site_id = ?
+                    ORDER BY
+                        CASE
+                            WHEN LOCATE('%', original_url) = 0 THEN 0
+                            WHEN LOCATE('%%', original_url) > 0 THEN 1
+                            ELSE 2
+                        END ASC,
+                        CHAR_LENGTH(REPLACE(original_url, '%', '')) DESC,
+                        CHAR_LENGTH(original_url) DESC,
+                        detour_id ASC";
             $detour = ee()->db->query($sql, [$search, ee()->config->item('site_id')])->row_array();
         }
 
@@ -154,7 +185,16 @@ class Detour_pro_ext extends Ext
                         (start_date IS NULL OR start_date <= NOW())
                         AND (end_date IS NULL OR end_date >= NOW())
                         AND ? LIKE REPLACE(original_url, '_', '[_') ESCAPE '['
-                        AND site_id = ?";
+                        AND site_id = ?
+                    ORDER BY
+                        CASE
+                            WHEN LOCATE('%', original_url) = 0 THEN 0
+                            WHEN LOCATE('%%', original_url) > 0 THEN 1
+                            ELSE 2
+                        END ASC,
+                        CHAR_LENGTH(REPLACE(original_url, '%', '')) DESC,
+                        CHAR_LENGTH(original_url) DESC,
+                        detour_id ASC";
                 $detour = ee()->db->query($sql, [$search, ee()->config->item('site_id')])->row_array();
 
             // This is a detour set up like the following:
@@ -190,6 +230,101 @@ class Detour_pro_ext extends Ext
                 exit;
             }
         }
+    }
+
+    public function cp_js_end()
+    {
+        $scripts = array();
+
+        if (ee()->extensions->last_call !== false) {
+            $scripts[] = ee()->extensions->last_call;
+        }
+
+        $scripts[] = <<<'JS'
+(function () {
+    var search = window.location.search || '';
+    var cpRoute = '';
+
+    if (search.charAt(0) === '?') {
+        cpRoute = search.substring(1).split('&')[0];
+    }
+
+    if (!cpRoute) {
+        var pathname = window.location.pathname || '';
+        var cpIndex = pathname.indexOf('/cp/');
+        if (cpIndex !== -1) {
+            cpRoute = pathname.substring(cpIndex);
+        }
+    }
+
+    cpRoute = cpRoute.replace(/\/+$/, '');
+    if (cpRoute !== '/cp/addons') {
+        return;
+    }
+
+    var statusByWidth = {
+        2: 'expired'
+    };
+
+    var maxAttempts = 30;
+    var attempt = 0;
+
+    function appendExpiredRibbon() {
+        var card = document.querySelector('div[data-addon="detour_pro"]');
+        if (!card) {
+            return false;
+        }
+
+        if (card.querySelector('.corner-ribbon.expired')) {
+            return true;
+        }
+
+        var ribbonWrap = document.createElement('div');
+        ribbonWrap.className = 'corner-ribbon-wrap';
+
+        var ribbon = document.createElement('p');
+        ribbon.className = 'corner-ribbon top-left expired shadow';
+        ribbon.textContent = 'Expired';
+
+        ribbonWrap.appendChild(ribbon);
+        card.appendChild(ribbonWrap);
+
+        return true;
+    }
+
+    function applyExpiredStatusFromRuntime() {
+        attempt++;
+
+        var statusImg = window.detour_proi;
+        if (!statusImg) {
+            if (attempt < maxAttempts) {
+                setTimeout(applyExpiredStatusFromRuntime, 200);
+            }
+            return;
+        }
+
+        var width = Number(statusImg.width || statusImg.naturalWidth || 0);
+        var status = statusByWidth[width] || '';
+
+        if (status === 'expired') {
+            appendExpiredRibbon();
+            return;
+        }
+
+        if (attempt < maxAttempts) {
+            setTimeout(applyExpiredStatusFromRuntime, 200);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyExpiredStatusFromRuntime);
+    } else {
+        applyExpiredStatusFromRuntime();
+    }
+})();
+JS;
+
+        return implode("\n", $scripts);
     }
 
     /**************************************************\
@@ -234,7 +369,7 @@ class Detour_pro_ext extends Ext
             $fragment = parse_url($newUrl, PHP_URL_FRAGMENT);
 
             // parse foo=bar&keywords=test into an array
-            parse_str($query, $result);
+            parse_str((string) $query, $result);
 
             // Combine the parameter arrays with the defined parameters overriding the GET params if relevant
             // e.g. redirect from /page to /other-page?thing=test, but with ?foo=bar in the original request,
@@ -266,6 +401,37 @@ class Detour_pro_ext extends Ext
         }
 
         return 'none';
+    }
+
+    /**
+     * Remove non-serializable values (e.g. Closures from addon.setup.php)
+     * so extension settings can be serialized safely during install.
+     */
+    private function sanitizeSettings($settings)
+    {
+        if (!is_array($settings)) {
+            return array();
+        }
+
+        $clean = array();
+        foreach ($settings as $key => $value) {
+            if ($value instanceof \Closure) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $clean[$key] = $this->sanitizeSettings($value);
+                continue;
+            }
+
+            if (is_object($value)) {
+                continue;
+            }
+
+            $clean[$key] = $value;
+        }
+
+        return $clean;
     }
 }
 //END CLASS

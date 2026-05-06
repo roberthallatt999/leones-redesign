@@ -4,15 +4,16 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Controllers;
 
+use Exception;
 use EllisLab\ExpressionEngine\Library\CP\Table;
-use EllisLab\ExpressionEngine\Service\Validation\Result;
+use ExpressionEngine\Service\Validation\Result;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\FieldInterface;
 use Solspace\Addons\FreeformNext\Library\Exceptions\FieldExceptions\FieldException;
 use Solspace\Addons\FreeformNext\Library\Helpers\ExtensionHelper;
@@ -31,7 +32,7 @@ class FieldController extends Controller
     /**
      * @return CpView
      */
-    public function index()
+    public function index(): RedirectView|CpView
     {
         $canAccessFields = $this->getPermissionsService()->canAccessFields(ee()->session->userdata('group_id'));
 
@@ -77,7 +78,7 @@ class FieldController extends Controller
                     'name'  => 'id_list[]',
                     'value' => $field->id,
                     'data'  => [
-                        'confirm' => lang('Field') . ': <b>' . htmlentities($field->label, ENT_QUOTES) . '</b>',
+                        'confirm' => lang('Field') . ': <b>' . htmlentities($field->label, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8') . '</b>',
                     ],
                 ],
             ];
@@ -110,7 +111,7 @@ class FieldController extends Controller
      * @return CpView
      * @throws FieldException
      */
-    public function edit($id, Result $validation = null)
+    public function edit($id, ?Result $validation = null): RedirectView|CpView
     {
         $canAccessFields = $this->getPermissionsService()->canAccessFields(ee()->session->userdata('group_id'));
 
@@ -228,7 +229,7 @@ class FieldController extends Controller
      *
      * @return FieldModel
      */
-    public function save($fieldId = null)
+    public function save(null|string|int $fieldId = null)
     {
         $field = FieldRepository::getInstance()->getOrCreateField($fieldId);
 
@@ -241,7 +242,7 @@ class FieldController extends Controller
         $isNew = !$field->id;
 
         $post        = $_POST;
-        $type        = isset($_POST['type']) ? $_POST['type'] : $field->type;
+        $type        = $_POST['type'] ?? $field->type;
         $validValues = $additionalProperties = [];
         foreach ($post as $key => $value) {
             if (property_exists($field, $key)) {
@@ -353,7 +354,7 @@ class FieldController extends Controller
                 ->defer();
 
             return $field;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             ee('CP/Alert')
                 ->makeInline('shared-form')
                 ->asIssue()
@@ -367,7 +368,7 @@ class FieldController extends Controller
     /**
      * @return RedirectView
      */
-    public function batchDelete()
+    public function batchDelete(): RedirectView
     {
         $canAccessFields = $this->getPermissionsService()->canAccessFields(ee()->session->userdata('group_id'));
 
@@ -398,8 +399,6 @@ class FieldController extends Controller
     }
 
     /**
-     * @param FieldModel $model
-     *
      * @return array
      */
     private function getFieldSettingsByType(FieldModel $model)
@@ -1101,7 +1100,7 @@ class FieldController extends Controller
                 $sectionData[] = [
                     'group'  => $type,
                     'title'  => $data['title'],
-                    'desc'   => isset($data['desc']) ? $data['desc'] : '',
+                    'desc'   => $data['desc'] ?? '',
                     'fields' => $fields,
                 ];
             }
@@ -1111,12 +1110,9 @@ class FieldController extends Controller
     }
 
     /**
-     * @param FieldModel $model
-     * @param string     $template
-     *
      * @return string
      */
-    private function getFieldHtml(FieldModel $model, $template, $type)
+    private function getFieldHtml(FieldModel $model, string $template, string $type): string|bool
     {
         $singleValue = $type !== FieldInterface::TYPE_CHECKBOX_GROUP;
 

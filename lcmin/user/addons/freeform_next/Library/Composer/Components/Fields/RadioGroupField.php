@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -26,7 +26,7 @@ class RadioGroupField extends AbstractExternalOptionsField implements SingleValu
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_RADIO_GROUP;
     }
@@ -36,7 +36,7 @@ class RadioGroupField extends AbstractExternalOptionsField implements SingleValu
      *
      * @return string
      */
-    public function getInputHtml()
+    public function getInputHtml(): string
     {
         $attributes = $this->getCustomAttributes();
         $output     = '';

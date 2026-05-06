@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -51,18 +51,26 @@ use ExpressionEngine\Service\URL;
 use ExpressionEngine\Service\Updater;
 use ExpressionEngine\Service\Validation;
 use ExpressionEngine\Service\Template;
+use ExpressionEngine\Service\TemplateGenerator;
 use ExpressionEngine\Service\View;
 use ExpressionEngine\Addons\Spam\Service\Spam;
 use ExpressionEngine\Addons\FilePicker\Service\FilePicker;
 use ExpressionEngine\Service\Generator\ActionGenerator;
 use ExpressionEngine\Service\Generator\AddonGenerator;
 use ExpressionEngine\Service\Generator\CommandGenerator;
+use ExpressionEngine\Service\Generator\CpRouteGenerator;
 use ExpressionEngine\Service\Generator\ExtensionHookGenerator;
+use ExpressionEngine\Service\Generator\ExtensionGenerator;
+use ExpressionEngine\Service\Generator\FieldtypeGenerator;
+use ExpressionEngine\Service\Generator\JumpsGenerator;
 use ExpressionEngine\Service\Generator\ModelGenerator;
 use ExpressionEngine\Service\Generator\ProletGenerator;
-use ExpressionEngine\Service\Generator\TagGenerator;
+use ExpressionEngine\Service\Generator\SidebarGenerator;
+use ExpressionEngine\Service\Generator\TemplateTagGenerator;
 use ExpressionEngine\Service\Generator\WidgetGenerator;
+use ExpressionEngine\Service\Generator\ServiceGenerator;
 use ExpressionEngine\Model\Channel\ChannelEntry;
+use ExpressionEngine\Model\Channel\Reindex;
 
 // TODO should put the version in here at some point ...
 $setup = [
@@ -220,6 +228,10 @@ $setup = [
             return new View\ViewFactory($ee);
         },
 
+        'View/Stub' => function ($ee) {
+            return new View\StubFactory($ee);
+        },
+
         'Memory' => function ($ee) {
             return new Memory\Memory();
         },
@@ -340,6 +352,16 @@ $setup = [
             return new LivePreview\LivePreview(ee()->session);
         },
 
+        'LivePreviewToken' => function ($ee) {
+            $key = ee()->config->item('live_preview_key') ?: ee()->config->item('encryption_key');
+
+            return new LivePreview\LivePreviewToken(
+                ee()->session,
+                $ee->make('Encrypt', $key),
+                $key
+            );
+        },
+
         'Str' => function ($ee) {
             return new Str();
         },
@@ -357,14 +379,16 @@ $setup = [
 
         'AddonGenerator' => function ($ee, $data) {
             $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
 
-            return new AddonGenerator($filesystem, $data);
+            return new AddonGenerator($filesystem, $str, $data);
         },
 
         'CommandGenerator' => function ($ee, $data) {
             $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
 
-            return new CommandGenerator($filesystem, $data);
+            return new CommandGenerator($filesystem, $str, $data);
         },
 
         'ExtensionHookGenerator' => function ($ee, $data) {
@@ -374,29 +398,74 @@ $setup = [
             return new ExtensionHookGenerator($filesystem, $str, $data);
         },
 
+        'ExtensionGenerator' => function ($ee, $data) {
+            $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
+
+            return new ExtensionGenerator($filesystem, $str, $data);
+        },
+
+        'FieldtypeGenerator' => function ($ee, $data) {
+            $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
+
+            return new FieldtypeGenerator($filesystem, $str, $data);
+        },
+
+        'JumpsGenerator' => function ($ee, $data) {
+            $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
+
+            return new JumpsGenerator($filesystem, $str, $data);
+        },
+
         'ModelGenerator' => function ($ee, $data) {
             $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
 
-            return new ModelGenerator($filesystem, $data);
+            return new ModelGenerator($filesystem, $str, $data);
+        },
+
+        'CpRouteGenerator' => function ($ee, $data) {
+            $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
+
+            return new CpRouteGenerator($filesystem, $str, $data);
         },
 
         'ProletGenerator' => function ($ee, $data) {
             $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
 
-            return new ProletGenerator($filesystem, $data);
+            return new ProletGenerator($filesystem, $str, $data);
         },
 
-        'TagGenerator' => function ($ee, $data) {
+        'SidebarGenerator' => function ($ee, $data) {
             $filesystem = $ee->make('Filesystem');
             $str = $ee->make('Str');
 
-            return new TagGenerator($filesystem, $str, $data);
+            return new SidebarGenerator($filesystem, $str, $data);
+        },
+
+        'TemplateTagGenerator' => function ($ee, $data) {
+            $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
+
+            return new TemplateTagGenerator($filesystem, $str, $data);
         },
 
         'WidgetGenerator' => function ($ee, $data) {
             $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
 
-            return new WidgetGenerator($filesystem, $data);
+            return new WidgetGenerator($filesystem, $str, $data);
+        },
+
+        'ServiceGenerator' => function ($ee, $data) {
+            $filesystem = $ee->make('Filesystem');
+            $str = $ee->make('Str');
+
+            return new ServiceGenerator($filesystem, $str, $data);
         },
 
         'Consent' => function ($ee, $member_id = null) {
@@ -437,6 +506,10 @@ $setup = [
 
         'Channel/ChannelEntry' => function ($ee) {
             return new Channel\ChannelEntry();
+        },
+
+        'Channel/Reindex' => function ($ee) {
+            return new Channel\Reindex();
         },
 
         'ChannelSet' => function ($ee) {
@@ -525,8 +598,16 @@ $setup = [
             return new File\Factory();
         },
 
+        'FileUsage' => function ($ee) {
+            return new File\Usage();
+        },
+
         'Filesystem' => function ($ee) {
             return new Filesystem\Filesystem();
+        },
+
+        'Filesystem/Adapter' => function ($ee) {
+            return new Filesystem\AdapterManager();
         },
 
         'IpAddress' => function ($ee) {
@@ -542,6 +623,13 @@ $setup = [
 
         'Member' => function ($ee) {
             return new Member\Member();
+        },
+
+        'MimeType' => function ($ee) {
+            $mimeType = new ExpressionEngine\Library\Mime\MimeType();
+            $mimeType->whitelistMimesFromConfig();
+
+            return $mimeType;
         },
 
         'Model/Datastore' => function ($ee) {
@@ -566,15 +654,15 @@ $setup = [
         },
 
         'Permission' => function ($ee, $site_id = null) {
-            $userdata = ee()->session->all_userdata();
-            $member = ee()->session->getMember();
+            $userdata = (REQ !== 'CLI') ? ee()->session->all_userdata() : [];
+            $member = (REQ !== 'CLI') ? ee()->session->getMember() : false;
             $site_id = ($site_id) ?: ee()->config->item('site_id');
 
             return new Permission\Permission(
                 $ee->make('Model'),
                 $userdata,
                 ($member) ? $member->getPermissions() : [],
-                ($member) ? $member->Roles->getDictionary('role_id', 'name') : [],
+                ($member) ? $member->Roles->getDictionary('role_id', 'name') : (REQ === 'CLI' ? [1 => 'SuperAdmin'] : []),
                 $site_id
             );
         },
@@ -597,8 +685,16 @@ $setup = [
             return new Session\Session($session);
         },
 
+        'TemplateGenerator' => function ($ee) {
+            return new TemplateGenerator\Factory();
+        },
+
         'Validation' => function ($ee) {
             return new Validation\Factory();
+        },
+
+        'Variables/Modifiers' => function ($ee) {
+            return new Template\Variables\Modifiers();
         },
 
         'View/Helpers' => function ($ee) {
@@ -621,12 +717,16 @@ $setup = [
         // ..\Category
         'Category' => 'Model\Category\Category',
         'CategoryGroup' => 'Model\Category\CategoryGroup',
+        'CategoryGroupSettings' => 'Model\Category\CategoryGroupSettings',
         'CategoryField' => 'Model\Category\CategoryField',
 
         // ..\File
         'UploadDestination' => 'Model\File\UploadDestination',
         'FileDimension' => 'Model\File\FileDimension',
+        'FileSystemEntity' => 'Model\File\FileSystemEntity',
         'File' => 'Model\File\File',
+        'Directory' => 'Model\File\Directory',
+        //'FileField' => 'Model\File\FileField',
         'Watermark' => 'Model\File\Watermark',
 
         // ..\Log
@@ -734,7 +834,12 @@ $setup = [
 
         // ..\EntryManager
         'EntryManagerView' => 'Model\EntryManager\View',
-        'EntryManagerViewColumn' => 'Model\EntryManager\ViewColumn',
+
+        // ..\FileManager
+        'FileManagerView' => 'Model\File\FileManagerView',
+
+        // ..\FileManager
+        'MemberManagerView' => 'Model\Member\MemberManagerView',
     ),
 
     'cookies.necessary' => [
@@ -752,6 +857,7 @@ $setup = [
         'viewtype',
         'cp_last_site_id',
         'ee_cp_viewmode',
+        'secondary_sidebar',
         'collapsed_nav'
     ],
     'cookie_settings' => [
@@ -792,6 +898,10 @@ $setup = [
         ],
         'collapsed_nav' => [
             'description' => 'lang:cookie_collapsed_nav_desc',
+            'provider' => 'cp',
+        ],
+        'secondary_sidebar' => [
+            'description' => 'lang:cookie_secondary_sidebar_desc',
             'provider' => 'cp',
         ],
         'ee_cp_viewmode' => [

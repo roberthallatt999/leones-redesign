@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -33,7 +33,7 @@ class TextareaField extends AbstractField implements SingleValueInterface, Place
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_TEXTAREA;
     }
@@ -75,7 +75,7 @@ class TextareaField extends AbstractField implements SingleValueInterface, Place
      *
      * @return string
      */
-    public function getInputHtml()
+    public function getInputHtml(): string
     {
         $attributes = $this->getCustomAttributes();
 
@@ -92,7 +92,7 @@ class TextareaField extends AbstractField implements SingleValueInterface, Place
                 $this->translate($attributes->getPlaceholder() ?: $this->getPlaceholder())
             )
             . '>'
-            . htmlspecialchars($this->getValue())
+            . htmlspecialchars($this->getValue(), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8')
             . '</textarea>';
     }
 }

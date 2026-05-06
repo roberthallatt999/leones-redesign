@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -257,6 +257,7 @@ class Access extends Profile
             ],
             'control_panel' => [
                 'can_access_cp',
+                'can_access_dock',
                 'can_access_footer_report_bug',
                 'can_access_footer_new_ticket',
                 'can_access_footer_user_guide',
@@ -293,6 +294,7 @@ class Access extends Profile
                     'can_create_members',
                     'can_edit_members',
                     'can_delete_members',
+                    'can_edit_member_fields',
                     'can_ban_users',
                     'can_email_from_profile',
                     'can_edit_html_buttons',
@@ -415,6 +417,7 @@ class Access extends Profile
             'can_edit_all_comments',
             'can_delete_all_comments',
             'can_access_cp',
+            'can_access_dock',
             'can_admin_channels',
             'can_create_members',
             'can_edit_members',

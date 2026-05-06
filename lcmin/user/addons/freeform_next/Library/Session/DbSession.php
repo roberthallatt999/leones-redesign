@@ -4,13 +4,14 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Session;
 
+use DateTime;
 class DbSession implements SessionInterface
 {
     /**
@@ -19,7 +20,7 @@ class DbSession implements SessionInterface
      *
      * @return mixed
      */
-    public function get($key, $defaultValue = null)
+    public function get($key, mixed $defaultValue = null)
     {
         if (null === $key) {
             return $defaultValue;
@@ -50,7 +51,7 @@ class DbSession implements SessionInterface
     {
         $valueExists = $this->getQueryInstance($key)->num_rows() > 0;
         $sessionId   = $this->getSessionId();
-        $date        = (new \DateTime())->format('Y-m-d H:i:s');
+        $date        = (new DateTime())->format('Y-m-d H:i:s');
 
         if ($valueExists) {
             ee()->db
@@ -88,7 +89,7 @@ class DbSession implements SessionInterface
      *
      * @return bool
      */
-    public function remove($key)
+    public function remove($key): bool
     {
         ee()->db
             ->delete(
@@ -124,7 +125,7 @@ class DbSession implements SessionInterface
     /**
      * @return string
      */
-    private function getSessionId()
+    private function getSessionId(): string|bool
     {
         return session_id();
     }

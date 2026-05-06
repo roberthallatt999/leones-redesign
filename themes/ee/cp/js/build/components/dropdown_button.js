@@ -20,9 +20,7 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var DropDownButton =
-/*#__PURE__*/
-function (_React$Component) {
+var DropDownButton = /*#__PURE__*/function (_React$Component) {
   _inherits(DropDownButton, _React$Component);
 
   function DropDownButton(props) {
@@ -37,6 +35,10 @@ function (_React$Component) {
         items: _this.initialItems.filter(function (item) {
           return item.label.toLowerCase().includes(event.target.value.toLowerCase());
         })
+      });
+
+      _this.setState({
+        search: true
       });
     });
 
@@ -58,10 +60,29 @@ function (_React$Component) {
       event.preventDefault();
     });
 
+    _defineProperty(_assertThisInitialized(_this), "dropdownRecursion", function (items) {
+      return React.createElement(React.Fragment, null, React.createElement("ul", null, items.map(function (item) {
+        return React.createElement("li", null, React.createElement("a", {
+          href: "#",
+          key: item.value,
+          className: "dropdown__link " + _this.props.itemClass,
+          rel: _this.props.rel,
+          onClick: function onClick(e) {
+            return _this.selectItem(e, item);
+          }
+        }, item.path.trim() == "" ? React.createElement("i", {
+          "class": "fal fa-hdd"
+        }) : React.createElement("i", {
+          "class": "fal fa-folder"
+        }), item.label), item.children && !_this.props.ignoreChild && item.children.length ? _this.dropdownRecursion(item.children) : null);
+      })));
+    });
+
     _this.initialItems = SelectList.formatItems(props.items);
     _this.state = {
       items: _this.initialItems,
-      selected: null
+      selected: null,
+      search: false
     };
     return _this;
   }
@@ -83,7 +104,7 @@ function (_React$Component) {
           return _this2.dropdown = el;
         },
         className: "dropdown"
-      }, this.state.items.length > 7 && React.createElement("div", {
+      }, (this.state.items.length > 7 || this.state.search) && React.createElement("div", {
         className: "dropdown__search"
       }, React.createElement("form", null, React.createElement("div", {
         className: "search-input"
@@ -102,17 +123,28 @@ function (_React$Component) {
         className: "dropdown__divider"
       })), React.createElement("div", {
         className: "dropdown__scroll"
-      }, dropdownItems.map(function (item) {
-        return React.createElement("a", {
-          href: "#",
-          key: item.value,
-          className: "dropdown__link " + _this2.props.itemClass,
-          rel: _this2.props.rel,
-          onClick: function onClick(e) {
-            return _this2.selectItem(e, item);
-          }
-        }, item.label);
-      }))));
+      }, this.props.addInput && React.createElement("label", {
+        htmlFor: "f_open-filepicker_id",
+        className: "sr-only"
+      }, EE.lang.hidden_input) && React.createElement("input", {
+        id: "f_open-filepicker_id",
+        type: "file",
+        className: "f_open-filepicker",
+        style: {
+          display: 'none'
+        },
+        "data-upload_location_id": '',
+        "data-path": '',
+        multiple: this.props.allowMultipleFiles
+      }), this.dropdownRecursion(dropdownItems)), this.props.createNewDirectory && React.createElement("p", {
+        className: "create_new_direction"
+      }, React.createElement("a", {
+        href: "#",
+        rel: "add_new",
+        className: "js-modal-link--side submit"
+      }, React.createElement("i", {
+        className: "fal fa-plus icon-left"
+      }), " ", EE.lang.file_dnd_create_directory))));
     }
   }]);
 

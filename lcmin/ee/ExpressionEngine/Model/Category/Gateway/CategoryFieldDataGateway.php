@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -19,6 +19,7 @@ class CategoryFieldDataGateway extends VariableColumnGateway
 {
     protected static $_table_name = 'category_field_data';
     protected static $_primary_key = 'cat_id';
+    protected static $_gateway_model = 'CategoryField'; // model that defines elements fetched by this gateway
 
     protected static $_related_gateways = array(
         'cat_id' => array(

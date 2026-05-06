@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -22,13 +22,13 @@ use Solspace\Addons\FreeformNext\Library\Integrations\SettingBlueprint;
 
 class Dotmailer extends AbstractMailingListIntegration
 {
-    const TITLE        = 'Dotmailer';
-    const LOG_CATEGORY = 'Dotmailer';
+    public const TITLE        = 'Dotmailer';
+    public const LOG_CATEGORY = 'Dotmailer';
 
-    const SETTING_USER_EMAIL    = 'user_email';
-    const SETTING_USER_PASS     = 'user_pass';
-    const SETTING_DOUBLE_OPT_IN = 'double_opt_in';
-    const SETTING_ENDPOINT      = 'endpoint';
+    public const SETTING_USER_EMAIL    = 'user_email';
+    public const SETTING_USER_PASS     = 'user_pass';
+    public const SETTING_DOUBLE_OPT_IN = 'double_opt_in';
+    public const SETTING_ENDPOINT      = 'endpoint';
 
     /**
      * Returns a list of additional settings for this integration
@@ -36,7 +36,7 @@ class Dotmailer extends AbstractMailingListIntegration
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -107,7 +107,7 @@ class Dotmailer extends AbstractMailingListIntegration
      * @return bool
      * @throws IntegrationException
      */
-    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues)
+    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues): bool
     {
         $client   = new Client();
         $endpoint = $this->getEndpoint('/address-books/' . $mailingList->getId() . '/contacts');
@@ -154,7 +154,7 @@ class Dotmailer extends AbstractMailingListIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -177,7 +177,7 @@ class Dotmailer extends AbstractMailingListIntegration
      *
      * @throws IntegrationException
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         $client = new Client();
 
@@ -197,7 +197,7 @@ class Dotmailer extends AbstractMailingListIntegration
                     }
                 }
             }
-        } catch (BadResponseException $e) {
+        } catch (BadResponseException) {
         }
 
         throw new IntegrationException('Could not get an API endpoint');
@@ -208,10 +208,10 @@ class Dotmailer extends AbstractMailingListIntegration
      * Builds ListObject objects based on the results
      * And returns them
      *
-     * @return \Solspace\Addons\FreeformNext\Library\Integrations\MailingLists\DataObjects\ListObject[]
+     * @return ListObject[]
      * @throws IntegrationException
      */
-    protected function fetchLists()
+    protected function fetchLists(): array
     {
         $client = new Client();
         $endpoint = $this->getEndpoint('/address-books');
@@ -293,24 +293,12 @@ class Dotmailer extends AbstractMailingListIntegration
         if ($json) {
             $fieldList = [];
             foreach ($json as $field) {
-                switch ($field->type) {
-                    case 'String':
-                    case 'Date':
-                        $type = FieldObject::TYPE_STRING;
-                        break;
-
-                    case 'Boolean':
-                        $type = FieldObject::TYPE_BOOLEAN;
-                        break;
-
-                    case 'Numeric':
-                        $type = FieldObject::TYPE_NUMERIC;
-                        break;
-
-                    default:
-                        $type = null;
-                        break;
-                }
+                $type = match ($field->type) {
+                    'String', 'Date' => FieldObject::TYPE_STRING,
+                    'Boolean' => FieldObject::TYPE_BOOLEAN,
+                    'Numeric' => FieldObject::TYPE_NUMERIC,
+                    default => null,
+                };
 
                 if (null === $type) {
                     continue;
@@ -335,7 +323,7 @@ class Dotmailer extends AbstractMailingListIntegration
      *
      * @return string
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         return rtrim($this->getSetting(self::SETTING_ENDPOINT) ?: '', '/') . '/v2/';
     }

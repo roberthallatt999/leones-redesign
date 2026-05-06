@@ -3,15 +3,16 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
 $(document).ready(function(){
-	// the code is responsible for preventing the page scrolling when press on 
+
+	// the code is responsible for preventing the page scrolling when press on
 	// the dropdown list using the spacebar (code 32)
 	window.addEventListener('keydown', (e) => {
-		if ((e.keyCode === 32 || e.keyCode === 13) && (e.target.classList.contains('select__button') || e.target.classList.contains('select__dropdown-item')) ) { 
+		if ((e.keyCode === 32 || e.keyCode === 13) && (e.target.classList.contains('select__button') || e.target.classList.contains('select__dropdown-item')) ) {
 		  e.preventDefault();
 		  e.target.click();
 		}
@@ -170,21 +171,6 @@ $(document).ready(function(){
 				return false;
 			});
 
-			// listen for clicks to the document
-			$(document).on('click',function(e){
-				// check to see if we are inside a sub-menu or not.
-				if(!$(e.target).closest('.sub-menu').length){
-					// close OTHER open sub menus
-					// when clicking outside ANY sub menu trigger
-					// thanks me :D
-					$('.open')
-						// remove the class of open
-						.removeClass('open')
-						// hide all siblings of open with a class of sub-menu
-						.siblings('.sub-menu').hide();
-				}
-			});
-
 	// =========
 	// sub menus (NEW)
 	// =========
@@ -235,20 +221,23 @@ $(document).ready(function(){
 			}
 		});
 
+		// Removed this code, to prevent bug with popup inside RedactorX
+		// Moved code to remove Class 'open' inside dropdown-controller.js file hideAllDropdowns()
+
 		// listen for clicks to the document
-		$(document).on('click',function(e){
-			// check to see if we are inside a sub-menu or not.
-			if( ! $(e.target).closest('.sub-menu, .date-picker-wrap').length){
-				// close OTHER open sub menus
-				// when clicking outside ANY sub menu trigger
-				// thanks me :D
-				$('.open')
-					// remove the class of open
-					.removeClass('open')
-					// hide all siblings of open with a class of sub-menu
-					.siblings('.sub-menu').hide();
-			}
-		});
+		// $(document).on('click',function(e){
+		// 	// check to see if we are inside a sub-menu or not.
+		// 	if( ! $(e.target).closest('.sub-menu, .date-picker-wrap').length && ! $(e.target).parents('.rx-popup').length){
+		// 		// close OTHER open sub menus
+		// 		// when clicking outside ANY sub menu trigger
+		// 		// thanks me :D
+		// 		$('.open')
+		// 			// remove the class of open
+		// 			.removeClass('open')
+		// 			// hide all siblings of open with a class of sub-menu
+		// 			.siblings('.sub-menu').hide();
+		// 	}
+		// });
 
 
     // Clicking icons in Jump input focuses input
@@ -328,6 +317,24 @@ $(document).ready(function(){
 
 	// Collapse navigation sidebar
 	// -------------------------------------------------------------------
+	$('body').on('click', '.secondary-sidebar-toggle .secondary-sidebar-toggle__target', function(e){
+		e.preventDefault();
+		let isSecondaryHidden = $('.secondary-sidebar').hasClass('secondary-sidebar__collapsed');
+
+		if (isSecondaryHidden) {
+			$('.secondary-sidebar').removeClass('secondary-sidebar__collapsed');
+			$(this).removeClass('collapsed');
+			$(this).find('i').removeClass('fa-angle-right').addClass('fa-angle-left');
+		} else {
+			$('.secondary-sidebar').addClass('secondary-sidebar__collapsed');
+			$(this).addClass('collapsed');
+			$(this).find('i').removeClass('fa-angle-left').addClass('fa-angle-right');
+		}
+		$.get(EE.cp.collapseSecondaryNavURL, {owner: $('.secondary-sidebar').data('owner'), collapsed: (!isSecondaryHidden ? 1 : 0)});
+	})
+
+	// Collapse navigation sidebar
+	// -------------------------------------------------------------------
 	$('.banner-dismiss').on('click', function (e) {
 		e.preventDefault();
 		$(this).parent().remove();
@@ -361,7 +368,7 @@ $(document).ready(function(){
 
 	function updateMenuText(newTheme) {
 		if ($('.js-dark-theme-toggle').length) {
-			$('.js-dark-theme-toggle').html('<i class="fas fa-adjust fa-fw"></i> ' + (newTheme == 'dark' ? EE.lang.light_theme : EE.lang.dark_theme));
+			$('.js-dark-theme-toggle').html('<i class="fal fa-adjust fa-fw"></i> ' + (newTheme == 'dark' ? EE.lang.light_theme : EE.lang.dark_theme));
 		}
 	}
 
@@ -519,6 +526,14 @@ $(document).ready(function(){
 			// Open the new tab
 			_this.addClass(active_class);
 			$('.'+active_group_class+' .tab.'+tabClassIs).addClass('tab-open');
+
+			//set the hidden input if needed
+			if (typeof(_this.data('action')) !== 'undefined') {
+				var _hiddenAction = _this.parents('form').find('input[type=hidden][name=action]');
+				if (_hiddenAction.length) {
+					_hiddenAction.val(_this.data('action'));
+				}
+			}
 		}
 
 
@@ -614,7 +629,6 @@ $(document).ready(function(){
 		})
 
 		$('body').on('modal:open', '.modal-wrap, .modal-form-wrap, .app-modal', function(e) {
-
 			// Hide any dropdowns that are currently shown
 			DropdownController.hideAllDropdowns()
 
@@ -643,13 +657,9 @@ $(document).ready(function(){
 				}
 			}
 
-			// reveal the modal
-			if ($(this).hasClass('modal-wrap')) {
-				$(this).fadeIn('slow');
-			} else {
-				$(this).removeClass('app-modal---closed')
-					.addClass('app-modal---open');
-			}
+				if ($(this).find('div[data-dropdown-react]').length) {
+					Dropdown.renderFields();
+				}
 
 			// remove viewport scroll for --side
 			if (e.linkIs) {
@@ -669,7 +679,7 @@ $(document).ready(function(){
 
 			// scroll up, if needed, but only do so after a significant
 			// portion of the overlay is show so as not to disorient the user
-			if ($(this).is('.app-modal--fullscreen'))
+			if ($(this).is('.app-modal--fullscreen') || $(this).is('.modal-file'))
 			{
 				$('body').css('overflow','hidden');
 			}else if ( ! $(this).is('.modal-form-wrap, .app-modal--side'))
@@ -680,6 +690,18 @@ $(document).ready(function(){
 			} else {
 				// Remove viewport scroll
 				$('body').css('overflow','hidden');
+			}
+
+			// reveal the modal
+			if ($(this).hasClass('modal-wrap')) {
+				$(this).fadeIn('slow');
+
+				if ($(this).find('input:visible').length) {
+					$(this).find('input:visible').focus();
+				}
+			} else {
+				$(this).removeClass('app-modal---closed')
+					.addClass('app-modal---open');
 			}
 		});
 
@@ -692,7 +714,7 @@ $(document).ready(function(){
 		$('body').on('modal:close', '.modal-wrap, .modal-form-wrap, .app-modal', function(e) {
 			var modal = $(this)
 
-			if (modal.is(":visible")) {
+			if (modal.is(":visible") && !modal.hasClass('must-interact')) {
 				// fade out the overlay
 				$('.overlay').fadeOut('slow');
 
@@ -790,7 +812,13 @@ $(document).ready(function(){
 
 		// listen for clicks on the element with a class of overlay
 		$('body').on('click', '.m-close, .js-modal-close', function(e) {
-			$(this).closest('.modal-wrap, .modal-form-wrap, .app-modal').trigger('modal:close');
+			var thisModal = $(this).closest('.modal-wrap, .modal-form-wrap, .app-modal');
+			var thisModalParent = thisModal.parents('.modal-wrap, .modal-form-wrap, .app-modal');
+			if (thisModalParent.length) {
+				thisModal.hide();
+			} else {
+				$(this).closest('.modal-wrap, .modal-form-wrap, .app-modal').trigger('modal:close');
+			}
 
 			// stop THIS from reloading the source window
 			e.preventDefault();
@@ -830,7 +858,7 @@ $(document).ready(function(){
 		});
 
 		// Prevent clicks on checkboxes from bubbling to the table row
-		$('body').on('click', 'table tr td:last-child input[type=checkbox]', function(e) {
+		$('body').on('click', 'table tr td:last-child input[type=checkbox], table tr td.app-listing__cell', function(e) {
 			e.stopPropagation();
 		});
 
@@ -960,8 +988,8 @@ $(document).ready(function(){
 
 		$('body').on('click', 'button.toggle-btn', function (e) {
 			if ($(this).hasClass('disabled') ||
-				$(this).parents('.toggle-tools').size() > 0 ||
-				$(this).parents('[data-reactroot]').size() > 0) {
+				$(this).parents('.toggle-tools').length > 0 ||
+				$(this).parents('[data-reactroot]').length > 0) {
 				return;
 			}
 
@@ -1029,7 +1057,17 @@ $(document).ready(function(){
 			}
 		});
 
-		// Check if Toggle button has data-group-toggle and 
+		$('#fieldset-limit_subfolders_layers button.toggle-btn').each(function(){
+			if( $(this).data('state') == 'on' ) {
+				$('#fieldset-limit_subfolders_layers').siblings('#fieldset-limit_subfolders_layers').show();
+			}
+
+			if( $(this).data('state') == 'off' ){
+				$('#fieldset-limit_subfolders_layers').siblings('#fieldset-limit_subfolders_layers').hide();
+			}
+		});
+
+		// Check if Toggle button has data-group-toggle and
 		// show and hide dependent blocks depending on toggle button value
 		$('.toggle-btn').find('[data-group-toggle]').each(function() {
 			var val = $(this).val();
@@ -1148,38 +1186,130 @@ $(document).ready(function(){
 
 		// Check the Entry page for existence and compliance with the conditions
 		// to show or hide fields depending on conditions
-        if(window.EE) {
-            EE.cp.hide_show_entries_fields = function(idArr) {
-                var hide_block = $('.hide-block');
+		if(window.EE) {
+			EE.cp.hide_show_entries_fields = function(idArr) {
+				var hide_block = $('.hide-block');
 
-                $(hide_block).removeClass('hide-block');
+				$(hide_block).removeClass('hide-block');
 
-                $.each(idArr, function(index, id) {
-                    $('[data-field_id="'+id+'"]').each(function(){
-                        $(this).addClass('hide-block').removeClass('fieldset-invalid');
-                    })
-                });
-            }
-        }
+				$.each(idArr, function(index, id) {
+					$('[data-field_id="'+id+'"]').each(function(){
+						$(this).addClass('hide-block').removeClass('fieldset-invalid');
+					})
+				});
+			}
+		}
 
-        if ($('.range-slider').length) {
 
-        	$('.range-slider').each(function() {
-	        	var minValue = $(this).find('input[type="range"]').attr('min');
-	        	var maxValue = $(this).find('input[type="range"]').attr('max');
+		$('body').on('click', '.title-bar a.upload, .main-nav__toolbar a.dropdown__link', function(e){
+			e.preventDefault();
+			var uploadLocationId = $(this).attr('data-upload_location_id');
+			var directoryId = $(this).attr('data-directory_id');
+			$('.imitation_button').attr('data-upload_location_id', uploadLocationId);
+			$('.imitation_button').attr('data-directory_id', directoryId);
+			$('.imitation_button')[0].click();
+		})
 
-	        	$(this).attr('data-min', minValue);
-	        	$(this).attr('data-max', maxValue);
-        	});
-        }
+		$('body').on('click', '.toolbar-wrap .settings', function(e) {
+			e.preventDefault();
+			var href = $(this).attr('href');
+			location.href = href;
+		})
 
-    if ($('.checkbox-label').length) {
+		if ($('.checkbox-label').length) {
 			$('.checkbox-label').each(function(e){
 				if (!$(this).closest('div[data-input-value^="categories["]').length) {
 						$(this).css('pointer-events', 'none');
 						$(this).find('.checkbox-label__text').css('pointer-events', 'auto');
+						$(this).find('.flyout-edit').css('pointer-events', 'auto');
+						$(this).find('.icon-reorder').css('pointer-events', 'auto');
 						$(this).find('input').css('pointer-events', 'auto');
+
+						if ($(this).find('.checkbox-label__text-editable').length) {
+							$(this).find('.checkbox-label__text-editable').css('pointer-events', 'none');
+							$(this).find('.checkbox-label__text-editable .button').css('pointer-events', 'auto')
+						}
 				}
 			});
 		}
+
+		$('body').on('click', '.js-app-badge', async function(e) {
+			var el = $(this);
+
+			// id is the data-id attribute of the clicked element
+			var id = el.data('id');
+			var contentType = el.data('content_type');
+			var fluid_id = el.data('fluid_id');
+
+			var copyText = el.find('.txt-only').text();
+
+			// if the id is an integer, get the template from the server
+			if(Number.isInteger(id)) {
+				// if EE.cp.exampleTemplateUrls[contentType] not defined, use the default url
+				if(!EE.cp.exampleTemplateUrls[contentType]) {
+					contentType = 'default';
+				}
+
+				var url = EE.cp.exampleTemplateUrls[contentType];
+				url = url.replace('{id}', id);
+
+				// if this is a fluid field, lets replace vars in the URL
+				if(contentType == 'fluid_field' || contentType == 'fluid_fieldgroup') {
+					url = url.replace('{fluid_id}', fluid_id);
+				}
+
+				// get the template from the server
+				await $.get(url, function(data) {
+					// copy asset link to clipboard and show notification
+					copyText = data;
+				});
+			}
+
+			// copy asset link to clipboard and show notification
+			var success = await copyToClipboard(copyText);
+
+			// show notification if success
+			if (success) {
+				el.addClass('success');
+				el.find('.fa-copy').addClass('hidden');
+				el.find('.fa-circle-check').removeClass('hidden');
+
+				// hide notification in 2 sec
+				setTimeout(function() {
+					el.removeClass('success');
+					el.find('.fa-copy').removeClass('hidden');
+					el.find('.fa-circle-check').addClass('hidden');
+				}, 2000);
+			}
+
+			return false;
+		})
+
+		// add a function to copy text to clipboard
+		async function copyToClipboard(copyText) {
+			// if the browser supports clipboard
+			if (navigator.clipboard) {
+				return await navigator.clipboard.writeText(copyText)
+					.then(() => {
+						// console.log('copyText copied:', copyText);
+						return true;
+					})
+					.catch((error) => {
+						// console.log('copyText wasnt copied')
+						return false;
+					}
+				);
+			}
+
+			return false;
+		}
+
+
+		$('body').on('click', '.js-lv-banner__close-btn', function(e) {
+			e.preventDefault();
+		    $.get(EE.cp.acknowledgeLicenseNoticeURL, function(data) {
+                $('.lv-banner').hide();
+            });
+		})
+
 }); // close (document).ready

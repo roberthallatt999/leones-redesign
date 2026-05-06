@@ -3,7 +3,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -88,7 +88,8 @@ function toggleFields(fields, show, key) {
 		var fieldset = $(field).closest('fieldset');
 
 		if (fieldset.hasClass('fieldset-invalid')) {
-			if (fieldset.find('input:visible').not('.button').size() == 0) {
+			if (fieldset.find('input:visible').not('.button').length == 0 && fieldset.find('select:visible').length == 0 && fieldset.find('div[data-select-react]:visible').length == 0) {
+
 				fieldset.removeClass('fieldset-invalid');
 				fieldset.find('em.ee-form-error-message').remove();
 			}
@@ -121,7 +122,7 @@ function toggleSections(sections, show, key) {
 
 EE.cp.form_group_toggle = function(element) {
 
-	if ( ! $(element).size()) {
+	if ( ! $(element).length) {
 		return;
 	}
 
@@ -139,7 +140,7 @@ EE.cp.form_group_toggle = function(element) {
 			return $(this).data('group').split('|').includes(data)
 		});
 		var section_targets = $('*[data-section-group*="'+data+'"]').filter(function() {
-			return $(this).data('sectionGroup').split('|').includes(data)
+			return $(this).data('sectionGroup').toString().split('|').includes(data)
 		});
 
 		if (states[data] == undefined || states[data] == false) {
@@ -158,6 +159,16 @@ EE.cp.form_group_toggle = function(element) {
 
 	// Show the selected fields and sections
 	toggle(value, config[value]);
+
+	window.document.dispatchEvent(
+		new CustomEvent('formFields:toggle', {
+			detail: {
+				group: config[value],
+				state: value,
+				for: $(element).parent().data('toggle-for')
+			}
+		})
+	);
 
 	// The reset the form .last values
 	var form = $(element).closest('form');

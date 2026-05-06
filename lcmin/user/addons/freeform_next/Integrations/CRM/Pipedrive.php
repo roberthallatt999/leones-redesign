@@ -4,13 +4,15 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Integrations\CRM;
 
+use Exception;
+use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use Solspace\Addons\FreeformNext\Library\Exceptions\Integrations\IntegrationException;
@@ -22,9 +24,9 @@ use Solspace\Addons\FreeformNext\Library\Logging\LoggerInterface;
 
 class Pipedrive extends AbstractCRMIntegration
 {
-    const SETTING_API_TOKEN = 'api_token';
-    const TITLE             = 'Pipedrive';
-    const LOG_CATEGORY      = 'Pipedrive';
+    public const SETTING_API_TOKEN = 'api_token';
+    public const TITLE             = 'Pipedrive';
+    public const LOG_CATEGORY      = 'Pipedrive';
 
     /**
      * Returns a list of additional settings for this integration
@@ -32,7 +34,7 @@ class Pipedrive extends AbstractCRMIntegration
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -52,7 +54,7 @@ class Pipedrive extends AbstractCRMIntegration
      *
      * @return bool
      */
-    public function pushObject(array $keyValueList, $formFields = NULL)
+    public function pushObject(array $keyValueList, ?array$formFields = NULL): bool
     {
         $client = new Client();
 
@@ -92,7 +94,7 @@ class Pipedrive extends AbstractCRMIntegration
 
                 $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $responseBody, self::LOG_CATEGORY);
                 $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $e->getMessage(), self::LOG_CATEGORY);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->getLogger()->log(LoggerInterface::LEVEL_WARNING, $e->getMessage(), self::LOG_CATEGORY);
             }
         }
@@ -118,7 +120,7 @@ class Pipedrive extends AbstractCRMIntegration
 
                 $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $responseBody, self::LOG_CATEGORY);
                 $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $e->getMessage(), self::LOG_CATEGORY);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->getLogger()->log(LoggerInterface::LEVEL_WARNING, $e->getMessage(), self::LOG_CATEGORY);
             }
         }
@@ -145,7 +147,7 @@ class Pipedrive extends AbstractCRMIntegration
 
             $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $responseBody, self::LOG_CATEGORY);
             $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $e->getMessage(), self::LOG_CATEGORY);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->log(LoggerInterface::LEVEL_WARNING, $e->getMessage(), self::LOG_CATEGORY);
         }
 
@@ -199,7 +201,7 @@ class Pipedrive extends AbstractCRMIntegration
 
             $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $responseBody, self::LOG_CATEGORY);
             $this->getLogger()->log(LoggerInterface::LEVEL_ERROR, $e->getMessage(), self::LOG_CATEGORY);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->log(LoggerInterface::LEVEL_WARNING, $e->getMessage(), self::LOG_CATEGORY);
         }
 
@@ -211,7 +213,7 @@ class Pipedrive extends AbstractCRMIntegration
      *
      * @return bool
      */
-    public function checkConnection()
+    public function checkConnection(): bool
     {
 		$response = $this->getResponse(
 			$this->getEndpoint('/v1/deals'),
@@ -336,7 +338,7 @@ class Pipedrive extends AbstractCRMIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -345,18 +347,17 @@ class Pipedrive extends AbstractCRMIntegration
      *
      * @param IntegrationStorageInterface $model
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         $model->updateAccessToken($this->getSetting(self::SETTING_API_TOKEN));
     }
 
     /**
      * @param       $endpoint
-     * @param array $queryOptions
      *
-     * @return \Psr\Http\Message\ResponseInterface
-	 */
-    private function getResponse($endpoint, array $queryOptions = [])
+     * @return ResponseInterface
+     */
+    private function getResponse($endpoint, array $queryOptions = []): ResponseInterface
     {
         $client = new Client();
 
@@ -371,7 +372,7 @@ class Pipedrive extends AbstractCRMIntegration
     /**
      * @return string
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         return 'https://api.pipedrive.com/';
     }

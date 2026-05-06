@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -66,12 +66,6 @@ class CustomFieldAttributes extends AbstractAttributes
     /** @var string */
     protected $tableSelectInputClass;
 
-    /** @var AbstractField */
-    private $field;
-
-    /** @var CustomFormAttributes */
-    private $formAttributes;
-
     /**
      * CustomFieldAttributes constructor.
      *
@@ -80,14 +74,11 @@ class CustomFieldAttributes extends AbstractAttributes
      * @param CustomFormAttributes|null $formAttributes
      */
     public function __construct(
-        AbstractField $field,
-        array $attributes = null,
-        CustomFormAttributes $formAttributes = null
+        private AbstractField $field,
+        ?array $attributes = null,
+        private ?CustomFormAttributes $formAttributes = null
     ) {
         parent::__construct($attributes);
-
-        $this->field          = $field;
-        $this->formAttributes = $formAttributes;
     }
 
     /**
@@ -200,7 +191,7 @@ class CustomFieldAttributes extends AbstractAttributes
     /**
      * @return array
      */
-    public function getInputAttributes()
+    public function getInputAttributes(): ?array
     {
         if (null === $this->inputAttributes) {
             return $this->inputAttributes;
@@ -322,7 +313,7 @@ class CustomFieldAttributes extends AbstractAttributes
      *
      * @return string
      */
-    private function combineClassStrings($classStringA = null, $classStringB = null)
+    private function combineClassStrings($classStringA = null, $classStringB = null): string
     {
         $classListA = explode(' ', $classStringA ?: '');
         $classListB = explode(' ', $classStringB ?: '');

@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -31,7 +31,7 @@ class FilterFactory
     protected $filters = array();
 
 
-    public $view;
+    protected $view;
 
     /**
      * Constructs the FilterFactory. It requires a ViewFactory instance since
@@ -134,6 +134,18 @@ class FilterFactory
         return $this;
     }
 
+    public function withLabel($label)
+    {
+        if (empty($this->filters)) {
+            throw new \Exception('No filters have been addded. Cannot rename a filter.');
+        }
+
+        $filter = end($this->filters);
+        $filter->label = $label;
+
+        return $this;
+    }
+
     /**
      * This will render the filters down to HTML by looping through all the
      * Filters and calling their individual render() methods.
@@ -178,16 +190,24 @@ class FilterFactory
     public function renderEntryFilters(URL $base_url)
     {
         $url = clone $base_url;
-        $url->addQueryStringVariables($this->values());
+        $values = $this->values();
+        unset($values['columns']);
+        if (isset($values['sort'])) {
+            $sort = explode('|', $values['sort']);
+            $values['sort_col'] = $sort[0];
+            $values['sort_dir'] = $sort[1];
+            unset($values['sort']);
+        }
+        $url->addQueryStringVariables($values);
 
         $filters = array();
 
         foreach ($this->filters as $filter) {
-            if (in_array($filter->name, ['filter_by_keyword', 'search_in', 'filter_by_entry_keyword', 'columns', 'perpage'])) {
+            if (in_array($filter->name, ['filter_by_keyword', 'search_in', 'filter_by_entry_keyword', 'columns', 'perpage', 'viewtype', 'sort'])) {
                 continue;
             }
 
-            $html = $filter->render($this->view, $url);
+            $html = $filter->render($this->view, $url, true);
             if (! empty($html)) {
                 $filters[] = [
                     'name' => $filter->name,
@@ -211,17 +231,26 @@ class FilterFactory
      * Filters and calling their individual render() methods.
      *
      * @param URL $base_url A URL object reference to use when constructing URLs
+     * @param bool $skipSearchIn skip "search in" filter and just add closing HTML instead
      * @return string Returns HTML
      */
-    public function renderSearch(URL $base_url)
+    public function renderSearch(URL $base_url, $skipSearchIn = false)
     {
         $url = clone $base_url;
-        $url->addQueryStringVariables($this->values());
+        $values = $this->values();
+        unset($values['columns']);
+        if (isset($values['sort'])) {
+            $sort = explode('|', $values['sort']);
+            $values['sort_col'] = $sort[0];
+            $values['sort_dir'] = $sort[1];
+            unset($values['sort']);
+        }
+        $url->addQueryStringVariables($values);
 
         $filters = array();
 
         foreach ($this->filters as $filter) {
-            if (!in_array($filter->name, ['columns', 'filter_by_keyword', 'search_in'])) {
+            if (!in_array($filter->name, ['columns', 'filter_by_keyword', 'search_in', 'viewtype', 'sort', 'perpage'])) {
                 continue;
             }
 
@@ -239,7 +268,8 @@ class FilterFactory
         $vars = array(
             'filters' => $filters,
             'has_reset' => $this->canReset(),
-            'reset_url' => $base_url
+            'reset_url' => $base_url,
+            'skipSearchIn' => $skipSearchIn,
         );
 
         return $this->view->make('_shared/filters/search')->render($vars);
@@ -329,6 +359,36 @@ class FilterFactory
     protected function createDefaultColumns($columns, $channel = null, $view_id = null)
     {
         return new Filter\Columns($columns, $channel, $view_id);
+    }
+
+    /**
+     * This will instantiate and return a default FileManagerColumns filter
+     *
+     * @return Filter\FileManagerColumns a FileManagerColumns Filter object
+     */
+    protected function createDefaultFileManagerColumns($columns, $uploadLocation = null, $view_id = null)
+    {
+        return new Filter\FileManagerColumns($columns, $uploadLocation, $view_id);
+    }
+
+    /**
+     * This will instantiate and return a default MemberManagerColumns filter
+     *
+     * @return Filter\MemberManagerColumns a MemberManagerColumns Filter object
+     */
+    protected function createDefaultMemberManagerColumns($columns, $primaryRole = null, $view_id = null)
+    {
+        return new Filter\MemberManagerColumns($columns, $primaryRole, $view_id);
+    }
+
+    /**
+     * This will instantiate and return a default Sort filter
+     *
+     * @return Filter\Sort a Sort Filter object
+     */
+    protected function createDefaultSort($options, $default = null)
+    {
+        return new Filter\Sort($options, $default);
     }
 
     /**

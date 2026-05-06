@@ -67,12 +67,13 @@ EE.cp.JumpMenu = {
     jumpContainer.document.addEventListener('keyup', EE.cp.JumpMenu._keyUp, false); // jumpContainer.document.querySelector('#jumpEntry1').addEventListener("focus", function() { EE.cp.JumpMenu._showResults(1); });
 
     jumpContainer.document.querySelector('#jumpEntry1').addEventListener("focus", function () {
+      var top = jQuery(this).offset().top + jQuery(this).outerHeight() + 5;
       EE.cp.JumpMenu.currentFocus = 1;
       jumpContainer.document.querySelector('#jumpMenu2').style.display = 'none';
       jumpContainer.document.querySelector('#jumpEntry2').value = '';
       jumpContainer.document.querySelector('#jumpMenuResults2').style.display = 'none';
 
-      EE.cp.JumpMenu._showJumpMenu(1);
+      EE.cp.JumpMenu._showJumpMenu(1, top);
     });
     jumpContainer.document.querySelector('#jumpEntry2').addEventListener("focus", function () {
       EE.cp.JumpMenu._showResults(2);
@@ -109,10 +110,11 @@ EE.cp.JumpMenu = {
   },
   _showJumpMenu: function _showJumpMenu() {
     var loadResults = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+    var top = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 59;
     jumpContainer.$('#jump-menu').css({
       position: 'absolute',
       'z-index': 150,
-      top: '59px',
+      top: top + 'px',
       right: '82px'
     }).show();
     jumpContainer.document.querySelector('.input--jump').focus();
@@ -401,7 +403,7 @@ EE.cp.JumpMenu = {
           commandContext = commandSet[commandKey].command_context;
         }
 
-        jumpContainer.document.querySelector(resultsTarget).innerHTML += '<a class="jump-menu__link ' + matchClass + '" href="' + jumpTarget + '" ' + jumpClick + '><span class="jump-menu__link-text"><i class="fas fa-sm ' + commandSet[commandKey].icon + '"></i> ' + commandSet[commandKey].command_title + '</span><span class="meta-info jump-menu__link-right">' + commandContext + '</span></a>';
+        jumpContainer.document.querySelector(resultsTarget).innerHTML += '<a class="jump-menu__link ' + matchClass + '" href="' + jumpTarget + '" ' + jumpClick + '><span class="jump-menu__link-text"><i class="fal fa-sm ' + commandSet[commandKey].icon + '"></i> ' + commandSet[commandKey].command_title + '</span><span class="meta-info jump-menu__link-right">' + commandContext + '</span></a>';
         firstMatch = false;
         matchClass = '';
       }

@@ -15,7 +15,7 @@ class PhoneField extends TextField
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return self::TYPE_PHONE;
     }
@@ -31,7 +31,7 @@ class PhoneField extends TextField
     /**
      * @inheritDoc
      */
-    public function getConstraints()
+    public function getConstraints(): array
     {
         return [
             new PhoneConstraint(

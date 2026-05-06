@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -22,9 +22,11 @@ class Factory
     public $db;
     public $filesystem;
     public $migration;
-    public $stepsRemaining;
 
-    public function __construct(Database\Query $db, Filesystem $filesystem, MigrationModel $migration = null)
+    protected $stepsRemaining;
+    protected $respectMigrationGroups;
+
+    public function __construct(Database\Query $db, Filesystem $filesystem, ?MigrationModel $migration = null)
     {
         $this->db = $db;
         $this->filesystem = $filesystem;
@@ -99,7 +101,7 @@ class Factory
      * Checks for migration folder and creates it if it does not exist
      * @var boolean
      */
-    public function ensureMigrationFolderExists($location=null)
+    public function ensureMigrationFolderExists($location = null)
     {
         // If no location was passed, get one
         if (! isset($location)) {
@@ -126,7 +128,7 @@ class Factory
         }
     }
 
-    public function getMigrationPath($location='ExpressionEngine')
+    public function getMigrationPath($location = 'ExpressionEngine')
     {
         // If we set a migration model, use the location in the model
         if (isset($this->migration)) {
@@ -206,7 +208,7 @@ class Factory
         $this->migration->delete();
     }
 
-    public function getNewMigrations($location=null)
+    public function getNewMigrations($location = null)
     {
         $allExecutedMigrations = ee('Model')->get('Migration')
             ->fields('migration')
@@ -245,7 +247,7 @@ class Factory
         return $newMigrations;
     }
 
-    public function migrateAllByType($type, $migrationGroup=null, $stepsRemaining=-1)
+    public function migrateAllByType($type, $migrationGroup = null, $stepsRemaining = -1)
     {
         // If we dont have a migration group for this run, lets set one
         if (is_null($migrationGroup)) {
@@ -287,7 +289,7 @@ class Factory
         $newMigrations = $this->getNewMigrations($type);
 
         foreach ($newMigrations as $migrationName) {
-            if ($this->stepsRemaining==0) {
+            if ($this->stepsRemaining == 0) {
                 break;
             }
             $migrationData = [
@@ -306,7 +308,7 @@ class Factory
         return $ran;
     }
 
-    public function rollbackAllByType($type, $respectMigrationGroups=true, $stepsRemaining=-1)
+    public function rollbackAllByType($type, $respectMigrationGroups = true, $stepsRemaining = -1)
     {
         // Keep track of the migrations that have rolled back
         $rolledback = [];
@@ -349,7 +351,7 @@ class Factory
 
         $migrationGroup = null;
         foreach ($ranMigrations as $migration) {
-            if ($this->stepsRemaining==0) {
+            if ($this->stepsRemaining == 0) {
                 break;
             }
 
@@ -424,7 +426,7 @@ class Factory
     public function getAddonsThatRanMigrations()
     {
         // Get all migrations that are not core, and pluck the location
-        $migrations =  ee('Model')->get('Migration')
+        $migrations = ee('Model')->get('Migration')
             ->filter('migration_location', '!=', 'ExpressionEngine')
             ->all()->pluck('migration_location');
 
@@ -435,7 +437,7 @@ class Factory
         return $migrations;
     }
 
-    public function writeMigrationFileFromTemplate($templateName, $tablename)
+    public function writeMigrationFileFromTemplate($templateName, $templateVariables)
     {
         if (!isset($this->migration)) {
             throw new \Exception("Cannot run writeMigrationFileFromTemplate without setting Migration Model", 1);
@@ -450,10 +452,8 @@ class Factory
 
         $templateClass = '\ExpressionEngine\Cli\Commands\Migration\Templates\\' . $templateName;
 
-        $vars = [
-            'classname' => $this->getClassname(),
-            'table' => $tablename,
-        ];
+        $vars = array_merge(['classname' => $this->getClassname()], $templateVariables);
+
         $template = new $templateClass($vars);
 
         try {

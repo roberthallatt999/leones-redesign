@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -55,7 +55,7 @@ class EE_Cache_file extends CI_Driver
         }
 
         if ($data['ttl'] > 0 && ee()->localize->now > $data['time'] + $data['ttl']) {
-            unlink($this->_cache_path . $key);
+            @unlink($this->_cache_path . $key);
 
             return false;
         }
@@ -102,7 +102,9 @@ class EE_Cache_file extends CI_Driver
             // to see if that's the case and if not, something else went wrong
             // and we'll show an error
             if (! is_dir($path) or ! is_really_writable($path)) {
-                trigger_error($error['message'], E_USER_WARNING);
+                if (! empty($error)) {
+                    trigger_error($error['message'], E_USER_WARNING);
+                }
             } else {
                 // Write an index.html file to ensure no directory indexing
                 write_index_html($path);

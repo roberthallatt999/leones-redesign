@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -16,12 +16,16 @@ use ExpressionEngine\Service\Model\Model;
  * File Dimension Model
  *
  * A model representing one of image manipulations that can be applied on
- * images uploaded to its corresponting upload destination.
+ * images uploaded to its corresponding upload destination.
  */
 class FileDimension extends Model
 {
     protected static $_primary_key = 'id';
     protected static $_table_name = 'file_dimensions';
+
+    protected static $_events = array(
+        'afterDelete',
+    );
 
     protected static $_typed_columns = array(
         //'width'  => 'int',
@@ -30,6 +34,9 @@ class FileDimension extends Model
     );
 
     protected static $_relationships = array(
+        'Site' => array(
+            'type' => 'belongsTo'
+        ),
         'UploadDestination' => array(
             'type' => 'belongsTo',
             'from_key' => 'upload_location_id'
@@ -60,6 +67,24 @@ class FileDimension extends Model
     protected $watermark_id;
     protected $quality;
 
+    public function onAfterDelete()
+    {
+        //delete the root manipulation folder
+        $filesystem = $this->UploadDestination->getFilesystem();
+        $manipulatedFolderPath = '_' . $this->short_name;
+        if ($filesystem->exists($manipulatedFolderPath) && $filesystem->isDir($manipulatedFolderPath)) {
+            $filesystem->deleteDir($manipulatedFolderPath);
+        }
+        //go into subfolder and delete manipulations there
+        $folders = ee('Model')->get('Directory')->filter('upload_location_id', $this->UploadDestination->getId())->all();
+        foreach ($folders as $folder) {
+            $manipulatedFolderPath = $folder->getAbsolutePath() . '/_' . $this->short_name;
+            if ($filesystem->exists($manipulatedFolderPath) && $filesystem->isDir($manipulatedFolderPath)) {
+                $filesystem->deleteDir($manipulatedFolderPath);
+            }
+        }
+    }
+
     /**
      * At least a height OR a width must be specified if there is no watermark selected
      */
@@ -84,6 +109,10 @@ class FileDimension extends Model
     public function getNewDimensionsOfFile(File $file)
     {
         if (! $file->isImage()) {
+            return false;
+        }
+
+        if (empty($file->file_hw_original)) {
             return false;
         }
 
@@ -200,13 +229,13 @@ class FileDimension extends Model
 
     /**
      * Uses the upload destination's server path to compute the absolute
-     * path of the dirctory
+     * path of the directory
      *
      * @return string The absolute path to the directory
      */
     public function getAbsolutePath()
     {
-        return rtrim($this->UploadDestination->server_path, '/') . '/_' . $this->short_name . '/';
+        return $this->UploadDestination->getAbsolutePath() . '/_' . $this->short_name . '/';
     }
 
     /**
@@ -217,7 +246,7 @@ class FileDimension extends Model
      */
     public function getAbsoluteURL()
     {
-        return rtrim($this->UploadDestination->url, '/') . '/_' . rawurlencode($this->short_name) . '/';
+        return $this->UploadDestination->getFilesystem()->getUrl('_' . rawurlencode($this->short_name) . '/');
     }
 }
 

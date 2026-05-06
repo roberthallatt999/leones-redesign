@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -23,10 +23,6 @@ class Pro extends Logs
     public function __construct()
     {
         parent::__construct();
-
-        if (!IS_PRO) {
-            show_error(lang('unauthorized_access'), 403);
-        }
     }
 
     public function __call($name, $arguments)

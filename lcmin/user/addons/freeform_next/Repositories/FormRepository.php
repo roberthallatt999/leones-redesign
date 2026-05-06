@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -35,7 +35,7 @@ class FormRepository extends Repository
      *
      * @return FormModel|null
      */
-    public function getOrCreateForm($id = null)
+    public function getOrCreateForm(mixed $id = null)
     {
         $model = null;
         if ($id) {
@@ -55,14 +55,14 @@ class FormRepository extends Repository
      *
      * @return FormModel[]
      */
-    public function getAllForms($ids = null, $handles = null)
+    public function getAllForms(?string $ids = null, ?string $handles = null)
     {
         $query = ee('Model')
             ->get(FormModel::MODEL);
 
         if (null !== $ids) {
             $operator = 'IN';
-            if (strpos($ids, 'not ') === 0) {
+            if (str_starts_with($ids, 'not ')) {
                 $ids      = substr($ids, 4);
                 $operator = 'NOT IN';
             }
@@ -74,7 +74,7 @@ class FormRepository extends Repository
 
         if (null !== $handles) {
             $operator = 'IN';
-            if (strpos($handles, 'not ') === 0) {
+            if (str_starts_with($handles, 'not ')) {
                 $handles  = substr($handles, 4);
                 $operator = 'NOT IN';
             }
@@ -112,8 +112,6 @@ class FormRepository extends Repository
     }
 
     /**
-     * @param array $ids
-     *
      * @return FormModel[]
      */
     public function getFormByIdList(array $ids)
@@ -159,11 +157,9 @@ class FormRepository extends Repository
     }
 
     /**
-     * @param array $formIds
-     *
      * @return array
      */
-    public function getFormSubmissionCount(array $formIds)
+    public function getFormSubmissionCount(array $formIds): array
     {
         if (empty($formIds)) {
             return [];
@@ -171,6 +167,27 @@ class FormRepository extends Repository
 
         $data = ee()->db
             ->select('formId, COUNT(id) as total')
+            ->where('isSpam', 0)
+            ->group_by('formId')
+            ->where_in('formId', $formIds ?: [])
+            ->get(SubmissionModel::TABLE)
+            ->result_array();
+
+        return array_column($data, 'total', 'formId');
+    }
+
+    /**
+     * @return array
+     */
+    public function getFormSpamCount(array $formIds): array
+    {
+        if (empty($formIds)) {
+            return [];
+        }
+
+        $data = ee()->db
+            ->select('formId, COUNT(id) as total')
+            ->where('isSpam', 1)
             ->group_by('formId')
             ->where_in('formId', $formIds ?: [])
             ->get(SubmissionModel::TABLE)

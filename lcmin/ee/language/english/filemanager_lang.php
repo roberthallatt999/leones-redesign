@@ -2,41 +2,63 @@
 
 $lang = array(
 
+    'added_by' => 'Added By',
+
     'all_files' => 'All Files',
+
+    'allow_subfolders' => 'Allow subfolders?',
+
+    'allow_subfolders_desc' => 'Manage nested layers of subfolders within this upload directory.',
 
     'append' => 'Append numeral to <strong>newer</strong> file <i>&mdash; example: %s</i>',
 
     'btn_cancel_upload' => 'Cancel Upload',
 
+    'delete' => 'Delete',
+
     'delete_file' => 'Delete File',
 
-    'btn_edit_file_meta' => 'Save File Meta',
+    'btn_edit_file_meta' => 'Save',
 
     'btn_finish_upload' => 'Finish Upload',
 
     'categories' => 'Categories',
 
-    'credit' => 'Credit',
+    'column_file_id' => 'ID#',
 
-    'custom_limit' => 'custom limit',
+    'column_title' => 'Title',
+
+    'column_categories' => 'Categories',
+
+    'copy_link' => 'Copy Link',
+
+    'credit' => 'Credit',
 
     'date_added' => 'Date Added',
 
+    'date_modified' => 'Date Modified',
+
     'description' => 'Description',
+
+    'dimensions' => 'Dimensions',
 
     'download' => 'Download',
 
-    'edit_file_metadata' => 'Edit File Meta Data',
+    'edit_file_metadata' => 'Edit File Data',
 
-    'edit_file_metadata_error' => 'Cannot Update File Meta Data',
+    'edit_file_metadata_error' => 'Cannot Update File Data',
 
-    'edit_file_metadata_error_desc' => 'We were unable to update the meta data, please review and fix errors below.',
+    'edit_file_metadata_error_desc' => 'We were unable to update the file data, please review and fix errors below.',
 
-    'edit_file_metadata_success' => 'File Meta Data Updated',
+    'edit_file_metadata_success' => 'File Data Updated',
 
-    'edit_file_metadata_success_desc' => 'The meta data for the file <b>%s</b> has been updated.',
+    'edit_file_metadata_success_desc' => 'The data for the file <b>%s</b> has been updated.',
 
     'exceeds_max_dimensions' => 'File exceeds maximum dimensions and is not resizable.',
+
+    'existing_subfolders' => 'Include existing subfolders?',
+
+    'existing_subfolders_desc' => 'Any existing folders in this upload directory will appear in the File Manager',
 
     'file' => 'File',
 
@@ -72,7 +94,37 @@ $lang = array(
 
     'invalid_upload_destination' => 'The upload destination is invalid.',
 
+    'keep_subfolders_top' => 'Keep subfolders on top?',
+
+    'keep_subfolders_top_desc' => 'Group subfolders at the top of the files list when browsing.',
+
+    'last_modified' => 'Last Modified',
+
+    'limit_subfolder_toggle' => 'Limit layers of subfolders?',
+
+    'limit_subfolders_toggle_desc' => 'Include a limit to the number of nested subfolder layers',
+
+    'limit_subfolders' => 'Subfolder Layers Limit',
+
+    'limit_subfolders_desc' => 'How many nested layers of subfolders would you like to allow in this upload directory?',
+
+    'modified_by' => 'Modified By',
+
+    'move' => 'Move',
+
+    'name' => 'File Name',
+
+    'new_folder' => 'New Folder',
+
+    'folder_name' => 'Folder Name',
+
     'location' => 'Location',
+
+    'create_folder_location' => 'Create a folder in the following location:',
+
+    'subfolder_directory_renamed' => 'Subfolder directory renamed',
+
+    'subfolder_already_exists' => 'Subfolder directory already exists',
 
     'no_file' => 'No file selected',
 
@@ -86,21 +138,27 @@ $lang = array(
 
     'not_an_image' => 'Selected file is not an image',
 
+    'open_cmd' => 'Open',
+
     'pixels' => 'pixels',
 
     'problem_downloading_file' => 'An error occurred when attempting to download the selected file. Please verify the file exists on the server.',
 
     'problem_downloading_files' => 'An error occurred when attempting to download the selected files. Please verify the files exist on the server.',
 
+    'rename_cmd' => 'Rename',
+
     'rename' => 'Rename <strong>newer</strong> file',
 
     'replace' => 'Replace <strong>older</strong> file only <i>&mdash; destructive action</i>',
 
+    'replace_file' => 'Replace',
+
     'replace_no_metadata' => 'Only the file was replaced. The Title, Description, Credit, Location, and Categories were not updated.',
 
-    'search_files' => 'Search Files',
-
     'security_failure' => 'The file type you are attempting to upload is not allowed.',
+
+    'select' => 'Select...',
 
     'show_all_files' => 'All %d files',
 
@@ -117,6 +175,12 @@ $lang = array(
     'upload_new_file' => 'Upload New File',
 
     'upload_options' => 'Upload options',
+
+    'uploaded_by' => 'Uploaded By',
+
+    'usage' => 'Usage',
+
+    'usage_desc' => 'This file is being used in the following locations:',
 
     /* sidebar */
     'zero_directories_found' => 'No <b>Directories</b> found',
@@ -200,6 +264,8 @@ $lang = array(
 
     'flip_vertically' => 'Flip, vertically',
 
+    'folder_deleted_desc' => 'The folder was deleted',
+
     'height' => 'height',
 
     'no_categories_assigned_file_desc' => 'There are no categories assigned to this file. <a href="%s" rel="external">Assign a category group.</a>',
@@ -246,14 +312,18 @@ $lang = array(
 
     'zero_upload_directories_found' => 'No <b>upload directories</b> found.',
 
+    'remove_files_from_disk' => 'Remove files from disk?',
+
+    'toggle_on_to_remove_files' => 'Switch the toggle on to physically remove the files',
+
     /* Uploads */
     'add_manipulation' => 'Add New Manipulation',
 
     'all_upload_dirs' => 'All Upload Directories',
 
-    'apply_manipulations' => 'Apply manipulations',
+    'apply_manipulations' => 'Re-generate manipulations',
 
-    'apply_manipulations_desc' => 'Applies chosen image manipulations to the files in this directory during sync operation. Increases sync time.',
+    'apply_manipulations_desc' => 'Forces generation of chosen image manipulations for the files in this directory during sync operation. Increases sync time.',
 
     'bottom' => 'Bottom',
 
@@ -281,7 +351,7 @@ $lang = array(
 
     'create_watermark' => 'Create Watermark',
 
-    'default_modal_view' => 'Default modal view?',
+    'default_modal_view' => 'Default browser view?',
 
     'default_modal_view_desc' => 'How files should be displayed by default for this upload directory.',
 
@@ -315,9 +385,13 @@ $lang = array(
 
     'file_sync' => 'File sync',
 
-    'file_sync_desc' => '<b>%d</b> files',
+    'file_sync_desc' => '<b>%d</b> files and folders',
 
     'file_sync_desc_images' => '<b>%d</b> <code>image</code> files',
+
+    'filesystem_adapter' => 'Adapter',
+
+    'local' => 'Local',
 
     'horizontal' => 'horizontal',
 
@@ -351,6 +425,8 @@ $lang = array(
 
     'image_options' => 'Image Options',
 
+    'link_copied' => 'Link to file has been copied',
+
     'left' => 'Left',
 
     'middle' => 'Middle',
@@ -365,7 +441,7 @@ $lang = array(
 
     'right' => 'Right',
 
-    'sync_alt_title' => 'Sync %s',
+    'sync_alt_title' => 'Synchronize %s',
 
     'sync_title' => 'Directory Sync',
 
@@ -377,9 +453,25 @@ $lang = array(
 
     'upload_allowed_types' => 'Allowed file types?',
 
-    'upload_allowed_types_opt_all' => 'All file types',
+    'type_all' => 'All file types',
 
-    'upload_allowed_types_opt_images' => 'Images only',
+    'type_img' => 'Image',
+
+    'type_doc' => 'Document',
+
+    'type_video' => 'Video',
+
+    'type_audio' => 'Audio',
+
+    'type_archive' => 'Archive',
+
+    'type_other' => 'Other',
+
+    'type_directory' => 'Folder',
+
+    'share_directory_on_all_sites' => 'Share Upload Directory on all sites?',
+
+    'share_directory_on_all_sites_desc' => 'Make files in this directory accessible through all MSM sites.<br><b>Note:</b> this can only be set on creation and cannot be changed.',
 
     'upload_btn_edit' => 'edit',
 
@@ -409,10 +501,6 @@ $lang = array(
 
     'upload_manage' => 'Manage',
 
-    'upload_member_groups' => 'Allowed member groups',
-
-    'upload_member_groups_desc' => 'The following user groups are allowed to upload to this directory.</em><br /><em>Super Administrators are <b>always</b> allowed.',
-
     'upload_roles' => 'Allowed member roles',
 
     'upload_roles_desc' => 'The following member roles are allowed to upload to this directory.<br />Super Administrators are <b>always</b> allowed.',
@@ -427,7 +515,7 @@ $lang = array(
 
     'upload_remove_modal_upload_directory' => 'Upload directory',
 
-    'upload_url' => 'Upload directory',
+    'upload_url' => 'Upload directory URL',
 
     'upload_url_desc' => '<abbr title="Uniform Resource Location">URL</abbr> location of this directory. We recommend using <code>{base_url}your_upload_directory</code>',
 
@@ -477,13 +565,13 @@ $lang = array(
 
     'watermark_text_desc' => 'Content of this watermark',
 
-    'watermark_text_dropshadow' => 'Enable dropshadow?',
+    'watermark_text_dropshadow' => 'Enable drop shadow?',
 
-    'watermark_text_dropshadow_color' => 'Dropshadow color',
+    'watermark_text_dropshadow_color' => 'Drop shadow color',
 
-    'watermark_text_dropshadow_desc' => 'When enabled, a drop-shadow will be rendered.',
+    'watermark_text_dropshadow_desc' => 'When enabled, a drop shadow will be rendered.',
 
-    'watermark_text_dropshadow_distance' => 'Dropshadow distance',
+    'watermark_text_dropshadow_distance' => 'Drop shadow distance',
 
     'watermark_text_font' => 'Font face',
 
@@ -595,6 +683,8 @@ $lang = array(
 
     'browse_files' => 'Browse Files',
 
+    'browser_behavior' => 'Browser Behavior',
+
     'can_upload_files' => 'Can upload files',
 
     'cancel_changes' => 'Cancel Changes',
@@ -629,11 +719,11 @@ $lang = array(
 
     'delete_upload_preference' => 'Delete Upload Preference',
 
-    'dir_name' => 'Upload Directory Name',
+    'dir_name' => 'Upload Location Name',
 
     'directory' => 'Directory',
 
-    'directory_manager' => 'Upload Directory Manager',
+    'directory_manager' => 'Upload Location Manager',
 
     'disallow_image' => 'Disallow Image',
 
@@ -650,6 +740,8 @@ $lang = array(
     'errors' => 'Errors Encountered',
 
     'exit_apply_changes' => 'You are about to exit this edit mode. Permanently apply changes first?',
+
+    'field_options' => 'Field Options',
 
     'file_count' => 'Number of Files',
 
@@ -701,8 +793,6 @@ $lang = array(
 
     'max_width' => 'Maximum Image Width (in pixels)',
 
-    'member_group' => 'Member Group',
-
     'new_file_upload_created' => 'New File Upload Created',
 
     'new_file_upload_preferences' => 'New File Upload Preferences',
@@ -714,8 +804,6 @@ $lang = array(
     'no_edit_selected' => 'No Edit Operation Selected',
 
     'no_errors' => 'No errors',
-
-    'no_results' => 'No available member groups.',
 
     'no_sync_title' => 'No Results', // @todo, this phrase should change, just not sure what to put -ga
     'no_upload_directories_for_fieldtype' => 'There are currently no upload directories available. Please <a href="%s" rel="external">add one or more upload directories</a> to use the File fieldtype.',
@@ -758,14 +846,6 @@ $lang = array(
 
     'resize_width' => 'Width',
 
-    'restrict_notes_1' => 'These radio buttons let you to specify which Member Groups are allowed to upload files.',
-
-    'restrict_notes_2' => 'Super Admins can always upload files',
-
-    'restrict_notes_3' => 'Note: File uploading is currently only allowed via the control panel',
-
-    'restrict_to_group' => 'Restrict file uploading to select member groups',
-
     'rotate' => 'Rotate',
 
     'rotate_180' => '180&#176',
@@ -803,6 +883,8 @@ $lang = array(
     'total_dir_size' => 'Total Directory Size:',
 
     'upload_dir_dropdown' => '%s (%s files)',
+
+    'upload_location' => 'Upload Location',
 
     'upload_pref_deleted' => 'Upload Preference Deleted:',
 
@@ -872,9 +954,9 @@ $lang = array(
 
     'wm_padding' => 'Padding',
 
-    'wm_shadow_color' => 'Dropshadow Color',
+    'wm_shadow_color' => 'Drop shadow Color',
 
-    'wm_shadow_distance' => 'Dropshadow Distance',
+    'wm_shadow_distance' => 'Drop shadow Distance',
 
     'wm_test' => 'Test Watermark',
 
@@ -888,7 +970,7 @@ $lang = array(
 
     'wm_type' => 'Watermark Type',
 
-    'wm_use_drop_shadow' => 'Enable Dropshadow',
+    'wm_use_drop_shadow' => 'Enable Drop shadow',
 
     'wm_use_font' => 'Use True Type Font',
 
@@ -899,6 +981,72 @@ $lang = array(
     'wm_x_transp' => 'Transparency X Coordinate',
 
     'wm_y_transp' => 'Transparency Y Coordinate',
+
+    /* Removing */
+
+    'folder_not_empty' => 'The directory is not empty',
+
+    'all_files_in_folder_will_be_deleted' => 'If you delete this folder, all files in it will be deleted as well.',
+
+    'all_files_in_folder_will_be_moved' => 'All files in folder will be moved with it.',
+
+    'file_is_in_use' => 'The file is being used <a href="%s"> in <span>%s</span> entries</a>',
+
+    'files_is_in_use' => 'Please note some of these files are currently in use',
+
+    /* Moving the files */
+
+    'move_file' => 'Move File',
+
+    'select_new_destinatin_for' => 'Select new destination for:',
+
+    'destination' => 'Destination',
+
+    'error_moving_need_same_driver' => 'The files can be moved only between upload directories that use same adapter',
+
+    'error_moving_already_there' => 'The file is already in target destination',
+
+    'files_moved' => 'The files have been moved',
+
+    'some_files_not_moved' => 'Could not move some files',
+
+    'error_moving_directory_cannot_be_own_child' => 'Directory cannot be moved to this position',
+
+    /* Subfolders */
+
+    'subfolder_directory_already_exists' => 'Subfolder already exists',
+
+    'subfolder_directory_already_exists_desc' => 'Directory with this name already exists on the file system',
+
+    'error_creating_directory' => 'Could not create folder',
+
+    'error_moving_already_exists' => 'Could not move because file or folder with that name already exists',
+
+    'subfolder_directory_created' => 'Folder created',
+
+    'invalid_subfolder' => 'Selected subfolder does not exist in this upload location',
+
+    'subfolder_not_exists' => 'Selected subfolder does not exist on the server',
+
+    'subfolder_not_writable' => 'Selected subfolder is not writable',
+
+    'rename_folder' => 'Rename Folder',
+
+    'could_not_rename' => 'Could not rename',
+
+    'one_rename_at_a_time' => 'It is only possible to rename one file/folder at a time',
+
+    'new_name' => 'New name',
+
+    'error_renaming_already_exists' => 'Could not rename because file or folder with that name already exists',
+
+    'rename_success' => 'Successfully renamed',
+
+    'rename_success_desc' => '<code>%s</code> has been renamed to <code>%s</code>',
+
+    'existing_file_manipulations_desc' => 'These are existing pre-defined manipulations for this file based in Upload Directory settings',
+
+    'manipulations' => 'Manipulations',
 
 );
 

@@ -4,36 +4,27 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Integrations\DataObjects;
 
-class FieldObject implements \JsonSerializable
+use JsonSerializable;
+class FieldObject implements JsonSerializable
 {
-    const TYPE_STRING  = 'string';
-    const TYPE_ARRAY   = 'array';
-    const TYPE_NUMERIC = 'numeric';
-    const TYPE_BOOLEAN = 'boolean';
+    public const TYPE_STRING  = 'string';
+    public const TYPE_ARRAY   = 'array';
+    public const TYPE_NUMERIC = 'numeric';
+    public const TYPE_BOOLEAN = 'boolean';
 
-    /** @var string */
-    private $handle;
-
-    /** @var string */
-    private $label;
-
-    /** @var bool */
-    private $required;
-
-    /** @var string */
-    private $type;
+    private bool $required;
 
     /**
      * @return array
      */
-    public static function getTypes()
+    public static function getTypes(): array
     {
         return [self::TYPE_STRING, self::TYPE_NUMERIC, self::TYPE_BOOLEAN, self::TYPE_ARRAY];
     }
@@ -41,7 +32,7 @@ class FieldObject implements \JsonSerializable
     /**
      * @return string
      */
-    public static function getDefaultType()
+    public static function getDefaultType(): string
     {
         return self::TYPE_STRING;
     }
@@ -52,11 +43,8 @@ class FieldObject implements \JsonSerializable
      * @param string $type
      * @param bool   $required
      */
-    public function __construct($handle, $label, $type, $required = false)
+    public function __construct(private $handle, private $label, private $type, $required = false)
     {
-        $this->handle = $handle;
-        $this->label = $label;
-        $this->type = $type;
         $this->required = (bool)$required;
     }
 
@@ -87,7 +75,7 @@ class FieldObject implements \JsonSerializable
     /**
      * @return boolean
      */
-    public function isRequired()
+    public function isRequired(): bool
     {
         return (bool)$this->required;
     }

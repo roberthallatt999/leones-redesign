@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -89,7 +89,7 @@ class StandardGlobals extends Variables
 
         // add member variables and their aliases
         foreach ($this->legacy_tmpl_obj->getUserVars() as $val) {
-            $replace = (isset(ee()->session->userdata[$val]) && strval(ee()->session->userdata[$val]) != '') ?
+            $replace = (isset(ee()->session) && isset(ee()->session->userdata[$val]) && strval(ee()->session->userdata[$val]) != '') ?
                 ee()->session->userdata[$val] : '';
 
             $this->variables[$val] = $replace;

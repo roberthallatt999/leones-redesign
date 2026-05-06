@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -21,7 +21,7 @@ class ExportDataCSV extends ExportData
      *
      * @return string
      */
-    public function generateRow($row) {
+    public function generateRow($row): string {
         foreach ($row as $key => $value) {
             // Escape inner quotes by double-quoting and wrap non-empty contents in new quotes
             if (!empty($value)) {
@@ -31,7 +31,7 @@ class ExportDataCSV extends ExportData
         return implode(',', $row) . "\n";
     }
 
-    public function sendHttpHeaders() {
+    public function sendHttpHeaders(): void {
         header('Content-type: text/csv');
         header('Content-Disposition: attachment; filename=' .basename($this->filename));
     }

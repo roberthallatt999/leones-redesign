@@ -11,16 +11,13 @@ use Solspace\Addons\FreeformNext\Model\SubmissionModel;
 
 class SubmissionTransformer
 {
-    /** @var array */
-    private static $fieldsByFormId;
+    private static ?array $fieldsByFormId = null;
 
     /**
-     * @param SubmissionModel           $model
      * @param int                       $count
      * @param int                       $totalResults
      * @param int                       $absoluteTotal
      * @param SubmissionAttributes|null $attributes
-     *
      * @return array
      */
     public function transformSubmission(
@@ -42,9 +39,9 @@ class SubmissionTransformer
             if ($field instanceof FileUploadField)
             {
                 $fieldValue = $model->getFieldValue($field->getHandle()) ?: [];
-                if(count($fieldValue))
+                if(is_countable($fieldValue) ? count($fieldValue) : 0)
                 {
-                    $attachmentCount += count($fieldValue);
+                    $attachmentCount += is_countable($fieldValue) ? count($fieldValue) : 0;
                 }
             }
         }
@@ -75,12 +72,9 @@ class SubmissionTransformer
     }
 
     /**
-     * @param SubmissionModel $model
-     * @param string          $prefix
-     *
      * @return array
      */
-    private function getFields(SubmissionModel $model, $prefix = 'field:')
+    private function getFields(SubmissionModel $model, string $prefix = 'field:'): array
     {
         $fieldTransformer = new FieldTransformer();
         $data             = [];
@@ -103,12 +97,9 @@ class SubmissionTransformer
     }
 
     /**
-     * @param SubmissionModel $model
-     * @param string          $prefix
-     *
      * @return array
      */
-    private function getSeparateFieldInfo(SubmissionModel $model, $prefix = 'submission:')
+    private function getSeparateFieldInfo(SubmissionModel $model, string $prefix = 'submission:'): array
     {
         $fieldTransformer = new FieldTransformer();
 
@@ -126,8 +117,6 @@ class SubmissionTransformer
     }
 
     /**
-     * @param SubmissionModel $model
-     *
      * @return AbstractField[]
      */
     private function getFieldList(SubmissionModel $model)

@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -63,6 +63,8 @@ class CustomFormAttributes extends AbstractAttributes
 
     /** @var string */
     protected $dynamicNotificationTemplate;
+
+    protected string $dynamicNotificationFormat = 'html';
 
     /** @var array */
     protected $overrideValues;
@@ -204,7 +206,7 @@ class CustomFormAttributes extends AbstractAttributes
     /**
      * @return array
      */
-    public function getDynamicNotificationRecipients()
+    public function getDynamicNotificationRecipients(): ?array
     {
         if (null === $this->dynamicNotificationRecipients) {
             return null;
@@ -219,6 +221,11 @@ class CustomFormAttributes extends AbstractAttributes
     public function getDynamicNotificationTemplate()
     {
         return $this->dynamicNotificationTemplate;
+    }
+
+    public function getDynamicNotificationFormat(): string
+    {
+        return $this->dynamicNotificationFormat;
     }
 
     /**
@@ -256,7 +263,7 @@ class CustomFormAttributes extends AbstractAttributes
     /**
      * @return bool
      */
-    public function isUseActionUrl()
+    public function isUseActionUrl(): bool
     {
         $val = $this->useActionUrl;
         if (
@@ -274,7 +281,7 @@ class CustomFormAttributes extends AbstractAttributes
     /**
      * @return array
      */
-    public function getFormAttributes()
+    public function getFormAttributes(): ?array
     {
         if (null === $this->formAttributes) {
             return $this->formAttributes;
@@ -300,7 +307,7 @@ class CustomFormAttributes extends AbstractAttributes
     /**
      * @return array
      */
-    public function getInputAttributes()
+    public function getInputAttributes(): ?array
     {
         if (null === $this->inputAttributes) {
             return $this->inputAttributes;
@@ -316,7 +323,7 @@ class CustomFormAttributes extends AbstractAttributes
     /**
      * @return array
      */
-    public function getManifest()
+    public function getManifest(): array
     {
         $manifest = array_keys(get_object_vars($this));
 

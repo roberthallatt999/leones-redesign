@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -22,11 +22,11 @@ use Solspace\Addons\FreeformNext\Library\Integrations\SettingBlueprint;
 
 class ConstantContact extends AbstractMailingListIntegration
 {
-    const TITLE        = 'Constant Contact';
-    const LOG_CATEGORY = 'ConstantContact';
+    public const TITLE        = 'Constant Contact';
+    public const LOG_CATEGORY = 'ConstantContact';
 
-    const SETTING_API_KEY      = 'api_key';
-    const SETTING_ACCESS_TOKEN = 'access_token';
+    public const SETTING_API_KEY      = 'api_key';
+    public const SETTING_ACCESS_TOKEN = 'access_token';
 
     /**
      * Returns a list of additional settings for this integration
@@ -34,7 +34,7 @@ class ConstantContact extends AbstractMailingListIntegration
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -60,7 +60,7 @@ class ConstantContact extends AbstractMailingListIntegration
      *
      * @return string
      */
-    public function getServiceProvider()
+    public function getServiceProvider(): string
     {
         return 'Constant Contact';
     }
@@ -102,7 +102,7 @@ class ConstantContact extends AbstractMailingListIntegration
         }
     }
 
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -122,7 +122,7 @@ class ConstantContact extends AbstractMailingListIntegration
      *
      * @throws IntegrationException
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         $model->updateAccessToken($this->getSetting(self::SETTING_ACCESS_TOKEN));
         $model->updateSettings($this->getSettings());
@@ -138,7 +138,7 @@ class ConstantContact extends AbstractMailingListIntegration
      * @return bool
      * @throws IntegrationException
      */
-    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues)
+    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues): bool
     {
         $client = new Client();
 
@@ -195,10 +195,10 @@ class ConstantContact extends AbstractMailingListIntegration
      * Builds ListObject objects based on the results
      * And returns them
      *
-     * @return \Solspace\Addons\FreeformNext\Library\Integrations\MailingLists\DataObjects\ListObject[]
+     * @return ListObject[]
      * @throws IntegrationException
      */
-    protected function fetchLists()
+    protected function fetchLists(): array
     {
         $client = new Client();
 
@@ -263,7 +263,7 @@ class ConstantContact extends AbstractMailingListIntegration
      * @return FieldObject[]
      * @throws IntegrationException
      */
-    protected function fetchFields($listId)
+    protected function fetchFields($listId): array
     {
         return [
             new FieldObject('first_name', 'First Name', FieldObject::TYPE_STRING, false),
@@ -282,7 +282,7 @@ class ConstantContact extends AbstractMailingListIntegration
      * @return string
      * @throws IntegrationException
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         return 'https://api.constantcontact.com/v2/';
     }

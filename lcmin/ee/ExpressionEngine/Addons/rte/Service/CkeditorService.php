@@ -1,35 +1,49 @@
 <?php
+/**
+ * This source file is part of the open source project
+ * ExpressionEngine (https://expressionengine.com)
+ *
+ * @link      https://expressionengine.com/
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
+ * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
+ */
 
 namespace ExpressionEngine\Addons\Rte\Service;
 
 use ExpressionEngine\Library\Rte\RteFilebrowserInterface;
 
-class CkeditorService implements RteService
+class CkeditorService extends AbstractRteService implements RteService
 {
-    public $class = 'rte-textarea rte-ckeditor';
+    public $class = 'rte-textarea';
     public $handle;
     protected $settings;
     protected $toolset;
     private static $_includedFieldResources = false;
     private static $_includedConfigs;
 
-    public function init($settings, $toolset = null)
-    {
-        $this->settings = $settings;
-        $this->toolset = $toolset;
-        $this->includeFieldResources();
-        $this->insertConfigJsById();
-        return $this->handle;
-    }
-
     protected function includeFieldResources()
     {
         if (! static::$_includedFieldResources) {
-            //would rather prefer this in combo loader, but that's for CP only
-            ee()->cp->add_js_script(['file' => [
-                'fields/rte/ckeditor/ckeditor',
-                'fields/rte/rte']
-            ]);
+            ee()->load->library('file_field');
+            ee()->lang->loadfile('fieldtypes');
+            ee()->file_field->loadDragAndDropAssets();
+
+            if (!empty(ee()->config->item('rte_custom_ckeditor_build')) && ee()->config->item('rte_custom_ckeditor_build') === 'y') {
+                ee()->cp->load_package_js('ckeditor');
+            } else {
+                ee()->cp->add_js_script(['file' => 'fields/rte/ckeditor/ckeditor']);
+            }
+            ee()->cp->add_js_script(['file' => 'fields/rte/rte']);
+
+            if (REQ == 'CP') {
+                ee()->cp->add_js_script(['file' => [
+                    'fields/file/file_field_drag_and_drop',
+                    'fields/file/concurrency_queue',
+                    'fields/file/file_upload_progress_table',
+                    'fields/file/drag_and_drop_upload',
+                    'fields/grid/file_grid']
+                ]);
+            }
 
             $language = isset(ee()->session) ? ee()->session->get_language() : ee()->config->item('deft_lang');
             $lang_code = ee()->lang->code($language);
@@ -49,11 +63,6 @@ class CkeditorService implements RteService
 
             static::$_includedFieldResources = true;
         }
-    }
-
-    public function getClass()
-    {
-        return $this->class;
     }
 
     protected function insertConfigJsById()
@@ -92,47 +101,20 @@ class CkeditorService implements RteService
             return $configHandle;
         }
 
-        // language
+        // CKEditor does not allow specifying language direction implicitely, so we have to fake it by setting language
         $language = isset(ee()->session) ? ee()->session->get_language() : ee()->config->item('deft_lang');
-        $config['language'] = ee()->lang->code($language);
+        $config['language'] = (object) [
+            'ui' => ee()->lang->code($language),
+            'content' => (isset($config['field_text_direction']) && $config['field_text_direction'] == 'rtl') ? 'ar' : ee()->lang->code($language)
+        ];
 
         // toolbar
-        if (is_array($config['toolbar'])) {
-            $toolbarObject = new \stdClass();
-            $toolbarObject->items = $config['toolbar'];
-            $toolbarObject->viewportTopOffset = 59;
-            $config['toolbar'] = $toolbarObject;
-            $config['image'] = new \stdClass();
-            $config['image']->toolbar = [
-                'imageTextAlternative',
-                'linkImage',
-                'imageStyle:full',
-                'imageStyle:side',
-                'imageStyle:alignLeft',
-                'imageStyle:alignCenter',
-                'imageStyle:alignRight'
-            ];
-            $config['image']->styles = [
-                'full',
-                'side',
-                'alignLeft',
-                'alignCenter',
-                'alignRight'
-            ];
+        $config = array_merge($config, $this->buildToolbarConfig($config));
+        if (REQ == 'CP') {
+            $config['toolbar']->viewportOffset = (object) ['top' => 59];
         }
 
-        if (in_array('heading', $config['toolbar']->items)) {
-            $config['heading'] = new \stdClass();
-            $config['heading']->options = [
-                (object) ['model' => 'paragraph', 'title' => lang('paragraph_rte')],
-                (object) ['model' => 'heading1', 'view' => 'h1', 'title' => lang('heading_h1_rte'), 'class' => 'ck-heading_heading1'],
-                (object) ['model' => 'heading2', 'view' => 'h2', 'title' => lang('heading_h2_rte'), 'class' => 'ck-heading_heading2'],
-                (object) ['model' => 'heading3', 'view' => 'h3', 'title' => lang('heading_h3_rte'), 'class' => 'ck-heading_heading3'],
-                (object) ['model' => 'heading4', 'view' => 'h4', 'title' => lang('heading_h4_rte'), 'class' => 'ck-heading_heading4'],
-                (object) ['model' => 'heading5', 'view' => 'h5', 'title' => lang('heading_h5_rte'), 'class' => 'ck-heading_heading5'],
-                (object) ['model' => 'heading6', 'view' => 'h6', 'title' => lang('heading_h6_rte'), 'class' => 'ck-heading_heading6']
-            ];
-        }
+        $config['editorClass'] = 'rte_' . $configHandle;
 
         if (!empty(ee()->config->item('site_pages'))) {
             ee()->cp->add_to_foot('<script type="text/javascript">
@@ -178,18 +160,13 @@ class CkeditorService implements RteService
 
         $config['toolbar']->shouldNotGroupWhenFull = true;
 
-        //link
-        $config['link'] = (object) ['decorators' => [
-            'openInNewTab' => [
-                'mode' => 'manual',
-                'label' => lang('open_in_new_tab'),
-                'attributes' => [
-                    'target' => '_blank',
-                    'rel' => 'noopener noreferrer'
-                ]
-            ]
-        ]
-        ];
+        if (isset($config['field_text_direction'])) {
+            $config['textDirection'] = $config['field_text_direction'];
+            unset($config['field_text_direction']);
+        }
+
+        unset($config['rte_config_json']);
+        unset($config['rte_advanced_config']);
 
         // -------------------------------------------
         //  JSONify Config and Return
@@ -199,18 +176,170 @@ class CkeditorService implements RteService
             'Rte.configs.' . $configHandle => $config
         ]);
 
+        // some config values are regular expressions, re-decleare those as such
+        $configRegex = [];
+        if (isset($config['htmlSupport']) && isset($config['htmlSupport']->allow)) {
+            foreach ($config['htmlSupport'] as $property => $htmlSupport) {
+                foreach ($htmlSupport as $i => $allowDisallow) {
+                    foreach ($allowDisallow as $key => $value) {
+                        if (is_string($value) && strpos($value, '/') === 0 && strrpos($value, '/') === strlen($value) - 1) {
+                            $configRegex[] = 'EE.Rte.configs.' . $configHandle . '.htmlSupport.' . $property . '[' . $i . '].' . $key . ' = new RegExp(' . $value . ');';
+                        } elseif (is_array($value)) {
+                            foreach ($value as $j => $v) {
+                                if (is_string($v) && strpos($v, '/') === 0 && strrpos($v, '/') === strlen($v) - 1) {
+                                    $configRegex[] = 'EE.Rte.configs.' . $configHandle . '.htmlSupport.' . $property . '[' . $i . '].' . $key . '[' . $j . '] = new RegExp(' . $v . ');';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (isset($config['typing']) && isset($config['typing']->transformations) && isset($config['typing']->transformations->extra)) {
+            foreach ($config['typing']->transformations->extra as $i => $extra) {
+                foreach ($extra as $key => $value) {
+                    if (is_string($value) && strpos($value, '/') === 0 && strrpos($value, '/') === strlen($value) - 1) {
+                        $configRegex[] = 'EE.Rte.configs.typing.transformations.extra[' . $i . '].' . $key . ' = new RegExp(' . $value . ');';
+                    }
+                }
+            }
+        }
+
+        if (!empty($configRegex)) {
+            ee()->cp->add_to_foot('<script type="text/javascript">
+                ' . implode("\n", $configRegex) . '
+            </script>');
+        }
+
         static::$_includedConfigs[] = $configHandle;
 
         if (isset($config['height']) && !empty($config['height'])) {
             ee()->cp->add_to_head('<style type="text/css">.rte_' . $configHandle . '.ck-editor__editable_inline { min-height: ' . $config['height'] . 'px; }</style>');
         }
 
+        if (isset($config['css_template']) && !empty($config['css_template'])) {
+            $this->includeCustomCSS($configHandle, $config['css_template'], '.ck.ck-editor.rte_' . $configHandle);
+        }
+
+        if (isset($config['js_template']) && !empty($config['js_template'])) {
+            ee()->cp->add_js_script([
+                'template' => $config['js_template']
+            ]);
+        }
+
         return $configHandle;
+    }
+
+    public function buildToolbarConfig($config)
+    {
+        $toolbarConfig = [];
+        if (is_array($config['toolbar'])) {
+            $toolbarObject = new \stdClass();
+            $toolbarObject->items = $config['toolbar'];
+            $toolbarConfig['toolbar'] = $toolbarObject;
+            $toolbarConfig['image'] = new \stdClass();
+            $toolbarConfig['image']->toolbar = [
+                'imageTextAlternative',
+                'toggleImageCaption',
+                'linkImage'
+            ];
+            $imageStyles = new \stdClass();
+            $imageStyles->name = 'imageStyle:customDropdown';
+            $imageStyles->title = lang('alignment_rte');
+            $imageStyles->defaultItem = 'imageStyle:inline';
+            $imageStyles->items = [
+                'imageStyle:inline',
+                'imageStyle:block',
+                'imageStyle:side',
+                'imageStyle:alignLeft',
+                'imageStyle:alignBlockLeft',
+                'imageStyle:alignCenter',
+                'imageStyle:alignBlockRight',
+                'imageStyle:alignRight'
+            ];
+            $toolbarConfig['image']->toolbar[] = $imageStyles;
+            $toolbarConfig['image']->styles = [
+                'full',
+                'side',
+                'alignLeft',
+                'alignCenter',
+                'alignRight'
+            ];
+            $toolbarConfig['image']->insert = new \stdClass();
+            $toolbarConfig['image']->insert->type = 'auto';
+            $toolbarConfig['image']->insert->integrations = ['url'];
+
+            $toolbarConfig['htmlEmbed'] = new \stdClass();
+            $toolbarConfig['htmlEmbed']->showPreviews = true;
+
+            // By default, we allow some block elements & span with any data-attribute and any class
+            // Plus the elements that have corresponding plugin or button - such as table, link, image, etc.
+            // We also allow classes, but not styles
+            // If the mode "do anything when in source editing" needs to be enable, set up advanaced config like this:
+            // https://ckeditor.com/docs/ckeditor5/latest/features/html/general-html-support.html#enabling-all-html-features
+            // However this is ponetially dangerous and also will break "paste from Word" filters
+            $allowedHtml = new \stdClass();
+            $allowedHtml->name = '/^(div|section|article|span)$/';
+            $allowedHtml->attributes = '/data-[\w-]+/';
+            $allowedHtml->classes = true;
+            $allowedHtml->styles = false;
+            $toolbarConfig['htmlSupport'] = new \stdClass();
+            $toolbarConfig['htmlSupport']->allow = [
+                $allowedHtml
+            ];
+
+            if (in_array('heading', $toolbarConfig['toolbar']->items)) {
+                $toolbarConfig['heading'] = new \stdClass();
+                $toolbarConfig['heading']->options = [
+                    (object) ['model' => 'paragraph', 'title' => lang('paragraph_rte')],
+                    (object) ['model' => 'heading1', 'view' => 'h1', 'title' => lang('heading_h1_rte'), 'class' => 'ck-heading_heading1'],
+                    (object) ['model' => 'heading2', 'view' => 'h2', 'title' => lang('heading_h2_rte'), 'class' => 'ck-heading_heading2'],
+                    (object) ['model' => 'heading3', 'view' => 'h3', 'title' => lang('heading_h3_rte'), 'class' => 'ck-heading_heading3'],
+                    (object) ['model' => 'heading4', 'view' => 'h4', 'title' => lang('heading_h4_rte'), 'class' => 'ck-heading_heading4'],
+                    (object) ['model' => 'heading5', 'view' => 'h5', 'title' => lang('heading_h5_rte'), 'class' => 'ck-heading_heading5'],
+                    (object) ['model' => 'heading6', 'view' => 'h6', 'title' => lang('heading_h6_rte'), 'class' => 'ck-heading_heading6']
+                ];
+            }
+
+            $tableContentToolbar = [
+                'tableColumn',
+                'tableRow',
+                'mergeTableCells',
+                'tableProperties',
+                'tableCellProperties',
+                'toggleTableCaption'
+            ];
+            $toolbarConfig['table'] = new \stdClass();
+            $toolbarConfig['table']->contentToolbar = $tableContentToolbar;
+
+            //link
+            $toolbarConfig['link'] = (object) [
+                'decorators' => [
+                    'openInNewTab' => [
+                        'mode' => 'manual',
+                        'label' => lang('open_in_new_tab'),
+                        'attributes' => [
+                            'target' => '_blank',
+                            'rel' => 'noopener noreferrer'
+                        ]
+                    ]
+                ]
+            ];
+        }
+
+        return $toolbarConfig;
     }
 
     public function toolbarInputHtml($config)
     {
-        $selection = isset($config->settings['toolbar']['buttons']) ? $config->settings['toolbar']['buttons'] : $config->settings['toolbar'];
+        $selection = [];
+        if (is_object($config->settings['toolbar'])) {
+            if (isset($config->settings['toolbar']->items)) {
+                $selection = $config->settings['toolbar']->items;
+            }
+        } else {
+            $selection = isset($config->settings['toolbar']['buttons']) && is_array($config->settings['toolbar']['buttons']) ? $config->settings['toolbar']['buttons'] : $config->settings['toolbar'];
+        }
         $fullToolbar = array_merge($selection, static::defaultToolbars()['CKEditor Full']);//merge to get the right order
         $fullToolset = [];
         foreach ($fullToolbar as $i => $tool) {
@@ -272,6 +401,7 @@ class CkeditorService implements RteService
                 "superscript",
                 "blockquote",
                 "code",
+                "codeBlock",
                 "heading",
                 "removeFormat",
                 "undo",
@@ -282,6 +412,7 @@ class CkeditorService implements RteService
                 "indent",
                 "link",
                 "filemanager",
+                "insertImage",
                 "insertTable",
                 "mediaEmbed",
                 "htmlEmbed",
@@ -293,7 +424,10 @@ class CkeditorService implements RteService
                 "specialCharacters",
                 "readMore",
                 "fontColor",
-                "fontBackgroundColor"
+                "fontBackgroundColor",
+                "findAndReplace",
+                "showBlocks",
+                "sourceEditing"
             ],
         ];
     }

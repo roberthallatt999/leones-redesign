@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -15,18 +15,17 @@ use Hashids\Hashids;
 
 class HashHelper
 {
-    const SALT       = "composer";
-    const MIN_LENGTH = 9;
+    public const SALT       = "composer";
+    public const MIN_LENGTH = 9;
 
-    /** @var Hashids */
-    private static $hashids;
+    private static ?Hashids $hashids = null;
 
     /**
      * @param int $id
      *
      * @return string
      */
-    public static function hash($id)
+    public static function hash($id): string
     {
         return self::getHashids()->encode($id);
     }
@@ -48,19 +47,17 @@ class HashHelper
      *
      * @return array
      */
-    public static function decodeMultiple($hash)
+    public static function decodeMultiple($hash): array
     {
         return self::getHashids()->decode($hash);
     }
 
     /**
-     * @param mixed $value
      * @param int   $length
      * @param int   $offset
-     *
      * @return string
      */
-    public static function sha1($value, $length = null, $offset = 0)
+    public static function sha1(mixed $value, ?int $length = null, ?int $offset = 0): string
     {
         $hash = sha1($value);
 

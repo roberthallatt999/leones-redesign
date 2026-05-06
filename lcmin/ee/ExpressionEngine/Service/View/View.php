@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -139,7 +139,9 @@ class View
 
         $buffer = ob_get_contents();
 
-        ob_end_clean();
+        if ($buffer !== false) {
+            ob_end_clean();
+        }
 
         return $buffer;
     }
@@ -164,7 +166,10 @@ class View
         ob_start();
         echo $view->render($vars);
 
-        ob_end_flush();
+        // If output buffering is active we will flush any buffered content and close the buffer
+        if(ob_get_length() !== false) {
+            (ob_get_length() > 0) ? ob_end_flush() : ob_end_clean();
+        }
     }
 
     /**

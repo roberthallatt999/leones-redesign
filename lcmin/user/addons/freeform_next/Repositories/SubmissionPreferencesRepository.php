@@ -17,9 +17,7 @@ class SubmissionPreferencesRepository extends Repository
     }
 
     /**
-     * @param Form $form
      * @param int  $memberId
-     *
      * @return SubmissionPreferencesModel
      */
     public function getOrCreate(Form $form, $memberId)

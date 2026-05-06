@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -19,6 +19,7 @@ class ChannelDataGateway extends VariableColumnGateway
 {
     protected static $_table_name = 'channel_data';
     protected static $_primary_key = 'entry_id';
+    protected static $_gateway_model = 'ChannelField'; // model that defines elements fetched by this gateway
 
     // Properties
     public $entry_id;

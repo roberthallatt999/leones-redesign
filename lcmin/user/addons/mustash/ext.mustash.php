@@ -32,6 +32,14 @@ class Mustash_ext extends Mustash_base {
 	public $settings = array();
 
 	/**
+	 * EE extension metadata (assigned in __construct, lines 53-57)
+	 */
+	public $name;
+	public $version;
+	public $description;
+	public $settings_exist;
+
+	/**
 	 * Plugin hooks
 	 *
 	 * @var        array

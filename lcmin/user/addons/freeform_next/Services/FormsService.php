@@ -4,13 +4,14 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Services;
 
+use Exception;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Fields\SubmitField;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Form;
 use Solspace\Addons\FreeformNext\Library\Database\FormHandlerInterface;
@@ -25,8 +26,7 @@ use Solspace\Addons\FreeformNext\Repositories\SettingsRepository;
 
 class FormsService implements FormHandlerInterface
 {
-    /** @var array */
-    private static $spamBlockCache = [];
+    private static array $spamBlockCache = [];
 
     /**
      * @param Form   $form
@@ -35,7 +35,7 @@ class FormsService implements FormHandlerInterface
      * @return string
      * @throws FreeformException
      */
-    public function renderFormTemplate(Form $form, $templateName)
+    public function renderFormTemplate(Form $form, $templateName): string
     {
         $settings = $this->getSettingsService();
 
@@ -77,7 +77,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @return bool
      */
-    public function isSpamBehaviourSimulateSuccess()
+    public function isSpamBehaviourSimulateSuccess(): bool
     {
         return SettingsRepository::getInstance()->getOrCreate()->isSpamBlockLikeSuccessfulPost();
     }
@@ -85,7 +85,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @return bool
      */
-    public function isSpamBehaviourReloadForm()
+    public function isSpamBehaviourReloadForm(): bool
     {
         return false;
     }
@@ -93,7 +93,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @return bool
      */
-    public function isSpamProtectionEnabled()
+    public function isSpamProtectionEnabled(): bool
     {
         return SettingsRepository::getInstance()->getOrCreate()->isSpamProtectionEnabled();
     }
@@ -101,9 +101,17 @@ class FormsService implements FormHandlerInterface
     /**
      * @return bool
      */
-    public function isSpamBlockLikeSuccessfulPost()
+    public function isSpamBlockLikeSuccessfulPost(): bool
     {
         return SettingsRepository::getInstance()->getOrCreate()->isSpamBlockLikeSuccessfulPost();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSpamFolderEnabled(): bool
+    {
+        return SettingsRepository::getInstance()->getOrCreate()->isSpamFolderEnabled();
     }
 
     /**
@@ -132,20 +140,17 @@ class FormsService implements FormHandlerInterface
     /**
      * @return null|string
      */
-    public function getSubmitUrl()
+    public function getSubmitUrl(): ?string
     {
         try {
             $actionId = ee()->db
                 ->where(
-                    array(
-                        'class'  => 'Freeform_next',
-                        'method' => 'submitForm',
-                    )
+                    ['class'  => 'Freeform_next', 'method' => 'submitForm']
                 )
                 ->get('actions')
                 ->row()
                 ->action_id;
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return null;
         }
 
@@ -160,7 +165,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @inheritDoc
      */
-    public function onBeforeSubmit(Form $form)
+    public function onBeforeSubmit(Form $form): bool
     {
         return ExtensionHelper::call(ExtensionHelper::HOOK_FORM_BEFORE_SUBMIT, $form);
     }
@@ -168,7 +173,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @inheritDoc
      */
-    public function onAfterSubmit(Form $form, SubmissionModel $submission = null)
+    public function onAfterSubmit(Form $form, ?SubmissionModel $submission = null): void
     {
         ExtensionHelper::call(ExtensionHelper::HOOK_FORM_AFTER_SUBMIT, $form, $submission);
     }
@@ -176,7 +181,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @inheritDoc
      */
-    public function onRenderOpeningTag(Form $form, array $outputChunks = [])
+    public function onRenderOpeningTag(Form $form, array $outputChunks = []): string
     {
         $renderObject = new FormRenderObject($form);
         ExtensionHelper::call(ExtensionHelper::HOOK_FORM_RENDER_OPENING_TAG, $form, $renderObject);
@@ -187,7 +192,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @inheritDoc
      */
-    public function onRenderClosingTag(Form $form)
+    public function onRenderClosingTag(Form $form): string
     {
         $renderObject = new FormRenderObject($form);
         ExtensionHelper::call(ExtensionHelper::HOOK_FORM_RENDER_CLOSING_TAG, $form, $renderObject);
@@ -198,7 +203,7 @@ class FormsService implements FormHandlerInterface
     /**
      * @inheritDoc
      */
-    public function onFormValidate(Form $form)
+    public function onFormValidate(Form $form): void
     {
         ExtensionHelper::call(ExtensionHelper::HOOK_FORM_VALIDATE, $form);
     }

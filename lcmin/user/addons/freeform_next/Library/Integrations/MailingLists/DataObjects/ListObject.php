@@ -4,55 +4,30 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
 
 namespace Solspace\Addons\FreeformNext\Library\Integrations\MailingLists\DataObjects;
 
+use JsonSerializable;
 use Solspace\Addons\FreeformNext\Library\Composer\Components\Layout;
 use Solspace\Addons\FreeformNext\Library\Integrations\DataObjects\FieldObject;
 use Solspace\Addons\FreeformNext\Library\Integrations\MailingLists\MailingListIntegrationInterface;
 
-class ListObject implements \JsonSerializable
+class ListObject implements JsonSerializable
 {
-    /** @var MailingListIntegrationInterface */
-    private $mailingList;
-
-    /** @var int */
-    private $id;
-
-    /** @var string */
-    private $name;
-
-    /** @var int */
-    private $memberCount;
-
-    /** @var FieldObject[] */
-    private $fields;
-
     /**
      * ListObject constructor.
      *
-     * @param MailingListIntegrationInterface $mailingList
      * @param string                          $id
      * @param string                          $name
      * @param FieldObject[]                   $fields
      * @param int                             $memberCount
      */
-    public function __construct(
-        MailingListIntegrationInterface $mailingList,
-        $id,
-        $name,
-        array $fields = [],
-        $memberCount = 0
-    ) {
-        $this->id          = $id;
-        $this->name        = $name;
-        $this->fields      = $fields;
-        $this->memberCount = $memberCount;
-        $this->mailingList = $mailingList;
+    public function __construct(private MailingListIntegrationInterface $mailingList, private $id, private $name, private array $fields = [], private $memberCount = 0)
+    {
     }
 
     /**
@@ -74,7 +49,7 @@ class ListObject implements \JsonSerializable
     /**
      * @return FieldObject[]
      */
-    public function getFields()
+    public function getFields(): array
     {
         return $this->fields;
     }
@@ -88,8 +63,6 @@ class ListObject implements \JsonSerializable
     }
 
     /**
-     * @param array  $emails
-     * @param array  $mappedValues
      *
      * @return bool
      */

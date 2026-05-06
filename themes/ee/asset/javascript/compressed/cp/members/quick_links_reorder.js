@@ -3,7 +3,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -14,6 +14,7 @@
 $(document).ready(function() {
 
 	$('table').eeTableReorder({
+		appendTo: 'table',
 		afterSort: function(row) {
 			$.ajax({
 				url: EE.quick_links.reorder_url,
@@ -25,7 +26,7 @@ $(document).ready(function() {
 				},
 				error: function(xhr, text, error) {
 					// Let the user know something went wrong
-					if ($('body > .banner').size() == 0) {
+					if ($('body > .banner').length == 0) {
 						$('body').prepend(EE.alert.reorder_ajax_fail);
 					}
 				}

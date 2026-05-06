@@ -11,35 +11,20 @@ use Solspace\Addons\FreeformNext\Repositories\SubmissionRepository;
 
 class SubmissionToTagDataTransformer
 {
-    const PATTERN_FIELD_RENDER           = '/{field:([a-zA-Z0-9\-_]+):(render(?:_?[a-zA-Z]+)?)?\s+([^}]+)}/i';
-    const PATTERN_FIELD_RENDER_VARIABLES = '/\b([a-zA-Z0-9_\-:]+)=(?:\'|")([^"\']+)(?:\'|")/';
-
-    /** @var Form */
-    private $form;
-
-    /** @var string */
-    private $content;
-
-    /** @var SubmissionModel[] */
-    private $submissions;
+    public const PATTERN_FIELD_RENDER           = '/{field:([a-zA-Z0-9\-_]+):(render(?:_?[a-zA-Z]+)?)?\s+([^}]+)}/i';
+    public const PATTERN_FIELD_RENDER_VARIABLES = '/\b([a-zA-Z0-9_\-:]+)=(?:\'|")([^"\']+)(?:\'|")/';
 
     /**
      * FormToTagDataTransformer constructor.
      *
-     * @param Form   $form
      * @param string $content
-     * @param array  $submissions
+     * @param SubmissionModel[] $submissions
      */
-    public function __construct(Form $form, $content, array $submissions)
+    public function __construct(private Form $form, private $content, private array $submissions)
     {
-        $this->form        = $form;
-        $this->content     = $content;
-        $this->submissions = $submissions;
     }
 
     /**
-     * @param SubmissionAttributes $attributes
-     *
      * @return string
      */
     public function getOutput(SubmissionAttributes $attributes)
@@ -51,11 +36,9 @@ class SubmissionToTagDataTransformer
     }
 
     /**
-     * @param SubmissionAttributes $attributes
-     *
      * @return array
      */
-    private function transform(SubmissionAttributes $attributes)
+    private function transform(SubmissionAttributes $attributes): array
     {
         $formTransformer = new FormTransformer();
         $absoluteSubmissionCount = SubmissionRepository::getInstance()->getAllSubmissionCountFor($attributes);

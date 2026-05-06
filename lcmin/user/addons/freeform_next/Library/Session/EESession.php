@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -19,9 +19,9 @@ class EESession implements SessionInterface
      *
      * @return mixed
      */
-    public function get($key, $defaultValue = null)
+    public function get($key, mixed $defaultValue = null)
     {
-        return isset($_SESSION[$key]) ? $_SESSION[$key] : $defaultValue;
+        return $_SESSION[$key] ?? $defaultValue;
     }
 
     /**
@@ -42,7 +42,7 @@ class EESession implements SessionInterface
      *
      * @return bool
      */
-    public function remove($key)
+    public function remove($key): void
     {
         if (isset($_SESSION[$key])) {
             unset($_SESSION[$key]);

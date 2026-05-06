@@ -95,10 +95,10 @@ $(textarea).scrollToCursor();
 				newStart = this.el.selectionStart + text.length;
 				firstPart = this.el.value.substr(0, this.el.selectionStart);
 				lastPart = this.el.value.substr(this.el.selectionStart);
+
 				this.el.value = firstPart +
 								text +
 								lastPart;
-
 				this.el.setSelectionRange(newStart, newStart);
 			}
 			else if (document.selection) {
@@ -108,6 +108,7 @@ $(textarea).scrollToCursor();
 			if (localStorage.getItem('caretPosition')) {
 				localStorage.removeItem('caretPosition');
 			}
+
 			return this;
 		},
 

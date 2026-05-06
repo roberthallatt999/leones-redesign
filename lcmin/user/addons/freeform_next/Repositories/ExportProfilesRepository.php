@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -16,7 +16,7 @@ use Solspace\Addons\FreeformNext\Model\ExportProfileModel;
 class ExportProfilesRepository extends Repository
 {
     /** @var ExportProfileModel[] */
-    private static $cache;
+    private static ?array $cache = null;
 
     /**
      * @return ExportProfilesRepository
@@ -55,8 +55,6 @@ class ExportProfilesRepository extends Repository
     }
 
     /**
-     * @param array $ids
-     *
      * @return ExportProfileModel[]
      */
     public function getProfilesByIdList(array $ids)

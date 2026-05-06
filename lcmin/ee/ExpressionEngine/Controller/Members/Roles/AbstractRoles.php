@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -24,11 +24,7 @@ abstract class AbstractRoles extends CP_Controller
     {
         parent::__construct();
 
-        if (! ee('Permission')->hasAny(
-            'can_create_roles',
-            'can_edit_roles',
-            'can_delete_roles'
-        )) {
+        if ((! ee('Permission')->has('can_access_members')) || (! ee('Permission')->has('can_admin_roles'))) {
             show_error(lang('unauthorized_access'), 403);
         }
 
@@ -61,7 +57,7 @@ abstract class AbstractRoles extends CP_Controller
 
         $sidebar = ee('CP/Sidebar')->makeNew();
 
-        $all_roles = $sidebar->addItem(lang('all_roles'), ee('CP/URL')->make('members/roles'));
+        $all_roles = $sidebar->addItem(lang('all_roles'), ee('CP/URL')->make('members/roles'))->withIcon('user-tag');
 
         if ($active) {
             $all_roles->isInactive();
@@ -119,6 +115,7 @@ abstract class AbstractRoles extends CP_Controller
         }
 
         ee()->view->left_nav = $sidebar->render();
+        ee()->view->left_nav_collapsed = $sidebar->collapsedState;
     }
 }
 

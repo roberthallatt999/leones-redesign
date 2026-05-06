@@ -52,6 +52,8 @@ $lang = array(
 
     'confirm_uninstall_desc' => 'You are attempting to uninstall the following items, please confirm this action.',
 
+    'fieldtype_is_in_use' => 'This fieldtype is being used in following fields:',
+
     /* Filters */
     'addons_installed' => 'Add-Ons Installed',
 
@@ -64,6 +66,8 @@ $lang = array(
     'existing_consent_request' => 'The following add-on(s) could not be installed due to an existing Consent Request which the add-on(s) are trying to create:',
 
     'contact_developer' => 'Please contact the add-on developer(s) for assistance.',
+
+    'addons_not_uninstalled' => 'Add-Ons Not Uninstalled',
 
     'addons_uninstalled' => 'Add-Ons Uninstalled',
 
@@ -100,39 +104,12 @@ $lang = array(
     'uninstalled' => 'Uninstalled',
 
     /* 2.x */
-    'addons_extensions' => 'Extensions',
-
-    'addons_fieldtypes' => 'Fieldtypes',
-
-    'addons_modules' => 'Modules',
-
-    'addons_plugins' => 'Plugins',
-
-    'and_more' => 'and %x more...',
-
-    'available_to_member_groups' => 'Available to Member Groups',
-
-    'component' => 'Component',
 
     'configuration' => 'Configuration',
 
-    'current_status' => 'Current Status',
-
-    'delete_fieldtype' => 'Remove Fieldtype',
-
-    'delete_fieldtype_confirm' => 'Are you sure you want to remove this fieldtype?',
-
     'description' => 'Description',
 
-    'ext_disabled_short' => 'disabled',
-
-    'ext_enabled_short' => 'enabled',
-
     'extension' => 'Extension',
-
-    'extension_disabled' => 'Extension Disabled',
-
-    'extension_enabled' => 'Extension Enabled',
 
     'extensions' => 'Extensions',
 
@@ -155,8 +132,6 @@ $lang = array(
     'fieldtype_name' => 'Fieldtype Name',
 
     'global_settings_saved' => 'Settings Saved',
-
-    'member_group_assignment' => 'Assigned Member Groups',
 
     'module' => 'Module',
 
@@ -187,10 +162,6 @@ $lang = array(
     'version_required' => '%s version %s or higher is required.',
 
     /* License */
-
-    'license_error' => 'License error',
-    'license_error_file_not_writable' => 'The cache folder needs to be writable in order for ExpressionEngine Pro to work',
-    'license_error_file_broken' => 'There has been an error validating ExpressionEngine Pro license status',
 
     'license_license_expired' => 'License Expired',
     'license_invalid_domain' => 'Invalid Site Domain',

@@ -22,6 +22,8 @@ class SettingsRepository extends Repository
      */
     public function getOrCreate()
     {
+        $this->ensureSpamFolderEnabledColumnExists();
+
         $siteId = ee()->config->item('site_id');
 
         if (!isset(self::$cache[$siteId])) {
@@ -39,5 +41,27 @@ class SettingsRepository extends Repository
         }
 
         return self::$cache[$siteId];
+    }
+
+    private function ensureSpamFolderEnabledColumnExists(): void
+    {
+        $settingsTable = ee()->db->dbprefix('freeform_next_settings');
+
+        if (!ee()->db->table_exists($settingsTable)) {
+            return;
+        }
+
+        if (ee()->db->field_exists('spamFolderEnabled', $settingsTable)) {
+            return;
+        }
+
+        try {
+            ee()->db->query("ALTER TABLE `{$settingsTable}` ADD COLUMN `spamFolderEnabled` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1 AFTER `spamBlockLikeSuccessfulPost`");
+        } catch (\Exception $exception) {
+            // swallow race conditions
+            if (strpos($exception->getMessage(), 'Duplicate column name') === false) {
+                throw $exception;
+            }
+        }
     }
 }

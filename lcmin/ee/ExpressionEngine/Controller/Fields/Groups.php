@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -115,6 +115,33 @@ class Groups extends AbstractFieldsController
 
         ee()->view->cp_page_title = lang('create_field_group');
 
+        // Only auto-complete channel short name for new channels
+        ee()->cp->add_js_script('plugin', 'ee_url_title');
+
+        //	Create Foreign Character Conversion JS
+        $foreign_characters = ee()->config->loadFile('foreign_chars');
+
+        /* -------------------------------------
+        /*  'foreign_character_conversion_array' hook.
+        /*  - Allows you to use your own foreign character conversion array
+        */
+        if (ee()->extensions->active_hook('foreign_character_conversion_array') === true) {
+            $foreign_characters = ee()->extensions->call('foreign_character_conversion_array');
+        }
+        /*
+        /* -------------------------------------*/
+
+        ee()->javascript->set_global(array(
+            'publish.foreignChars' => $foreign_characters,
+            'publish.word_separator' => '_'
+        ));
+
+        ee()->javascript->output('
+            $("input[name=group_name]").bind("keyup keydown", function() {
+                $(this).ee_url_title("input[name=short_name]");
+            });
+        ');
+
         if (AJAX_REQUEST) {
             return ee()->cp->render('_shared/form', $vars);
         }
@@ -221,9 +248,17 @@ class Groups extends AbstractFieldsController
 
                 // Redirect to sync page if we need to
                 if ($syncNeeded) {
+                    $channels = $field_group->getAllChannels();
+                    foreach ($channels as $channel) {
+                        $channel->conditional_sync_required = 'y';
+                        $channel->save();
+                    }
+
                     ee()->functions->redirect(
-                        ee('CP/URL')->make('fields/groups/syncConditions/' . $field_group->getId())
-                        ->setQueryStringVariable('return', base64_encode($redirectUrl))
+                        ee('CP/URL')->make('utilities/sync-conditional-fields/sync')
+                            ->setQueryStringVariable('channel_id', $channels->pluck('channel_id'))
+                            ->setQueryStringVariable('return', base64_encode($redirectUrl))
+                            ->compile()
                     );
                 }
 
@@ -250,94 +285,6 @@ class Groups extends AbstractFieldsController
         ee()->cp->render('settings/form', $vars);
     }
 
-    public function syncConditions($field_group_id = null)
-    {
-        if (! ee('Permission')->can('edit_channel_fields')) {
-            show_error(lang('unauthorized_access'), 403);
-        }
-
-        $field_group = ee('Model')->get('ChannelFieldGroup', $field_group_id)->first();
-
-        // 404 if the field group doesnt exist
-        if (! $field_group) {
-            show_404();
-        }
-
-        $this->generateSidebar($field_group_id);
-
-        $channelEntryCount = 0;
-        $groupedChannelEntryCounts = [];
-
-        foreach ($field_group->getAllChannels() as $channel) {
-            $count = $channel->Entries->count();
-            $channelEntryCount += $count;
-            $groupedChannelEntryCounts[] = [
-                'channel_id' => $channel->getId(),
-                'entry_count' => $count
-            ];
-        }
-
-        ksort($groupedChannelEntryCounts);
-
-        $vars['sections'] = array(
-            array(
-                array(
-                    'title' => 'field_conditions_sync_existing_entries',
-                    'desc' => sprintf(lang('field_conditions_sync_desc'), $channelEntryCount),
-                    'fields' => array(
-                        'progress' => array(
-                            'type' => 'html',
-                            'content' => ee()->load->view('_shared/progress_bar', array('percent' => 0), true)
-                        ),
-                        'message' => array(
-                            'type' => 'html',
-                            'content' => ee()->load->view('_shared/message', array(
-                                'cp_messages' => [
-                                    'field-instruct' => '<em>'.lang('field_conditions_sync_in_progress_message').'</em>'
-                                ]), true)
-                        )
-                    )
-                )
-            )
-        );
-
-        $base_url = ee('CP/URL')->make('fields/syncConditions/' . $field_group_id);
-        $field_group_url = ee('CP/URL')->make('fields/groups/edit/' . $field_group_id);
-
-        $return = ee()->input->get('return') ? base64_decode(ee()->input->get('return')) : $field_group_url->compile();
-
-        if ($channelEntryCount === 0) {
-            ee()->functions->redirect($return);
-        }
-
-        ee()->cp->add_js_script('file', 'cp/fields/synchronize');
-
-        // Globals needed for JS script
-        ee()->javascript->set_global(array(
-            'fieldManager' => array(
-                'channel_entry_count' => $channelEntryCount,
-                'groupedChannelEntryCounts' => $groupedChannelEntryCounts,
-
-                'sync_baseurl' => $base_url->compile(),
-                'sync_returnurl' => $return,
-                'sync_endpoint' => ee('CP/URL')->make('fields/evaluateConditions')->compile(),
-            )
-        ));
-
-        ee()->view->base_url = $base_url;
-        ee()->view->cp_page_title = lang('field_conditions_syncing_conditional_logic');
-        ee()->view->cp_page_title_alt = lang('field_conditions_syncing_conditional_logic');
-        ee()->view->save_btn_text = 'btn_sync_conditional_logic';
-        ee()->view->save_btn_text_working = 'btn_sync_conditional_logic_working';
-
-        ee()->view->cp_breadcrumbs = array(
-            ee('CP/URL')->make('fields')->compile() => lang('fields'),
-            '' => lang('field_conditions_sync_conditional_logic')
-        );
-
-        ee()->cp->render('settings/form', $vars);
-    }
-
     private function setWithPost(ChannelFieldGroup $field_group)
     {
         $field_group->site_id = ($field_group->site_id) ?: 0;
@@ -347,7 +294,7 @@ class Groups extends AbstractFieldsController
         return $field_group;
     }
 
-    private function form(ChannelFieldGroup $field_group = null)
+    private function form(?ChannelFieldGroup $field_group = null)
     {
         if (! $field_group) {
             $field_group = ee('Model')->make('ChannelFieldGroup');
@@ -379,6 +326,27 @@ class Groups extends AbstractFieldsController
                         )
                     )
                 ),
+                array(
+                    'title' => 'short_name',
+                    'desc' => 'field_group_short_name_desc',
+                    'fields' => array(
+                        'short_name' => array(
+                            'type' => 'text',
+                            'value' => $field_group->short_name,
+                            'required' => true
+                        )
+                    )
+                ),
+                array(
+                    'title' => 'description',
+                    'desc' => '',
+                    'fields' => array(
+                        'group_description' => array(
+                            'type' => 'textarea',
+                            'value' => $field_group->group_description
+                        )
+                    )
+                        ),
                 array(
                     'title' => 'fields',
                     'desc' => 'fields_assign_to_group',

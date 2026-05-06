@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -16,7 +16,7 @@ namespace Solspace\Addons\FreeformNext\Library\DataExport;
  */
 class ExportDataTSV extends ExportData {
 
-    function generateRow($row) {
+    function generateRow($row): string {
         foreach ($row as $key => $value) {
             // Escape inner quotes and wrap all contents in new quotes.
             // Note that we are using \" to escape double quote not ""
@@ -29,7 +29,7 @@ class ExportDataTSV extends ExportData {
         return implode("\t", $row) . "\n";
     }
 
-    function sendHttpHeaders() {
+    function sendHttpHeaders(): void {
         header("Content-type: text/tab-separated-values");
         header("Content-Disposition: attachment; filename=".basename($this->filename));
     }

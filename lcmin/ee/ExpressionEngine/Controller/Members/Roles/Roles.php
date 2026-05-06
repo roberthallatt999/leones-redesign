@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -116,17 +116,36 @@ class Roles extends AbstractRolesController
             $vars['filters'] = $filters->render(ee('CP/URL')->make('members/roles'));
         }
 
+        $cpRoles = ee('Permission')->rolesThatHave('can_access_cp');
         foreach ($roles as $role) {
-            $edit_url = ee('CP/URL')->make('members/roles/edit/' . $role->getId());
+            $edit_url = (ee('Permission')->hasAny('can_edit_roles')) ? ee('CP/URL')->make('members/roles/edit/' . $role->getId()) : '';
+            $labelVars = [
+                'label' => $role->name,
+                'class' => str_replace(' ', '_', strtolower($role->name)),
+                'styles' => [
+                    'background-color' => 'var(--ee-bg-blank)',
+                    'border-color' => '#' . $role->highlight,
+                    'color' => '#' . $role->highlight,
+                ]
+            ];
+            $label = ee('View')->make('_shared/status-tag')->render($labelVars);
+            $badges = '<i class="fal fa-lock' . ($role->is_locked ? '' : '-open') . '" title=""></i> ' . lang(($role->is_locked ? '' : 'un') . 'locked');
+            if (in_array($role->role_id, $cpRoles)) {
+                $badges .= ' / <i class="fal fa-shield" style="color: var(--ee-security-caution)" title=""></i> ' . lang('cp_access');
+            }
             $data[] = [
                 'id' => $role->getId(),
-                'label' => $role->name,
-                'status' => $role->is_locked,
-                'faded' => '(' . $role->total_members . ')',
-                'faded-href' => ee('CP/URL')->make('members', ['role_filter' => $role->getId()]),
+                'label' => $label,
+                'extra' => $badges,
                 'href' => $edit_url,
                 'selected' => ($role_id && $role->getId() == $role_id),
-                'toolbar_items' => null,
+                'toolbar_items' => [
+                    'members' => [
+                        'href' => ee('CP/URL')->make('members', ['role_filter' => $role->getId()]),
+                        'title' => lang('members'),
+                        'content' => '<i class="fal fa-users"></i> ' . $role->total_members . ' ' . lang('members')
+                    ]
+                ],
                 'selection' => ee('Permission')->can('delete_roles') ? [
                     'name' => 'selection[]',
                     'value' => $role->getId(),
@@ -281,10 +300,10 @@ class Roles extends AbstractRolesController
         }
 
         ee()->javascript->output('
-			$("input[name=name]").bind("keyup keydown", function() {
-				$(this).ee_url_title("input[name=short_name]");
-			});
-		');
+            $("input[name=name]").bind("keyup keydown", function() {
+                $(this).ee_url_title("input[name=short_name]");
+            });
+        ');
 
         ee()->view->cp_page_title = lang('create_new_role');
 
@@ -320,6 +339,18 @@ class Roles extends AbstractRolesController
 
         $role_groups = $role->RoleGroups;
         $active_groups = $role_groups->pluck('group_id');
+
+        if (defined('CLONING_MODE') && CLONING_MODE === true) {
+            $role->setId(null);
+            while (true !== $role->validateUnique('short_name', $_POST['short_name'])) {
+                $_POST['short_name'] = 'copy_' . $_POST['short_name'];
+            }
+            while (true !== $role->validateUnique('name', $_POST['name'])) {
+                $_POST['name'] = lang('copy_of') . ' ' . $_POST['name'];
+            }
+            return $this->create(!empty($active_groups) ? $active_groups[0] : null);
+        }
+
         $this->generateSidebar($active_groups);
 
         $errors = null;
@@ -402,6 +433,16 @@ class Roles extends AbstractRolesController
             ),
         );
 
+        if ($role->getId() != 1) {
+            $vars['buttons'][] = [
+                'name' => 'submit',
+                'type' => 'submit',
+                'value' => 'save_as_new_entry',
+                'text' => sprintf(lang('clone_to_new'), lang('role')),
+                'working' => 'btn_saving'
+            ];
+        }
+
         ee()->view->cp_page_title = lang('edit_role');
         ee()->view->extra_alerts = array('search-reindex');
 
@@ -417,17 +458,19 @@ class Roles extends AbstractRolesController
     private function setWithPost(Role $role)
     {
         $site_id = ee()->config->item('site_id');
-        
+
         $role_groups = !empty(ee('Request')->post('role_groups')) ? ee('Request')->post('role_groups') : array();
 
-        $role->name = ee('Request')->post('name');
-        $role->short_name = ee('Request')->post('short_name');
-        $role->description = ee('Request')->post('description');
+        // can't use ee('Request') because $_POST could have been modified for cloning
+        $role->name = ee('Security/XSS')->clean($_POST['name']);
+        $role->short_name = ee('Security/XSS')->clean($_POST['short_name']);
+        $role->description = ee('Security/XSS')->clean(ee('Request')->post('description'));
+        $role->highlight = ee('Security/XSS')->clean(ee('Request')->post('highlight'));
 
         // Settings
         $settings = ee('Model')->make('RoleSetting')->getValues();
         unset($settings['id'], $settings['role_id'], $settings['site_id']);
-        
+
         foreach (array_keys($settings) as $key) {
             if (ee('Request')->post($key) !== null) {
                 $settings[$key] = ee('Request')->post($key);
@@ -454,6 +497,7 @@ class Roles extends AbstractRolesController
         //We don't allow much editing for SuperAdmin role, so just enforce it's locked and return here
         if ($role->getId() == 1) {
             $role->is_locked = 'y';
+
             return $role;
         }
         $role->is_locked = ee('Request')->post('is_locked');
@@ -464,7 +508,7 @@ class Roles extends AbstractRolesController
         $assignedUploadDestinations = $role->AssignedUploadDestinations->getDictionary('id', 'site_id');
         if (!empty($assignedUploadDestinations)) {
             foreach ($assignedUploadDestinations as $dest_id => $dest_site_id) {
-                if ($dest_site_id != $site_id) {
+                if ($dest_site_id != 0 && $dest_site_id != $site_id) {
                     $uploadDestinationIds[] = $dest_id;
                 }
             }
@@ -598,20 +642,23 @@ class Roles extends AbstractRolesController
     private function getTabs(Role $role, $errors)
     {
         ee()->cp->add_js_script(array(
-            'file' => array('cp/form_group'),
+            'file' => array(
+                'cp/form_group',
+                'library/simplecolor',
+                'components/colorpicker'
+            ),
         ));
 
-        if ($role->getId() != 1) {
-            $tabs = [
-                'role' => $this->renderRoleTab($role, $errors),
-                'site_access' => $this->renderSiteAccessTab($role, $errors),
-                'cp_access' => $this->renderCPAccessTab($role, $errors),
-                'template_access' => $this->renderTemplateAccessTab($role, $errors),
-            ];
-        } else {
-            $tabs = [
-                'role' => $this->renderRoleTab($role, $errors)
-            ];
+        $tabs = [
+            'role' => $this->renderRoleTab($role, $errors)
+        ];
+
+        if ($role->getId() != Member::SUPERADMIN) {
+            $tabs['site_access'] = $this->renderSiteAccessTab($role, $errors);
+            if ($role->getId() != Member::GUESTS) {
+                $tabs['cp_access'] = $this->renderCPAccessTab($role, $errors);
+            }
+            $tabs['template_access'] = $this->renderTemplateAccessTab($role, $errors);
         }
 
         return $tabs;
@@ -660,11 +707,22 @@ class Roles extends AbstractRolesController
                         'value' => $role->description
                     ]
                 ]
+            ],
+            [
+                'title' => 'role_highlight_color',
+                'desc' => 'role_highlight_color_desc',
+                'fields' => array(
+                    'highlight' => array(
+                        'type' => 'text',
+                        'attrs' => 'class="color-picker"',
+                        'value' => $role->highlight ?: 'FA5252'
+                    )
+                )
             ]
         ];
 
-        if (IS_PRO && ee('pro:Access')->hasValidLicense()) {
-            ee()->lang->load('pro', ee()->session->get_language(), false, true, PATH_ADDONS . 'pro/');
+        if (!in_array($role->getId(), [Member::BANNED, Member::GUESTS, Member::PENDING])) {
+            ee()->lang->load('pro');
             $section = array_merge($section, [
                 [
                     'title' => 'require_mfa',
@@ -673,56 +731,48 @@ class Roles extends AbstractRolesController
                     'fields' => [
                         'require_mfa' => [
                             'type' => 'yes_no',
-                            'disabled' => version_compare(PHP_VERSION, 7.1, '<'),
                             'value' => $role->isNew() ? 'n' : $role->RoleSettings->filter('site_id', ee()->config->item('site_id'))->first()->require_mfa,
                         ]
                     ]
                 ],
             ]);
-            if (version_compare(PHP_VERSION, 7.1, '<')) {
-                ee()->lang->load('addons');
+        }
+
+        if (!in_array($role->getId(), [Member::SUPERADMIN, Member::BANNED, Member::GUESTS, Member::PENDING])) {
+            if ($role->getId() != Member::SUPERADMIN) {
                 $section = array_merge($section, [
-                    ee('CP/Alert')->makeInline('mfa_not_available')
-                        ->asWarning()
-                        ->withTitle(lang('mfa_not_available'))
-                        ->addToBody(sprintf(lang('version_required'), 'PHP', 7.1))
-                        ->cannotClose()
-                        ->render()
-                        . form_hidden('require_mfa', 'n')
+                    [
+                        'title' => 'security_lock',
+                        'desc' => 'lock_description',
+                        'fields' => [
+                            'is_locked' => [
+                                'type' => 'yes_no',
+                                'value' => $role->is_locked,
+                            ]
+                        ]
+                    ],
+                    [
+                        'title' => 'role_groups',
+                        'desc' => 'role_groups_desc',
+                        'fields' => [
+                            'role_groups' => [
+                                'type' => 'checkbox',
+                                'choices' => $role_groups,
+                                'value' => $role->RoleGroups->pluck('group_id'),
+                                'no_results' => [
+                                    'text' => sprintf(lang('no_found'), lang('role_groups')),
+                                    'link_text' => lang('add_new'),
+                                    'link_href' => ee('CP/URL')->make('members/roles/groups/create')->compile()
+                                ]
+                            ]
+                        ]
+                    ]
                 ]);
             }
         }
 
-        if ($role->getId() != Member::SUPERADMIN) {
-            $section = array_merge($section, [
-                [
-                    'title' => 'security_lock',
-                    'desc' => 'lock_description',
-                    'fields' => [
-                        'is_locked' => [
-                            'type' => 'yes_no',
-                            'value' => $role->is_locked,
-                        ]
-                    ]
-                ],
-                [
-                    'title' => 'role_groups',
-                    'desc' => 'role_groups_desc',
-                    'fields' => [
-                        'role_groups' => [
-                            'type' => 'checkbox',
-                            'choices' => $role_groups,
-                            'value' => $role->RoleGroups->pluck('group_id'),
-                            'no_results' => [
-                                'text' => sprintf(lang('no_found'), lang('role_groups')),
-                                'link_text' => lang('add_new'),
-                                'link_href' => ee('CP/URL')->make('members/roles/groups/create')->compile()
-                            ]
-                        ]
-                    ]
-                ]
-            ]);
-        } else {
+        if ($role->getId() == Member::SUPERADMIN) {
+            // superadmins don't have other tabs, so including checkboxes here
             $section = array_merge($section, [
                 [
                     'title' => 'include_members_in',
@@ -743,6 +793,19 @@ class Roles extends AbstractRolesController
                         ]
                     ]
                 ]
+            ]);
+
+            $section = array_merge($section, [
+                [
+                    'title' => 'show_field_names',
+                    'desc' => 'show_field_names_desc',
+                    'fields' => [
+                        'show_field_names' => [
+                            'type' => 'yes_no',
+                            'value' => $role->RoleSettings->filter('site_id', ee()->config->item('site_id'))->first()->show_field_names,
+                        ]
+                    ]
+                ],
             ]);
         }
 
@@ -780,6 +843,10 @@ class Roles extends AbstractRolesController
                         'can_view_profiles' => $permissions['fields']['can_view_profiles']
                     ]
                 ],
+            ]
+        ];
+        if ($role->getId() != Member::GUESTS) {
+            $sections[0] = array_merge($sections[0], [
                 [
                     'title' => 'can_delete_self',
                     'desc' => 'can_delete_self_desc',
@@ -797,79 +864,83 @@ class Roles extends AbstractRolesController
                         ]
                     ]
                 ],
-                [
-                    'title' => 'include_members_in',
-                    'desc' => 'include_members_in_desc',
-                    'fields' => [
-                        'include_in_authorlist' => [
-                            'type' => 'checkbox',
-                            'choices' => ['y' => lang('include_in_authorlist')],
-                            'scalar' => true,
-                            'value' => $settings->include_in_authorlist
-                        ],
-                        'include_in_memberlist' => [
-                            'type' => 'checkbox',
-                            'margin_top' => false,
-                            'scalar' => true,
-                            'choices' => ['y' => lang('include_in_memberlist')],
-                            'value' => $settings->include_in_memberlist
-                        ]
+            ]);
+        }
+        $sections[0][] = [
+            'title' => 'include_members_in',
+            'desc' => 'include_members_in_desc',
+            'fields' => [
+                'include_in_authorlist' => [
+                    'type' => 'checkbox',
+                    'choices' => ['y' => lang('include_in_authorlist')],
+                    'scalar' => true,
+                    'value' => $settings->include_in_authorlist
+                ],
+                'include_in_memberlist' => [
+                    'type' => 'checkbox',
+                    'margin_top' => false,
+                    'scalar' => true,
+                    'choices' => ['y' => lang('include_in_memberlist')],
+                    'value' => $settings->include_in_memberlist
+                ]
+            ]
+        ];
+        $sections['commenting'] = [
+            [
+                'title' => 'can_post_comments',
+                'desc' => 'can_post_comments_desc',
+                'fields' => [
+                    'can_post_comments' => $permissions['fields']['can_post_comments']
+                ]
+            ],
+            [
+                'title' => 'exclude_from_moderation',
+                'desc' => sprintf(lang('exclude_from_moderation_desc'), ee('CP/URL', 'settings/comments')),
+                'group' => 'can_post_comments',
+                'fields' => [
+                    'exclude_from_moderation' => [
+                        'type' => 'yes_no',
+                        'value' => $settings->exclude_from_moderation,
                     ]
                 ]
             ],
-            'commenting' => [
-                [
-                    'title' => 'can_post_comments',
-                    'desc' => 'can_post_comments_desc',
-                    'fields' => [
-                        'can_post_comments' => $permissions['fields']['can_post_comments']
+        ];
+        if ($role->getId() != Member::GUESTS) {
+            $sections['commenting'][] = [
+                'title' => 'comment_actions',
+                'desc' => 'comment_actions_desc',
+                'caution' => true,
+                'fields' => [
+                    'comment_actions' => [
+                        'type' => 'checkbox',
+                        'choices' => $permissions['choices']['comment_actions'],
+                        'value' => $permissions['values']['comment_actions'],
                     ]
-                ],
-                [
-                    'title' => 'exclude_from_moderation',
-                    'desc' => sprintf(lang('exclude_from_moderation_desc'), ee('CP/URL', 'settings/comments')),
-                    'group' => 'can_post_comments',
-                    'fields' => [
-                        'exclude_from_moderation' => [
-                            'type' => 'yes_no',
-                            'value' => $settings->exclude_from_moderation,
-                        ]
-                    ]
-                ],
-                [
-                    'title' => 'comment_actions',
-                    'desc' => 'comment_actions_desc',
-                    'caution' => true,
-                    'fields' => [
-                        'comment_actions' => [
-                            'type' => 'checkbox',
-                            'choices' => $permissions['choices']['comment_actions'],
-                            'value' => $permissions['values']['comment_actions'],
-                        ]
-                    ]
-                ],
+                ]
+            ];
+        }
+        $sections['search'] = [
+            [
+                'title' => 'can_search',
+                'desc' => 'can_search_desc',
+                'fields' => [
+                    'can_search' => $permissions['fields']['can_search']
+                ]
             ],
-            'search' => [
-                [
-                    'title' => 'can_search',
-                    'desc' => 'can_search_desc',
-                    'fields' => [
-                        'can_search' => $permissions['fields']['can_search']
+            [
+                'title' => 'search_flood_control',
+                'desc' => 'search_flood_control_desc',
+                'group' => 'can_search',
+                'fields' => [
+                    'search_flood_control' => [
+                        'type' => 'text',
+                        'value' => $settings->search_flood_control,
                     ]
-                ],
-                [
-                    'title' => 'search_flood_control',
-                    'desc' => 'search_flood_control_desc',
-                    'group' => 'can_search',
-                    'fields' => [
-                        'search_flood_control' => [
-                            'type' => 'text',
-                            'value' => $settings->search_flood_control,
-                        ]
-                    ]
-                ],
+                ]
             ],
-            'personal_messaging' => [
+        ];
+        if ($role->getId() != Member::GUESTS) {
+            $sections['personal_messaging'] = [
                 [
                     'title' => 'can_send_private_messages',
                     'desc' => 'can_send_private_messages_desc',
@@ -915,8 +986,8 @@ class Roles extends AbstractRolesController
                         'can_send_bulletins' => $permissions['fields']['can_send_bulletins']
                     ]
                 ],
-            ]
-        ];
+            ];
+        }
 
         $html = '';
 
@@ -958,12 +1029,15 @@ class Roles extends AbstractRolesController
 
         $addons = ee('Model')->get('Module')
             ->fields('module_id', 'module_name')
-            ->filter('module_name', 'NOT IN', array('Channel', 'Comment', 'Member', 'File', 'Filepicker')) // @TODO This REALLY needs abstracting.
             ->all()
             ->filter(function ($addon) {
                 $provision = ee('Addon')->get(strtolower($addon->module_name));
 
                 if (! $provision) {
+                    return false;
+                }
+
+                if ($provision->get('built_in')) {
                     return false;
                 }
 
@@ -974,7 +1048,7 @@ class Roles extends AbstractRolesController
             ->getDictionary('module_id', 'module_name');
 
         $allowed_upload_destinations = ee('Model')->get('UploadDestination')
-            ->filter('site_id', ee()->config->item('site_id'))
+            ->filter('site_id', 'IN', [0, ee()->config->item('site_id')])
             ->filter('module_id', 0)
             ->all()
             ->getDictionary('id', 'name');
@@ -989,6 +1063,15 @@ class Roles extends AbstractRolesController
                     'caution' => true,
                     'fields' => [
                         'can_access_cp' => $permissions['fields']['can_access_cp']
+                    ]
+                ],
+                [
+                    'title' => 'can_access_dock',
+                    'desc' => 'can_access_dock_desc',
+                    'group' => 'can_access_cp',
+                    'caution' => true,
+                    'fields' => [
+                        'can_access_dock' => $permissions['fields']['can_access_dock']
                     ]
                 ],
             ]
@@ -1107,6 +1190,16 @@ class Roles extends AbstractRolesController
                             'auto_select_parents' => true,
                             'choices' => $channel_access['choices'],
                             'value' => $channel_access['values'],
+                        ]
+                    ]
+                ],
+                [
+                    'title' => 'show_field_names',
+                    'desc' => 'show_field_names_desc',
+                    'fields' => [
+                        'show_field_names' => [
+                            'type' => 'yes_no',
+                            'value' => $role->isNew() ? 'n' : $role->RoleSettings->filter('site_id', ee()->config->item('site_id'))->first()->show_field_names,
                         ]
                     ]
                 ],
@@ -1423,7 +1516,7 @@ class Roles extends AbstractRolesController
             foreach ($templates as $template) {
                 $template_name = $template->template_name;
                 if ($template->enable_http_auth == 'y') {
-                    $template_name = '<i class="fas fa-key fa-sm icon-left" title="' . lang('http_auth_protected') . '"></i>' . $template_name;
+                    $template_name = '<i class="fal fa-key fa-sm icon-left" title="' . lang('http_auth_protected') . '"></i>' . $template_name;
                 }
                 $children[$template->getId()] = $template_name;
             }
@@ -1476,7 +1569,7 @@ class Roles extends AbstractRolesController
             ->render(array('name' => null, 'settings' => $section, 'errors' => $errors));
     }
 
-    private function getChannelAccess($channels, Role $role = null)
+    private function getChannelAccess($channels, ?Role $role = null)
     {
         $channel_access = [
             'choices' => [],
@@ -1511,7 +1604,7 @@ class Roles extends AbstractRolesController
         return $channel_access;
     }
 
-    private function getTemplateGroupAccess(Role $role = null)
+    private function getTemplateGroupAccess(?Role $role = null)
     {
         $template_groups = ee('Model')->get('TemplateGroup')
             ->fields('group_id', 'group_name')
@@ -1549,7 +1642,7 @@ class Roles extends AbstractRolesController
         return $template_group_access;
     }
 
-    private function getPermissions(Role $role = null)
+    private function getPermissions(?Role $role = null)
     {
         $permissions = [
             'fields' => [
@@ -1649,6 +1742,12 @@ class Roles extends AbstractRolesController
                         'y' => 'can_access_cp'
                     ]
                 ],
+                'can_access_dock' => [
+                    'type' => 'yes_no',
+                    'group_toggle' => [
+                        'y' => 'can_access_dock'
+                    ]
+                ],
                 'can_view_homepage_news' => [
                     'type' => 'yes_no',
                 ],
@@ -1710,6 +1809,7 @@ class Roles extends AbstractRolesController
                     'can_edit_members' => lang('edit_members'),
                     'can_delete_members' => lang('can_delete_members'),
                     'can_ban_users' => lang('can_ban_users'),
+                    'can_edit_member_fields' => lang('edit_member_fields'),
                     'can_email_from_profile' => lang('can_email_from_profile'),
                     'can_edit_html_buttons' => lang('can_edit_html_buttons')
                 ],
@@ -1913,7 +2013,7 @@ class Roles extends AbstractRolesController
      *
      * Warning message shown when you try to delete a role
      *
-     * @return	mixed
+     * @return  mixed
      */
     public function confirm()
     {

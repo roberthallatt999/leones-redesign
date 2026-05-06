@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -22,7 +22,19 @@ class FileExists extends ValidationRule
 
     public function validate($key, $value)
     {
-        if (ee('Filesystem')->exists(parse_config_variables($value, $this->all_values))) {
+        $filesystem = ee('Filesystem');
+
+        if(array_key_exists('filesystem_provider', $this->all_values)) {
+            try {
+                $provider = $this->all_values['filesystem_provider'];
+                $filesystem = $provider->getFilesystem();
+                unset($this->all_values['filesystem_provider']);
+            }catch(\Exception $e) {
+                $this->stop();
+            }
+        }
+
+        if ($filesystem->exists(parse_config_variables($value, $this->all_values))) {
             return true;
         }
 

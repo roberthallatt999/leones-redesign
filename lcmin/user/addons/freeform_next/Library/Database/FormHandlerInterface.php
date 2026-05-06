@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -16,20 +16,18 @@ use Solspace\Addons\FreeformNext\Model\SubmissionModel;
 
 interface FormHandlerInterface
 {
-    const EVENT_BEFORE_SUBMIT      = 'beforeSubmit';
-    const EVENT_AFTER_SUBMIT       = 'afterSubmit';
-    const EVENT_BEFORE_SAVE        = 'beforeSave';
-    const EVENT_AFTER_SAVE         = 'afterSave';
-    const EVENT_BEFORE_DELETE      = 'beforeDelete';
-    const EVENT_AFTER_DELETE       = 'afterDelete';
-    const EVENT_RENDER_OPENING_TAG = 'renderOpeningTag';
-    const EVENT_RENDER_CLOSING_TAG = 'renderClosingTag';
-    const EVENT_FORM_VALIDATE      = 'validateForm';
+    public const EVENT_BEFORE_SUBMIT      = 'beforeSubmit';
+    public const EVENT_AFTER_SUBMIT       = 'afterSubmit';
+    public const EVENT_BEFORE_SAVE        = 'beforeSave';
+    public const EVENT_AFTER_SAVE         = 'afterSave';
+    public const EVENT_BEFORE_DELETE      = 'beforeDelete';
+    public const EVENT_AFTER_DELETE       = 'afterDelete';
+    public const EVENT_RENDER_OPENING_TAG = 'renderOpeningTag';
+    public const EVENT_RENDER_CLOSING_TAG = 'renderClosingTag';
+    public const EVENT_FORM_VALIDATE      = 'validateForm';
 
     /**
-     * @param Form   $form
      * @param string $templateName
-     *
      * @return string
      */
     public function renderFormTemplate(Form $form, $templateName);
@@ -37,7 +35,6 @@ interface FormHandlerInterface
     /**
      * Increments the spam block counter by 1
      *
-     * @param Form $form
      *
      * @return int - new spam block count
      */
@@ -59,10 +56,14 @@ interface FormHandlerInterface
     public function isSpamProtectionEnabled();
 
     /**
+     * @return bool
+     */
+    public function isSpamFolderEnabled();
+
+    /**
      * Do something before the form is saved
      * Return bool determines whether the form should be saved or not
      *
-     * @param Form $form
      *
      * @return bool
      */
@@ -71,15 +72,13 @@ interface FormHandlerInterface
     /**
      * Do something after the form is saved
      *
-     * @param Form                 $form
      * @param SubmissionModel|null $submission
      */
-    public function onAfterSubmit(Form $form, SubmissionModel $submission = null);
+    public function onAfterSubmit(Form $form, ?SubmissionModel $submission = null);
 
     /**
      * Attach anything to the form after opening tag
      *
-     * @param Form $form
      *
      * @return string
      */
@@ -88,14 +87,10 @@ interface FormHandlerInterface
     /**
      * Attach anything to the form before the closing tag
      *
-     * @param Form $form
      *
      * @return string
      */
     public function onRenderClosingTag(Form $form);
 
-    /**
-     * @param Form $form
-     */
     public function onFormValidate(Form $form);
 }

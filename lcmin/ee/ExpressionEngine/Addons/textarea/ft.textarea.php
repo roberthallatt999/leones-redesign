@@ -4,7 +4,7 @@
  * ExpressionEngine (https://expressionengine.com)
  *
  * @link      https://expressionengine.com/
- * @copyright Copyright (c) 2003-2023, Packet Tide, LLC (https://www.packettide.com)
+ * @copyright Copyright (c) 2003-2026, Packet Tide, LLC (https://www.packettide.com)
  * @license   https://expressionengine.com/license Licensed under Apache License, Version 2.0
  */
 
@@ -61,6 +61,9 @@ class Textarea_ft extends EE_Fieldtype
             foreach ($buttons as $button) {
                 // Don't let markItUp handle this button
                 if ($button->classname == 'html-upload') {
+                    if (REQ != 'CP') {
+                        continue;
+                    }
                     $button->tag_open = '';
                 }
                 $markItUp['markupSet'][] = $button->prepForJSON();
@@ -75,7 +78,7 @@ class Textarea_ft extends EE_Fieldtype
 
 				$("li.html-upload").addClass("m-link").attr({
 					rel: "modal-file",
-					href: "' . ee('CP/URL')->make('addons/settings/filepicker/modal', array('directory' => 'all')) . '"
+					href: "' . ee('CP/URL')->make('addons/settings/filepicker/modal', array('field_upload_locations' => 'all', 'hasUpload' => true)) . '"
 				});
 
 				Grid.bind("textarea", "display", function(cell)
@@ -84,7 +87,7 @@ class Textarea_ft extends EE_Fieldtype
 
 					$("li.html-upload", cell).addClass("m-link").attr({
 						rel: "modal-file",
-						href: "' . ee('CP/URL')->make('addons/settings/filepicker/modal', array('directory' => 'all')) . '"
+						href: "' . ee('CP/URL')->make('addons/settings/filepicker/modal', array('field_upload_locations' => 'all', 'hasUpload' => true)) . '"
 					});
 				});
 
@@ -94,7 +97,7 @@ class Textarea_ft extends EE_Fieldtype
 
 					$("li.html-upload", field).addClass("m-link").attr({
 						rel: "modal-file",
-						href: "' . ee('CP/URL')->make('addons/settings/filepicker/modal', array('directory' => 'all')) . '"
+						href: "' . ee('CP/URL')->make('addons/settings/filepicker/modal', array('field_upload_locations' => 'all', 'hasUpload' => true)) . '"
 					});
 
 					$(".textarea-field-filepicker, li.html-upload").FilePicker({callback: EE.filePickerCallback});
@@ -165,12 +168,28 @@ class Textarea_ft extends EE_Fieldtype
                 && $this->settings['field_show_formatting_btns'] == 'y')) {
                 $fp = new FilePicker();
                 $fp->inject(ee()->view);
-                $vars['fp_url'] = ee('CP/URL')->make($fp->controller, array('directory' => 'all'));
+                $vars['fp_url'] = ee('CP/URL')->make($fp->controller, array('field_upload_locations' => 'all', 'hasUpload' => true));
+
+                ee()->load->library('file_field');
+                ee()->lang->loadfile('fieldtypes');
+                ee()->file_field->loadDragAndDropAssets();
 
                 ee()->cp->add_js_script(array(
-                    'file' => array('fields/textarea/textarea'),
-                    'plugin' => array('ee_txtarea')
+                    'file' => array(
+                        'fields/textarea/textarea'
+                    ),
+                    'plugin' => array('ee_txtarea'),
                 ));
+
+                if (REQ == 'CP') {
+                    ee()->cp->add_js_script(['file' => [
+                        'fields/file/file_field_drag_and_drop',
+                        'fields/file/concurrency_queue',
+                        'fields/file/file_upload_progress_table',
+                        'fields/file/drag_and_drop_upload',
+                        'fields/grid/file_grid']
+                    ]);
+                }
             }
 
             return ee('View')->make('textarea:publish')->render($vars);

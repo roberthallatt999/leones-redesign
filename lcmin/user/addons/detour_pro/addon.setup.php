@@ -12,4 +12,14 @@ return array(
     'author_url'     => 'https://eeharbor.com/detour_pro',
     'docs_url'       => 'http://eeharbor.com/detour-pro/documentation',
     'settings_exist' => true,
+    'services.singletons' => array(
+        'AnalyticsService' => function ($ee) {
+            require_once __DIR__ . '/Service/AnalyticsService.php';
+            return new \EEHarbor\DetourPro\Service\AnalyticsService();
+        },
+        'ChartDataService' => function ($ee) {
+            require_once __DIR__ . '/Service/ChartDataService.php';
+            return new \EEHarbor\DetourPro\Service\ChartDataService();
+        },
+    ),
 );

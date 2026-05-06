@@ -4,7 +4,7 @@
  *
  * @package       Solspace:Freeform
  * @author        Solspace, Inc.
- * @copyright     Copyright (c) 2008-2025, Solspace, Inc.
+ * @copyright     Copyright (c) 2008-2026, Solspace, Inc.
  * @link          https://docs.solspace.com/expressionengine/freeform/v3/
  * @license       https://docs.solspace.com/license-agreement/
  */
@@ -23,11 +23,11 @@ use Solspace\Addons\FreeformNext\Library\Logging\LoggerInterface;
 
 class CampaignMonitor extends AbstractMailingListIntegration
 {
-    const TITLE        = 'Campaign Monitor';
-    const LOG_CATEGORY = 'CampaignMonitor';
+    public const TITLE        = 'Campaign Monitor';
+    public const LOG_CATEGORY = 'CampaignMonitor';
 
-    const SETTING_API_KEY   = 'api_key';
-    const SETTING_CLIENT_ID = 'client_id';
+    public const SETTING_API_KEY   = 'api_key';
+    public const SETTING_CLIENT_ID = 'client_id';
 
     /**
      * Returns a list of additional settings for this integration
@@ -35,7 +35,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
      *
      * @return SettingBlueprint[]
      */
-    public static function getSettingBlueprints()
+    public static function getSettingBlueprints(): array
     {
         return [
             new SettingBlueprint(
@@ -61,7 +61,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
      *
      * @return string
      */
-    public function getServiceProvider()
+    public function getServiceProvider(): string
     {
         return 'Campaign Monitor';
     }
@@ -103,7 +103,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
      * @return bool
      * @throws IntegrationException
      */
-    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues)
+    public function pushEmails(ListObject $mailingList, array $emails, array $mappedValues): bool
     {
         $client   = new Client();
         $endpoint = $this->getEndpoint("/subscribers/{$mailingList->getId()}.json");
@@ -133,7 +133,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
             foreach ($emails as $email) {
                 $data = [
                     'EmailAddress'                           => $email,
-                    'Name'                                   => isset($mappedValues['Name']) ? $mappedValues['Name'] : '',
+                    'Name'                                   => $mappedValues['Name'] ?? '',
                     'CustomFields'                           => $customFields,
                     'Resubscribe'                            => true,
                     'RestartSubscriptionBasedAutoresponders' => true,
@@ -164,7 +164,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
     /**
      * A method that initiates the authentication
      */
-    public function initiateAuthentication()
+    public function initiateAuthentication(): void
     {
     }
 
@@ -187,7 +187,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
      *
      * @throws IntegrationException
      */
-    public function onBeforeSave(IntegrationStorageInterface $model)
+    public function onBeforeSave(IntegrationStorageInterface $model): void
     {
         $model->updateAccessToken($this->getSetting(self::SETTING_API_KEY));
     }
@@ -200,7 +200,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
      * @return ListObject[]
      * @throws IntegrationException
      */
-    protected function fetchLists()
+    protected function fetchLists(): array
     {
         $client   = new Client();
         $endpoint = $this->getEndpoint('/clients/' . $this->getClientID() . '/lists.json');
@@ -286,24 +286,12 @@ class CampaignMonitor extends AbstractMailingListIntegration
 
         if (is_array($json)) {
             foreach ($json as $field) {
-                switch ($field->DataType) {
-                    case 'Text':
-                    case 'MultiSelectOne':
-                        $type = FieldObject::TYPE_STRING;
-                        break;
-
-                    case 'Number':
-                        $type = FieldObject::TYPE_NUMERIC;
-                        break;
-
-                    case 'MultiSelectMany':
-                        $type = FieldObject::TYPE_ARRAY;
-                        break;
-
-                    default:
-                        $type = null;
-                        break;
-                }
+                $type = match ($field->DataType) {
+                    'Text', 'MultiSelectOne' => FieldObject::TYPE_STRING,
+                    'Number' => FieldObject::TYPE_NUMERIC,
+                    'MultiSelectMany' => FieldObject::TYPE_ARRAY,
+                    default => null,
+                };
 
                 if (null === $type) {
                     continue;
@@ -327,7 +315,7 @@ class CampaignMonitor extends AbstractMailingListIntegration
      * @return string
      * @throws IntegrationException
      */
-    protected function getApiRootUrl()
+    protected function getApiRootUrl(): string
     {
         return 'https://api.createsend.com/api/v3.1/';
     }
