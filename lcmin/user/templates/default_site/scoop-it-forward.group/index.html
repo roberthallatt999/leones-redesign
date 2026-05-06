@@ -17,18 +17,21 @@
           <div class="grid-x">
              <div class="cell small-12 medium-10 large-8 float-center">
                 <h4 class="text-center">Hooray, someone decided to show their love and appreciation for you in the tastiest way! Here is the online version of our shop's Scoop it Forward chalkboard! </h4><p>Want to treat a pal anonymously? Swing by the creamery or give us a call at 605-644-6461, tell us who you'd like to treat, what you'd like to treat them to (a scoop, a sundae, a pint, etc.), and pay for their ice cream in advance. We keep a log of all purchases (recipients can find their name/treat below). Names are also rotated on to our shop's physical Scoop it Forward chalkboard!<br><br> <b>Search for your last name below to find out what deliciousness awaits you.</b></p>
-                <div class="search">
-                  {exp:low_search:form search_mode="all" result_page="scoop-it-forward/results/%s" secure="no"}
-                   <div class="input-group">
-                        <label for="keywords-desktop" class="hide">Search</label>
-                        <input class="input-group-field desktop" name="keywords" id="keywords-desktop" type="text" placeholder="Last Name or Company Name" onfocus="this.placeholder=''">
-                        <div class="input-group-button">
-                          <label for="search-submit-desktop" class="hide">Search</label>
-                          <input type="submit" class="button search-submit" id="search-submit-desktop" value="Search">
-                        </div>
+                {exp:pro_search:form result_page="scoop-it-forward/results/%s" required="keywords" secure="no"}
+                  {if pro_search_keywords_missing}
+                    <p class="search-error" role="alert">Please enter a name in the search field.</p>
+                  {/if}
+                  <div class="search">
+                    <div class="input-group">
+                      <label for="keywords-desktop" class="hide">Search</label>
+                      <input class="input-group-field desktop" name="keywords" id="keywords-desktop" type="text" placeholder="Last Name or Company Name" onfocus="this.placeholder=''">
+                      <div class="input-group-button">
+                        <label for="search-submit-desktop" class="hide">Search</label>
+                        <input type="submit" class="button search-submit" id="search-submit-desktop" value="Search">
+                      </div>
                     </div>
-                  {/exp:low_search:form}
-                </div>
+                  </div>
+                {/exp:pro_search:form}
   			     </div>
           </div>
         </div><!--end of wrapping grid-container-->

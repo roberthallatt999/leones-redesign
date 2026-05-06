@@ -16,9 +16,9 @@
       <div class="grid-container scoop-it-forward">
           <div class="grid-x">
              <div class="cell small-12 medium-10 large-8 float-center">
-              {exp:low_search:results query="{segment_3}" disable="member_data" keywords:lang="en" keywords:match="title" keywords:loose="right" keywords:inflect="yes" status="add to board|open"}
+              {exp:pro_search:results query="{segment_3}" disable="member_data" require_query="yes" require_all="keywords" keywords:lang="en" keywords:match="title" keywords:loose="right" keywords:inflect="yes" status="add to board|open"}
                {if count == 1}
-                <h4 class="text-center">We found a gift for {if low_search_keywords}"{low_search_keywords}"!{/if}<br>Find out all the details below and come into the shop to come claim your scoop.</h4>
+                <h4 class="text-center">We found a gift for {if pro_search_keywords}"{pro_search_keywords}"!{/if}<br>Find out all the details below and come into the shop to come claim your scoop.</h4>
 				{/if}
                <div class="result">
                 <table>
@@ -44,30 +44,36 @@
                   </div>
                 </div>
               {/if}
-              {if low_search_no_results}
+              {if no_results}
                 <h4 class="text-center">
-                     Snap! We didn't find anything for “{low_search_keywords}”.
-                      {exp:low_search:suggestions keywords="{low_search_keywords}" keywords:lang="en" limit="2"}
-                        {if suggestion_count == 1}Did you mean{/if}
-                        <a href="{low_search:url keywords="{suggestion}"}">{suggestion}</a>{if suggestion_count != total_suggestions}&nbsp;or&nbsp;{if:else}?{/if}
-                        {if no_suggestions}Check your spelling or try a different search term.{/if}
-                      {/exp:low_search:suggestions}
+                     Sorry, that person can't be found.
                    </h4>
+                <p class="text-center">
+                  We searched for &ldquo;{pro_search_keywords}&rdquo; but didn't turn up a match.
+                  {exp:pro_search:suggestions keywords="{pro_search_keywords}" keywords:lang="en" limit="2"}
+                    {if suggestion_count == 1}Did you mean{/if}
+                    <a href="{pro_search:url keywords="{suggestion}"}">{suggestion}</a>{if suggestion_count != total_suggestions}&nbsp;or&nbsp;{if:else}?{/if}
+                    {if no_suggestions}Try a different spelling or search term below.{/if}
+                  {/exp:pro_search:suggestions}
+                </p>
 
-                <div class="search">
-                  {exp:low_search:form search_mode="all" result_page="scoop-it-forward/results/%s" secure="no"}
-                   <div class="input-group">
-                        <label for="keywords-desktop" class="hide">Search</label>
-                        <input class="input-group-field desktop" name="keywords" id="keywords-desktop" type="text" placeholder="Search by Last Name or Company Name" onfocus="this.placeholder=''">
-                        <div class="input-group-button">
-                          <label for="search-submit-desktop" class="hide">Search</label>
-                          <input type="submit" class="button search-submit" id="search-submit-desktop" value="Search">
-                        </div>
+                {exp:pro_search:form result_page="scoop-it-forward/results/%s" required="keywords" secure="no"}
+                  {if pro_search_keywords_missing}
+                    <p class="search-error" role="alert">Please enter a name in the search field.</p>
+                  {/if}
+                  <div class="search">
+                    <div class="input-group">
+                      <label for="keywords-desktop" class="hide">Search</label>
+                      <input class="input-group-field desktop" name="keywords" id="keywords-desktop" type="text" placeholder="Search by Last Name or Company Name" onfocus="this.placeholder=''">
+                      <div class="input-group-button">
+                        <label for="search-submit-desktop" class="hide">Search</label>
+                        <input type="submit" class="button search-submit" id="search-submit-desktop" value="Search">
+                      </div>
                     </div>
-                  {/exp:low_search:form}
-                </div><!--end of search-->
+                  </div><!--end of search-->
+                {/exp:pro_search:form}
                 {/if}
-               {/exp:low_search:results}
+               {/exp:pro_search:results}
 
   			     </div><!--end of centered col-->
           </div>
