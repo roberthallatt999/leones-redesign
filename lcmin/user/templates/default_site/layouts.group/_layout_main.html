@@ -1,309 +1,88 @@
 <!doctype html>
-<html class="no-js" lang="en" dir="ltr">
+<html lang="en" dir="ltr">
 
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{if layout:meta_title}{layout:meta_title}{/if}</title>
-  {if layout:meta_description}
-  <meta name="description" content="{layout:meta_description}">{/if}
-  <meta property="og:title" content="{layout:social_title}" />
-  <meta property="og:image" content="{layout:social_image}" />
-  <meta property="og:description" content="{layout:social_description}" />
-  <meta property="og:url" content="{current_url}" />
-  <meta property="og:site_name" content="{site_name}" />
-  <meta name="google-site-verification" content="hz2yyQH5cyVJs1lCVtewtowsHr4y9EzD9eOLcVu7QS4" />
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/css/foundation.min.css">
-  <link rel="stylesheet" href="/js/slick/slick.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300|Fira+Sans:700|Josefin+Sans:400,700,600&display=swap"
-    rel="preload"
-    as="style"
-    crossorigin="anonymous">
-  <link
-    href="https://fonts.googleapis.com/css?family=Fira+Sans+Condensed:300|Fira+Sans:700|Josefin+Sans:400,700,600&display=swap"
-    rel="stylesheet"
-    crossorigin="anonymous"
-    >
-  <link rel="stylesheet" href="/css/custom-1778340160331.css">
-  <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/images/apple-icons/apple-icon-57x57-precomposed.png" />
-  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/images/apple-icons/apple-icon-72x72-precomposed.png" />
-  <link rel="apple-touch-icon-precomposed" sizes="114x114"
-    href="/images/apple-icons/apple-icon-114x114-precomposed.png" />
-  <link rel="apple-touch-icon-precomposed" sizes="144x144"
-    href="/images/apple-icons/apple-icon-144x144-precomposed.png" />
-  <meta name="apple-mobile-web-app-title" content="Add to Home">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{if layout:meta_title}{layout:meta_title}{if:else}Leone's Creamery{/if}</title>
+  {if layout:meta_description}<meta name="description" content="{layout:meta_description}">{/if}
+  <meta property="og:title" content="{layout:social_title}">
+  <meta property="og:image" content="{layout:social_image}">
+  <meta property="og:description" content="{layout:social_description}">
+  <meta property="og:url" content="{current_url}">
+  <meta property="og:site_name" content="{site_name}">
+  <meta name="google-site-verification" content="hz2yyQH5cyVJs1lCVtewtowsHr4y9EzD9eOLcVu7QS4">
+
+  {!-- Fonts --}
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Calistoga:400|Karla:400,500&display=swap" rel="stylesheet" crossorigin="anonymous">
+
+  {!-- Compiled site CSS (cache-busted by npm run prod) --}
+  <link rel="stylesheet" href="/css/custom-1778340552570.css">
+
+  {!-- Slick (still used by the hero carousel when more than one slide) --}
+  <link rel="stylesheet" href="/js/slick/slick.css">
+
+  {!-- Favicons / app icons --}
+  <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/images/apple-icons/apple-icon-57x57-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/images/apple-icons/apple-icon-72x72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/images/apple-icons/apple-icon-114x114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/images/apple-icons/apple-icon-144x144-precomposed.png">
   <link rel="shortcut icon" sizes="16x16" href="/images/icon-16x16.png">
   <link rel="shortcut icon" sizes="196x196" href="/images/icon-196x196.png">
   <link rel="apple-touch-icon-precomposed" href="/images/icon-152x152.png">
-  <link rel="stylesheet" type="text/css" href="/css/addtohomescreen.css">
-  <!-- Google Tag Manager -->
+  <meta name="apple-mobile-web-app-title" content="Leone's Creamery">
+
+  {!-- Google Tag Manager --}
   <script>(function (w, d, s, l, i) {
-      w[l] = w[l] || []; w[l].push({
-        'gtm.start':
-          new Date().getTime(), event: 'gtm.js'
-      }); var f = d.getElementsByTagName(s)[0],
-        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
-          'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+      w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+      var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+      j.async = true;
+      j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+      f.parentNode.insertBefore(j, f);
     })(window, document, 'script', 'dataLayer', 'GTM-5XR4G8N');</script>
-  <!-- End Google Tag Manager -->
-  <link rel="stylesheet" type="text/css"
-    href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css" />
+
+  {!-- Cookie consent --}
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.css">
   <script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js"></script>
   <script>
     window.addEventListener("load", function () {
       window.cookieconsent.initialise({
-        "palette": {
-          "popup": {
-            "background": "#005c4e",
-            "text": "#ffffff"
-          },
-          "button": {
-            "background": "#ffffff",
-            "text": "#005c4e"
-          }
-        },
-        "content": {
-          "message": "We use cookies to help make our site work properly and to analyze how our site is used. By clicking \"I Agree\" or continuing to use our site, you acknowledge that you accept our Cookie Policy.",
-          "dismiss": "I AGREE",
-          "link": "Learn More",
-          "href": "https://leonescreamery.com/cookie-policy"
+        palette: { popup: { background: "#005c4e", text: "#ffffff" }, button: { background: "#ffffff", text: "#005c4e" } },
+        content: {
+          message: "We use cookies to help make our site work properly and to analyze how our site is used. By clicking \"I Agree\" or continuing to use our site, you acknowledge that you accept our Cookie Policy.",
+          dismiss: "I AGREE",
+          link: "Learn More",
+          href: "https://leonescreamery.com/cookie-policy"
         }
-      })
+      });
     });
   </script>
 </head>
 
-<body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5XR4G8N" height="0" width="0"
-      style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
-  <div id="wrapper">
-    <div class="grid-x hours-section">
-      {exp:channel:entries channel="hours_of_operation" dynamic="no"}
-      {open_close_times}
-      {if '{current_time format="%l"}' == '{open_close_times:day_of_week}'}
-      {if
-      '{current_time format="%H%i"}' <= '1200' && '{open_close_times:open format="%H%i"}'>= '{current_time
-        format="%H%i"}' &&
-        '{open_close_times:closed_all_day}' != 'y'
-        }
-        <div class="cell small-2 medium-1 status">
-          <img src="/images/closed.svg" alt="closed" />
-        </div>
-        <div class="cell small-10 medium-7">
-          <div class="notice">{open_close_times:morning_closed_message}</div>
-        </div>
-        {/if}
-        {if
-        '{open_close_times:open format="%H%i"}' <= '{current_time format="%H%i"}'
-          && '{open_close_times:close format="%H%i"}'> '{current_time format="%H%i"}' &&
-          '{open_close_times:closed_all_day}' != 'y'
-          }
-          <div class="cell small-2 medium-1 open status">
-            <img src="/images/open.svg" alt="open" />
-          </div>
-          <div class="cell small-10 medium-7">
-            <div class="notice">Come in<span> TODAY</span> until <span>{open_close_times:close format="%g %A"}</span>
-            </div>
-          </div>
-          {/if}
-          {if
-          '{current_time format="%H%i"}' >= '1200' &&
-          '{open_close_times:close format="%H%i"}' <= '{current_time format="%H%i"}'
-            OR '{open_close_times:closed_all_day}'=='y' } <div class="cell small-2 medium-1 status">
-            <img src="/images/closed.svg" alt="closed" />
-    </div>
-    <div class="cell small-10 medium-7">
-      <div class="notice">{open_close_times:evening_closed_message}</div>
-    </div>
-    {/if}
+<body class="{if layout:page_class}{layout:page_class}{/if}">
+  {!-- Google Tag Manager (noscript) --}
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5XR4G8N" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
+  <div class="page-wrapper">
+    {embed="_partials/site_header"}
 
-    {/if}
-    {/open_close_times}
-    {/exp:channel:entries}
-    <div class="cell medium-4 show-for-medium text-right submenu">
-      <a href="/find-us">Find Us</a>
-      <a href="/contact">Contact Us</a>
-      <a href="/join-the-team">Join the Team</a>
-    </div>
+    <main class="main-wrapper">
+      {layout:contents}
+    </main>
+
+    {embed="_partials/site_footer"}
   </div>
 
-  <div class="off-canvas-content hide-for-large" data-off-canvas-content>
-    <div class="top-bar">
-      <div class="top-bar-title logo"><a href="/"><img src="/images/lc-logo-mobile.svg" alt="{site_name}" /></a></div>
-      <div class="top-bar-right">
-        <button class="menu-icon" type="button" data-toggle="offcanvas-full-screen"></button>
-      </div>
-    </div>
-  </div>
+  {!-- jQuery + Slick (already in project) --}
+  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="/js/slick/slick.min.js"></script>
+  <script src="/js/leones-redesign.js"></script>
 
-  <div id="offcanvas-full-screen" class="offcanvas-full-screen" data-off-canvas data-transition="overlap">
-    <div class="offcanvas-full-screen-inner">
-      <button class="offcanvas-full-screen-close" aria-label="Close menu" type="button" data-close>
-        <span aria-hidden="true">&times;</span>
-      </button>
-
-      <ul class="offcanvas-full-screen-menu">
-        <li><a href="/">Home</a></li>
-        <li><a href="/flavors">Flavors</a></li>
-        <li><a href="/scoop-it-forward">Scoop it Forward</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/special-orders">Special Orders</a></li>
-        <li><a href="/faqs">FAQs</a></li>
-        <li><a href="/blog">Blog</a></li>
-        <li><a href="https://squareup.com/gift/4EJERSYJ106JR/order" target="_blank">Gift Cards</a></li>
-        <div class="dots"></div>
-        <div class="cell small-12 text-center submenu">
-          <a href="/find-us">Find Us</a><br>
-          <a href="/contact">Contact Us</a><br>
-          <a href="/join-the-team">Join the Team</a><br>
-        </div>
-        <div class="cell small-12 text-center social">
-          <a href="https://www.facebook.com/LeonesCreamery" target="_blank">
-            <i class="fa fa-facebook"></i>
-          </a>
-          <a href="https://instagram.com/leonescreamery/" target="_blank">
-            <i class="fa fa-instagram"></i>
-          </a>
-        </div>
-      </ul>
-    </div>
-  </div><!--end of mobile menu-->
-
-
-  <div class="top-bar hide-for-small-only" id="topmenu">
-    <div class="top-left logo-container">
-      <div class="half-circle-outside-wrap">
-        <div class="half-circle-inside-wrap"></div>
-      </div>
-      <div class="menu-text logo"><a href="/"><img src="/images/lc-logo.svg" alt="{site_name}"></a></div>
-      <!--<div class="circle"></div>-->
-    </div>
-    <div class="top-center">
-
-    </div>
-    <div class="top-right">
-      <ul class="menu">
-        <li><a href="/flavors">Flavors</a></li>
-        <li><a href="/scoop-it-forward">Scoop it Forward</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/special-orders">Special Orders</a></li>
-        <li><a href="/faqs">FAQs</a></li>
-        <li><a href="/blog">Blog</a></li>
-        <li><a href="https://squareup.com/gift/4EJERSYJ106JR/order" target="_blank">Gift Cards</a></li>
-      </ul>
-    </div>
-  </div>
-
-
-  {layout:contents}
-
-
-  <div class="footer">
-    <div class="grid-x grid-padding-x">
-
-      <div class="cell small-12 text-center social">
-        <a href="https://www.facebook.com/LeonesCreamery" target="_blank" title="Facebook">
-          <i class="fa fa-facebook"></i>
-        </a>
-        <a href="https://instagram.com/leonescreamery/" target="_blank" title="Instagram">
-          <i class="fa fa-instagram"></i>
-        </a>
-      </div>
-    </div>
-
-    <div class="grid-x grid-padding-x">
-      <div class="cell small-12 medium-3">
-        <h2>Hours</h2>
-        <div class="info">{footer_hours}</div>
-      </div>
-      <div class="cell small-12 medium-3">
-        <h2>Location</h2>
-        <div class="info">722½ Main St<br>Spearfish, SD 57783<br>Attached to the Old City Hall Building</div>
-      </div>
-      <div class="cell small-12 medium-3">
-        <h2>Contact</h2>
-        <div class="info">605 644 6461<br>leonescreamery@gmail.com</div>
-      </div>
-      <div class="cell small-12 medium-3">
-        <div class="other-info">
-          <a href="/contact">Contact Us</a><br>
-          <a href="/join-the-team">Join The Team</a><br>
-          <a href="/terms-of-service">Terms of Service</a><br>
-          <a href="/privacy-policy">Privacy Policy</a><br>
-          <a href="/cookie-policy">Cookie Policy</a>
-        </div>
-      </div>
-    </div>
-    <div class="text-center dd"> Copyright © {current_time format="%Y"} Leones' Creamery. All Rights Reserved. <br>
-      Site by <a href="https://digitaldesigns.com/?utm_source={site_url}&utm_medium=footer_link" target="_blank">DIGITAL
-        DESIGNS</a>
-    </div>
-
-  </div><!--end of footer-->
-
-  </div><!--end wrapper-->
-
-  <div id="back-top">
-    <a class="button totop" href="#" title="Back to top"><i class="fa fa-chevron-up" aria-hidden="true"></i></a>
-  </div>
-
-
-  <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-  <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-  <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/js/foundation.min.js"></script>
-  <script>
-    $(document).foundation();
-  </script>
   {layout:extra_js}
-  <script>
-    $(document).ready(function () {
-
-      // hide #back-top first
-      $("#back-top").hide();
-
-      // fade in #back-top
-      $(function () {
-        $(window).scroll(function () {
-          if ($(this).scrollTop() > 100) {
-            $('#back-top').fadeIn();
-          } else {
-            $('#back-top').fadeOut();
-          }
-        });
-
-        // scroll body to 0px on click
-        $('#back-top .fi-arrow-up').click(function () {
-          $('body,html').animate({
-            scrollTop: 0
-          }, 800);
-          return false;
-        });
-      });
-
-    });
-  </script>
-  <script src="/js/addtohomescreen.js"></script>
-  <script>
-    // addToHomescreen.removeSession();     // use this to remove the localStorage variable
-    var ath = addToHomescreen({
-      skipFirstVisit: false,  // show at first access
-      startDelay: 0,          // display the message right away
-      lifespan: 0,            // do not automatically kill the call out
-      displayPace: 0,         // do not obey the display pace
-      privateModeOverride: true,  // show the message in private mode
-      maxDisplayCount: 1      // do not obey the max display count
-    });
-    // ath.clearSession();      // reset the user session
-  </script>
 </body>
 
 </html>
