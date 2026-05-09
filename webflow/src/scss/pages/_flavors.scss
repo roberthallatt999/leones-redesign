@@ -1,1 +1,15 @@
 // Page-specific styles: flavors.
+
+// ----- migrated from leones-creamery.webflow.css (split-legacy-css.mjs) -----
+.spearfish-flavors-feature__icon-wrapper {
+  grid-column-gap: 16px;
+  grid-row-gap: 16px;
+  vertical-align: top;
+  grid-template-rows: auto auto;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-columns: 1fr;
+  display: inline-block;
+}
+.spearfish-flavors-features__title-wrapper {
+  margin-top: -4rem;
+}

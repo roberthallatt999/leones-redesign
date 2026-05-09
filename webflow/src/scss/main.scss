@@ -17,6 +17,7 @@
 
 // --- Vendor (Webflow runtime — quarantined, removed during EE port) ----------
 @use 'vendor/webflow-runtime';
+@use 'vendor/legacy';
 
 // --- Layout ------------------------------------------------------------------
 @use 'layout/header';

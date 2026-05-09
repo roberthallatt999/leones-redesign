@@ -1,1 +1,58 @@
 // FAQ accordion.
+
+// ----- migrated from leones-creamery.webflow.css (split-legacy-css.mjs) -----
+.faqs-accordion {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+.faqs-content {
+  grid-column-gap: 5rem;
+  grid-row-gap: 4rem;
+  grid-template-rows: auto;
+  grid-template-columns: .75fr 1fr;
+  grid-auto-columns: 1fr;
+  align-items: start;
+  display: grid;
+}
+.faqs-question {
+  grid-column-gap: 1.5rem;
+  grid-row-gap: 1.5rem;
+  border-top: var(--_ui-styles---stroke--divider-width) solid var(--color-scheme-1--border);
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+  display: flex;
+}
+.faqs-list {
+  border-bottom: var(--_ui-styles---stroke--divider-width) solid var(--color-scheme-1--border);
+}
+@media screen and (max-width: 991px) {
+  .faqs-content {
+    grid-column-gap: 3rem;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: row;
+    min-height: auto;
+  }
+}
+@media screen and (max-width: 767px) {
+  .faqs-content {
+    grid-row-gap: 3rem;
+    grid-template-columns: 1fr;
+  }
+}
+@media screen and (max-width: 767px) {
+  .faqs-question {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+@media screen and (max-width: 479px) {
+  .faqs-content {
+    grid-template-columns: 1fr;
+  }
+}

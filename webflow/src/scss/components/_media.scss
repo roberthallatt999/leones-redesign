@@ -1,1 +1,90 @@
 // Image wrappers, lightbox triggers.
+
+// ----- migrated from leones-creamery.webflow.css (split-legacy-css.mjs) -----
+.video-overlay-layer {
+  z-index: 1;
+  background-color: var(--_primitives---opacity--neutral-darkest-20);
+  position: absolute;
+  inset: 0%;
+}
+.image-header {
+  position: relative;
+}
+.image-header-component {
+  z-index: 1;
+  position: relative;
+}
+.image-header-wrapper {
+  z-index: 0;
+  background-image: linear-gradient(#00000080, #00000080);
+  position: absolute;
+  inset: 0%;
+}
+.image-overlay-layer {
+  z-index: 1;
+  background-color: var(--_primitives---opacity--neutral-darkest-60);
+  position: absolute;
+  inset: 0%;
+}
+.image-header-image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0%;
+}
+.image {
+  display: inline-block;
+}
+.gallery__list {
+  column-count: 2;
+  column-gap: 2rem;
+}
+.gallery__lightbox-link {
+  width: 100%;
+  margin-bottom: 2rem;
+  display: inline-block;
+}
+.gallery__image-wrapper-large {
+  border-radius: var(--_ui-styles---radius--large);
+  width: 100%;
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+.gallery__image1 {
+  aspect-ratio: 1;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+.gallery__image-wrapper {
+  border-radius: var(--_ui-styles---radius--large);
+  width: 100%;
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+.gallery__image3, .gallery__image2 {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+.gallery__image4 {
+  aspect-ratio: 1;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+@media screen and (max-width: 767px) {
+  .gallery__list {
+    column-count: 1;
+    column-gap: 1.5rem;
+  }
+}
+@media screen and (max-width: 767px) {
+  .gallery__lightbox-link {
+    margin-bottom: 1.5rem;
+  }
+}

@@ -1,1 +1,32 @@
 // Color-scheme variable definitions (was Webflow .color-schemes embed).
+
+// ----- migrated from leones-creamery.webflow.css (split-legacy-css.mjs) -----
+.global-styles {
+  display: block;
+  position: fixed;
+  inset: 0% auto auto 0%;
+}
+.color-scheme-1 {
+  background-color: var(--color-scheme-1--background);
+  color: var(--color-scheme-1--text);
+}
+.color-scheme-2 {
+  background-color: var(--color-scheme-2--background);
+  color: var(--color-scheme-2--text);
+}
+.color-scheme-3 {
+  background-color: var(--color-scheme-3--background);
+  color: var(--color-scheme-3--text);
+}
+.color-scheme-4 {
+  background-color: var(--color-scheme-4--background);
+  color: var(--color-scheme-4--text);
+}
+.color-scheme-5 {
+  background-color: var(--color-scheme-5--background);
+  color: var(--color-scheme-5--text);
+}
+.color-scheme-6 {
+  background-color: var(--color-scheme-6--background);
+  color: var(--color-scheme-6--text);
+}
