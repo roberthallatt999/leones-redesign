@@ -192,6 +192,7 @@ yarn-debug.log*
 # Common Dependencies (never commit — install from lock file)
 # =============================================================================
 vendor/
+!src/assets/scss/vendor/
 
 # =============================================================================
 # Addon-bundled vendor libraries — DO commit (deploys rsync git-tracked files
