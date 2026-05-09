@@ -216,3 +216,7 @@ scripts/.migrate-logs/
 scripts/.migrate-cache/
 .github/secrets.yaml.pre-cutover-*
 specs
+
+# Webflow standalone preview — only ignore generated/installed dirs
+webflow/node_modules
+webflow/dist
