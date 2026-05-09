@@ -16,10 +16,12 @@
 @use 'base/typography';
 @use 'base/utilities';
 
-// --- Vendor (kept empty — Webflow runtime removed in this port) --------------
-// (was: vendor/_webflow-runtime.scss + vendor/_legacy.scss; both excluded
-//  from EE's compiled CSS. Legacy rules will be migrated into the structured
-//  partials as each page slice is ported. Runtime is permanently removed.)
+// --- Vendor (Webflow runtime — kept until each page is fully rebuilt on BEM) -
+// .w-button / .w-nav / .w-form / .w-slider / .w-layout-grid / .w-richtext etc.
+// vendor/_legacy.scss is the catch-all bucket from the SCSS split — page rules
+// migrate out of it into structured partials as each page slice is ported.
+@use 'vendor/webflow-runtime';
+@use 'vendor/legacy';
 
 // --- Layout ------------------------------------------------------------------
 @use 'layout/header';
