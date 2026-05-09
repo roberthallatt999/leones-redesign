@@ -1,148 +1,402 @@
-{layout='layouts/_layout_main'}
+{layout="layouts/_layout_main"}
+{layout:set name="meta_title"}Leone's Creamery — Black Hills Handcrafted Ice Cream{/layout:set}
+{layout:set name="meta_description"}Handcrafted ice cream in Spearfish &amp; Rapid City, SD. 8 ever-changing flavors made fresh daily.{/layout:set}
+{layout:set name="page_class"}home{/layout:set}
 
-{!-- only use cache in production --}
-
-{if global:env == "production"}
-  {exp:stash:cache}
-{/if}
-
-{layout:set name='meta_title'}Leones' Creamery | Handcrafted Ice Cream & Frozen Desserts{/layout:set}
-{layout:set name='meta_description'}Nestled in the heart of Spearfish, South Dakota, Leones' Creamery specializes in hand-crafting traditional and unique ice creams and frozen desserts from fresh, high-quality ingredients. Let us satisfy your sweet tooth!{/layout:set}
-{layout:set name='social_title'}Leones' Creamery | Handcrafted Ice Cream & Frozen Desserts{/layout:set}
-{layout:set name='social_description'}Nestled in the heart of Spearfish, South Dakota, Leones' Creamery specializes in hand-crafting traditional and unique ice creams and frozen desserts from fresh, high-quality ingredients. Let us satisfy your sweet tooth!{/layout:set}
-{layout:set name='social_image'}/images/socialmedia-og-image.jpg{/layout:set}
-{exp:channel:entries channel="homepage_carousel" dynamic="no" limit="6"}
-  <div class="hero-section">
-      <div class="slideshow">
-        <div class="slides">
-            {carousel}<div style="background-image:url({img:url});"></div>{/carousel}
-        </div>
-        <!--end slides-->
-      </div>
-  </div><!--end of hero-->
-{/exp:channel:entries}
-<div class="content-area"><!--start of main content-->
-  <div class="triangle-border"></div><!--end of doodle border-->
-      {exp:channel:entries channel="pages" entry_id="19" dynamic="no"}
-        <div class="grid-container">
-          <div class="grid-x welcome">
-              <div class="cell small-12 medium-10 text-center float-center">
-                <h1 class="home">Hand-crafted with
-                  <span class="hide-for-large"><br></span>
-                  <img src="/images/heart.svg" alt="heart"/>
-                  <span class="hide-for-large"><br></span>
-                in small batches</h1>
+{!-- =====================================================================
+     Section 1: Hero
+     Background video with overlay. Text + CTAs are static for now.
+     TODO: replace static hero text/CTAs with channel:pages or homepage_settings entry when content is modeled.
+     ===================================================================== --}
+{exp:channel:entries channel="homepage_carousel" limit="1" dynamic="no" disable="categories|category_fields|member_data|pagination"}
+<header class="section_hero text-color-white">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="hero">
+        <div class="padding-section-large">
+          <div class="max-width-medium">
+            <div class="margin-bottom margin-small">
+              <h1 class="heading-style-h1">The Black Hills' finest ice cream and frozen treats</h1>
+            </div>
+            <p class="text-size-medium">Leones' Creamery specializes in hand-crafting traditional and unique ice creams from fresh, high-quality ingredients.</p>
+            <div class="margin-top margin-medium">
+              <div class="button-group">
+                <a href="/spearfish-flavors" class="button button--secondary button--alternate">SPEARFISH FLAVORS</a>
+                <a href="/#" class="button button--secondary button--alternate">RAPID CITY FLAVORS</a>
               </div>
-             <div class="cell small-12 medium-10 large-8 text-center float-center">
-                {text_area_1}
-                <a class="button" href="/about">Our Story</a>
-  			     </div>
-          </div>
-        </div><!--end of intro-->
-      <div class="flavor-board">
-        <div class="grid-x">
-          <div class="cell small-11 medium-10 large-8 intro text-center float-center">
-            <h2><div class="rays"><img src="/images/flavor-rays.svg" alt=""></div>Current Flavor Board</h2>
-            <p>{text_area_2}</p>
+            </div>
           </div>
         </div>
-          
-      {/exp:channel:entries}
-
-      <div class="grid-x">
-        {exp:low_reorder:entries set="flavors" limit="8"}
-          <div class="cell small-6 medium-3">
-            {!-- flavor card partial --}
-            {flavor-card}
-          </div>
-        {/exp:low_reorder:entries}
       </div>
-
-      <div class="cell small-12 text-center">
-        <a class="button" href="/flavors">See More Products</a>
-      </div>
-
-    </div><!--end of flavor board-->
-
-    <div class="blog home">
-      <h2 class="text-center">From the Blog</h2>
-      <div class="grid-container">
-        <div class="grid-x grid-padding-x">
-        {exp:channel:entries channel="blog_entry" limit="1"}
-          <div class="cell small-12 medium-6"><a href="/blog/{url_title}" class="article">
-            <h3 class="blog-title">{title}</h3>
-            <div class="date">{entry_date format="%F %d, %Y"} | by {blog_author}</div>
-            <p>{exp:chopper words="50" append="..."}{body_area}{/exp:chopper}</p></a>
-          </div>
-          <div class="cell small-12 medium-6"><a href="/blog/{url_title}">
-            <img src="{top_image}{img:url}{/top_image}" alt="{img:title}"/></a>
-          </div>
-        {/exp:channel:entries}
-        <div class="cell small-12 text-center">
-          <a class="button" href="/blog">See More Posts</a>
-        </div>
-        </div>
-      </div>
-    </div><!--end of blog-->
-    <div class="instagram">
-      <div class="grid-x grid-padding-x">
-        <div class="small-12 cell">
-          <i class="fa fa-instagram" aria-hidden="true"></i><span> leonescreamery</span>
-        </div>
-      </div>
-      <div id="instafeed" class="grid-x"></div>
     </div>
-</div><!--end of main content-->
+  </div>
+  <div class="hero-background-video-wrapper">
+    <div class="video-overlay-layer"></div>
+    <div class="hero_background-video">
+      {!-- TODO: swap poster for Ansel field when carousel entry carries a poster image:
+           {exp:ansel:single field="carousel"}<img src="{url:large}" alt="Leone's Creamery">{/exp:ansel:single} --}
+      <video autoplay loop muted playsinline data-object-fit="cover">
+        <source src="/videos/lc-hero-transcode.mp4">
+        <source src="/videos/lc-hero-transcode.webm">
+      </video>
+    </div>
+  </div>
+</header>
+{/exp:channel:entries}
 
- {layout:set name='extra_js'}
-  <script type="text/javascript" src="/js/slick/slick.min.js"></script>         
-  <script type="text/javascript">
-            $('.slides').slick({
-  centerMode: true,
-  centerPadding: '0px',
-  arrows:false,
-  slidesToShow: 1,
-  infinite: true,
-  autoplay: true,
-  autoplaySpeed:5000,
-  fade: true,
-  dots:false,
-  responsive: [
-    {
-      breakpoint: 768,
-      settings: {
-        centerMode: true,
-        centerPadding: '0px',
-        slidesToShow: 1
-      }
-    },
-    {
-      breakpoint: 480,
-      settings: {
-        centerMode: true,
-        centerPadding: '0px',
-        slidesToShow: 1,
-      }
-    }
-  ]
-});
-</script>
-    <script type="text/javascript" src="/js/instafeed.min.js"></script>
-    <script type="text/javascript">
-        var feed = new Instafeed({
-            get: 'user',
-            userId: '1582665758',
-            accessToken: '1582665758.1677ed0.577af98bb2834994bd0a66992d666b89',
-            resolution: 'standard_resolution',
-            limit:'6',
-            template: '<div class="cell small-4 medium-2"><a href="{{link}}" target="_blank"><img src="{{image}}" /></a></div>'
-      });
-      feed.run();
-    </script>
-{/layout:set}
+{!-- =====================================================================
+     Section 2: Home About
+     TODO: replace with channel:pages url_title="home_about" when content modeled
+     ===================================================================== --}
+<section class="section_home_about color-scheme-1">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="home-about">
+          <div class="home_about-content">
+            <div class="home_about-image-wrapper">
+              <img
+                sizes="(max-width: 1280px) 100vw, 1280px"
+                srcset="/images/8-flavors-sm_1-p-500.avif 500w, /images/8-flavors-sm_1-p-800.avif 800w, /images/8-flavors-sm_18-flavors-sm.avif 1280w"
+                alt="Eight flavors of Leone's Creamery ice cream"
+                src="/images/8-flavors-sm_18-flavors-sm.avif"
+                loading="lazy"
+                class="home_about-image">
+            </div>
+            <div class="home_about-content-right">
+              <div class="margin-bottom margin-xsmall">
+                <div class="text-style-tagline">MADE WITH ❤ SINCE 2014</div>
+              </div>
+              <div class="margin-bottom margin-small">
+                <h2 class="heading-style-h2">8 Ever-changing Flavors</h2>
+              </div>
+              <div class="margin-bottom margin-medium">
+                <p class="text-size-medium">Specializing in hand-crafting traditional and unique ice creams and frozen desserts from fresh, high-quality ingredients, it's our joy to provide the Black Hills with happy hearts and tummies.</p>
+              </div>
+              <div class="margin-top margin-medium">
+                <div class="button-group">
+                  <a href="/about-us" class="button button--secondary">LEARN MORE</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-{!-- only use cache in production --}
+{!-- =====================================================================
+     Section 3: About-2 Grid
+     TODO: replace with channel:pages url_title="about_grid" when content modeled
+     ===================================================================== --}
+<section class="section_extra_about-2 color-scheme-2">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="about-grid">
+          <div class="margin-bottom margin-xxlarge">
+            <div class="text-align-center">
+              <div class="max-width-large align-center">
+                <div class="margin-bottom margin-xsmall">
+                  <div class="text-style-tagline">EXCITING THINGS ARE IN THE WORKS</div>
+                </div>
+                <div class="margin-bottom margin-small">
+                  <h2 class="heading-style-h2">Soon twice as nice</h2>
+                </div>
+                <p class="text-size-medium">It's time to get excited for more opportunities to catch your favorite flavor or discover brand new ones. Stay tuned for more updates!</p>
+              </div>
+            </div>
+          </div>
+          <div class="about-grid__grid-list">
+            <div class="about-grid__row">
+              <div class="about-grid__card-small">
+                <div class="about-grid__card-small-image-wrapper">
+                  <img
+                    sizes="(max-width: 1125px) 100vw, 1125px"
+                    srcset="/images/spearfish-creamery-p-500.avif 500w, /images/spearfish-creamery.avif 1125w"
+                    alt="Spearfish Creamery storefront"
+                    src="/images/spearfish-creamery.avif"
+                    loading="lazy"
+                    class="about-grid__card-small-image">
+                </div>
+                <div class="about-grid__card-small-content">
+                  <div class="about-grid__card-small-content-top">
+                    <div class="margin-bottom margin-xxsmall">
+                      <div class="tag tag--text">SINCE 2014</div>
+                    </div>
+                    <div class="margin-bottom margin-xxsmall">
+                      <h3 class="heading-style-h5">Spearfish Creamery</h3>
+                    </div>
+                    <p>Where it all began - this is where the delectable cream gets churned into magic.</p>
+                  </div>
+                  <div class="margin-top margin-small">
+                    <div class="button-group">
+                      <a href="/spearfish-flavors" class="button button--link button--icon">
+                        <div>CURRENT FLAVORS</div>
+                        <div class="icon-embed-xxsmall">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 3L11 8L6 13" stroke="CurrentColor" stroke-width="1.5"></path>
+                          </svg>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="about-grid__card-small">
+                <div class="about-grid__card-small-image-wrapper">
+                  <img
+                    sizes="(max-width: 1642px) 100vw, 1642px"
+                    srcset="/images/caramel-apple-p-500.avif 500w, /images/caramel-apple-p-800.avif 800w, /images/caramel-apple.avif 1642w"
+                    alt="Caramel apple ice cream"
+                    src="/images/caramel-apple.avif"
+                    loading="lazy"
+                    class="about-grid__card-small-image">
+                </div>
+                <div class="about-grid__card-small-content">
+                  <div class="about-grid__card-small-content-top">
+                    <div class="margin-bottom margin-xxsmall">
+                      <div class="tag tag--text">COMING JUNE 2026</div>
+                    </div>
+                    <div class="margin-bottom margin-xxsmall">
+                      <h3 class="heading-style-h5">Rapid City</h3>
+                    </div>
+                    <p>We are giving you more chances to satisfy that sweet tooth of yours.</p>
+                  </div>
+                  <div class="margin-top margin-small">
+                    <div class="button-group">
+                      <a href="/#" class="button button--link button--icon">
+                        <div>CURRENT FLAVORS</div>
+                        <div class="icon-embed-xxsmall">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 3L11 8L6 13" stroke="CurrentColor" stroke-width="1.5"></path>
+                          </svg>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-{if global:env == "production"}
-  {/exp:stash:cache}
-{/if}
+{!-- =====================================================================
+     Section 4: Layout Feature Extra
+     TODO: replace with channel:pages url_title="layout_feature_extra" when content modeled
+     ===================================================================== --}
+<section class="section_extra_layout color-scheme-1">
+  <div class="layout-feature-extra">
+    <div class="layout-feature-extra__inner-wrapper">
+      <div class="layout-feature-extra__images-wrapper">
+        <div class="layout-feature-extra__image-wrapper layout-feature-extra__image-wrapper--1">
+          <img
+            sizes="(max-width: 1640px) 100vw, 1640px"
+            srcset="/images/oreo_1-p-500.avif 500w, /images/oreo_1-p-800.avif 800w, /images/oreo_1oreo.avif 1640w"
+            alt="Oreo ice cream"
+            src="/images/oreo_1oreo.avif"
+            loading="lazy"
+            class="layout-feature-extra__image">
+        </div>
+        <div class="layout-feature-extra__image-wrapper layout-feature-extra__image-wrapper--2">
+          <img
+            sizes="(max-width: 1662px) 100vw, 1662px"
+            srcset="/images/milkshake-p-500.avif 500w, /images/milkshake-p-800.avif 800w, /images/milkshake.avif 1662w"
+            alt="Milkshake"
+            src="/images/milkshake.avif"
+            loading="lazy"
+            class="layout-feature-extra__image">
+        </div>
+        <div class="layout-feature-extra__image-wrapper layout-feature-extra__image-wrapper--3">
+          <img
+            sizes="(max-width: 1536px) 100vw, 1536px"
+            srcset="/images/sunrise-p-500.avif 500w, /images/sunrise-p-800.avif 800w, /images/sunrise.avif 1536w"
+            alt="Sunrise ice cream"
+            src="/images/sunrise.avif"
+            loading="lazy"
+            class="layout-feature-extra__image">
+        </div>
+      </div>
+      <div class="layout-feature-extra__images-wrapper images-wrapper-right">
+        <div class="layout-feature-extra__image-wrapper layout-feature-extra__image-wrapper--4">
+          <img
+            sizes="(max-width: 1638px) 100vw, 1638px"
+            srcset="/images/pumpkin_1-p-500.avif 500w, /images/pumpkin_1-p-800.avif 800w, /images/pumpkin_1pumpkin.avif 1638w"
+            alt="Pumpkin ice cream"
+            src="/images/pumpkin_1pumpkin.avif"
+            loading="lazy"
+            class="layout-feature-extra__image">
+        </div>
+        <div class="layout-feature-extra__image-wrapper layout-feature-extra__image-wrapper--5">
+          <img
+            sizes="(max-width: 1640px) 100vw, 1640px"
+            srcset="/images/trout_1-p-500.avif 500w, /images/trout_1-p-800.avif 800w, /images/trout_1trout.avif 1640w"
+            alt="Trout ice cream"
+            src="/images/trout_1trout.avif"
+            loading="lazy"
+            class="layout-feature-extra__image">
+        </div>
+      </div>
+      <div class="layout-feature-extra__content">
+        <div class="padding-global">
+          <div class="container-large">
+            <div class="padding-section-large">
+              <div class="text-align-center">
+                <div class="max-width-large align-center">
+                  <div class="margin-bottom margin-xsmall">
+                    <div class="text-style-tagline">RUNNING HEAD</div>
+                  </div>
+                  <div class="margin-bottom margin-small">
+                    <h2 class="heading-style-h2">Slingin' the freshest cream</h2>
+                  </div>
+                  <p class="text-size-medium">Leones' Creamery was founded in 2014 by Rebecca and Hannah (sisters) and John (Rebecca's husband). From our storefront to our flavors, Leones' Creamery has been a wildly collaborative venture.</p>
+                  <div class="margin-top margin-medium">
+                    <div class="button-group button-group--center">
+                      <a href="/local-partners" class="button button--secondary">LOCAL PARTNERS</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layout-feature-extra__ix-trigger"></div>
+  </div>
+</section>
+
+{!-- =====================================================================
+     Section 5: FAQs
+     Driven by the faqs channel. Each entry renders as a native <details>/<summary>
+     accordion — no JS required, accessible by default.
+     ===================================================================== --}
+<section class="section-faqs">
+  <div class="padding-global color-scheme-5">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="faqs-component">
+          <div class="faqs-content">
+            <div class="faqs-content-left">
+              <div class="margin-bottom margin-small">
+                <h2 class="heading-style-h2">Here's the scoop</h2>
+              </div>
+              <p class="text-size-medium">You have questions. We have answers!</p>
+            </div>
+            <div class="faqs-list">
+              {exp:channel:entries channel="faqs" cache="yes" refresh="60" orderby="entry_date" sort="asc" disable="categories|category_fields|member_data|pagination"}
+              <details class="faqs-accordion">
+                <summary class="faqs-question">
+                  <div class="text-size-medium faqs">{question}</div>
+                  <div class="cta-extra__icon-wrapper">
+                    <div class="icon-embed-small">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true" role="img">
+                        <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </summary>
+                <div class="cta-extra__answer">
+                  <div class="margin-bottom margin-small">
+                    <p>{answer}</p>
+                  </div>
+                </div>
+              </details>
+              {/exp:channel:entries}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{!-- =====================================================================
+     Section 6: Hero Callout (header141)
+     TODO: replace with channel:pages url_title="hero_callout" when content modeled
+     ===================================================================== --}
+<header class="section_header141">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="hero">
+          <div class="margin-bottom margin-xxlarge">
+            <div class="text-align-center">
+              <div class="max-width-large">
+                <div class="margin-bottom margin-small">
+                  <h1 class="heading-style-h2">Slingin' the freshest cream</h1>
+                </div>
+                <p class="text-size-medium">Nestled in downtown Spearfish, South Dakota, Leones' Creamery was founded in 2014 by Rebecca and Hannah (sisters) and John (Rebecca's husband). From our storefront to our flavors, Leones' Creamery has been a wildly collaborative venture.</p>
+                <div class="margin-top margin-medium">
+                  <div class="button-group button-group--center">
+                    <a href="/#" class="button button--secondary">OUR JOURNEY</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hero__image-group">
+            <div class="hero__image-wrapper2">
+              <img
+                sizes="(max-width: 1640px) 100vw, 1640px"
+                srcset="/images/oreo_1-p-500.avif 500w, /images/oreo_1-p-800.avif 800w, /images/oreo_1oreo.avif 1640w"
+                alt="Oreo ice cream"
+                src="/images/oreo_1oreo.avif"
+                loading="eager"
+                class="hero__image2">
+            </div>
+            <div class="hero__image-wrapper1">
+              <img
+                sizes="(max-width: 1640px) 100vw, 1640px"
+                srcset="/images/trout_1-p-500.avif 500w, /images/trout_1-p-800.avif 800w, /images/trout_1trout.avif 1640w"
+                alt="Trout ice cream"
+                src="/images/trout_1trout.avif"
+                loading="eager"
+                class="hero__image1">
+            </div>
+            <div class="hero__image-wrapper3">
+              <img
+                sizes="(max-width: 1638px) 100vw, 1638px"
+                srcset="/images/pumpkin_1-p-500.avif 500w, /images/pumpkin_1-p-800.avif 800w, /images/pumpkin_1pumpkin.avif 1638w"
+                alt="Pumpkin ice cream"
+                src="/images/pumpkin_1pumpkin.avif"
+                loading="eager"
+                class="hero__image3">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+{!-- =====================================================================
+     Section 7: Section Collage
+     Purely visual — no channel data needed.
+     ===================================================================== --}
+<header class="section-collage text-color-white">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="section-collage-text">
+          <h4 class="heading-style-h3 collage">There's ALWAYS room for ice cream.</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="collage-image-wrapper">
+    <div class="image-overlay-layer"></div>
+    <img
+      sizes="(max-width: 1600px) 100vw, 1600px"
+      srcset="/images/faqs-collage-fullwidth-p-500.avif 500w, /images/faqs-collage-fullwidth-p-800.avif 800w, /images/faqs-collage-fullwidth-p-1080.avif 1080w, /images/faqs-collage-fullwidth.avif 1600w"
+      alt="Leone's Creamery collage"
+      src="/images/faqs-collage-fullwidth.avif"
+      loading="eager"
+      class="collage-background-image">
+  </div>
+</header>
