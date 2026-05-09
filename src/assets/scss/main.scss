@@ -1,67 +1,31 @@
 // =============================================================================
-// Leone's Creamery — Webflow standalone preview
-// SCSS entry.
+// Leone's Creamery — EE site (redesign)
+// SCSS entry. Mirrors the published Webflow load order:
 //
-// Cascade order matches the original webflow loading sequence:
 //   1. normalize.css
-//   2. webflow.css          (the .w-* runtime — vendor/_webflow-runtime.scss)
-//   3. leones-creamery.webflow.css
-//      (everything else — base, color-schemes, layout, components, pages)
+//   2. webflow.css            (the .w-* runtime — vendor/_webflow-runtime.scss)
+//   3. leones-creamery.webflow.css (the original site CSS — vendor/_legacy.scss)
 //
-// This order matters: rules in the runtime (e.g. .w-nav { background: #ddd })
-// must come before .color-scheme-1 { background: white } so the latter wins
-// for compound selectors like `.nav.color-scheme-1.w-nav`.
+// We keep the original Webflow output as the source of truth so the published
+// webflow.js IX2 timelines (which reference original class names) can find
+// their animation targets.
+//
+// The BEM-organized partials under layout/, components/, pages/, etc. are
+// retained on disk for future use (when each page is rebuilt off the Webflow
+// runtime), but are NOT imported here — the HTML in lcmin/ uses original
+// Webflow class names, not BEM-renamed names.
 // =============================================================================
 
-// --- Step 1: normalize -------------------------------------------------------
+// Step 1: normalize ----------------------------------------------------------
 @use 'base/normalize';
 
-// --- Step 2: webflow runtime (must come before custom rules) -----------------
+// Step 2: webflow runtime (must come before custom rules) --------------------
 @use 'vendor/webflow-runtime';
 
-// --- Step 3: custom rules (matches leones-creamery.webflow.css load) ---------
-
-// Abstracts (variables, mixins; mostly side-effect-free).
-@use 'abstracts/variables';
-@use 'abstracts/mixins';
-@use 'abstracts/functions';
-
-// Inline styles that lived in webflow's HTML <style> blocks (color-scheme
-// cascades + .w-richtext margin resets + .container-* alignment).
+// Step 3: inline-style blocks that lived in Webflow's HTML <style> embeds
+//         (color-scheme cascade rules, .w-richtext margin resets, container
+//         alignment). Loaded after runtime so the cascade overrides win.
 @use 'abstracts/webflow-inline-styles';
 
-// Color-scheme background/text defaults.
-@use 'abstracts/color-schemes';
-
-// Base typography, resets, utilities.
-@use 'base/reset';
-@use 'base/typography';
-@use 'base/utilities';
-
-// Layout, components, pages.
-@use 'layout/header';
-@use 'layout/footer';
-@use 'layout/section';
-
-@use 'components/button';
-@use 'components/card';
-@use 'components/slider';
-@use 'components/accordion';
-@use 'components/form';
-@use 'components/media';
-
-@use 'pages/home';
-@use 'pages/flavors';
-@use 'pages/flavor-detail';
-@use 'pages/about';
-@use 'pages/blog';
-@use 'pages/contact';
-@use 'pages/join-the-team';
-@use 'pages/local-partners';
-@use 'pages/scoop-it-forward';
-@use 'pages/terms';
-
-// Legacy catch-all (rules that didn't match any structured partial during the
-// SCSS split). Loaded last so its rules can be safely shadowed by the
-// structured partials above as each page is ported.
+// Step 4: original leones-creamery.webflow.css (the full site CSS, verbatim) -
 @use 'vendor/legacy';
