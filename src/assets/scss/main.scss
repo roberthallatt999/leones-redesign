@@ -8,6 +8,7 @@
 @use 'abstracts/mixins';
 @use 'abstracts/functions';
 @use 'abstracts/color-schemes';
+@use 'abstracts/webflow-inline-styles';
 
 // --- Base --------------------------------------------------------------------
 @use 'base/normalize';
