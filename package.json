@@ -11,7 +11,7 @@
     "browsersync": {
       "sslKey": "./src/assets/certs/master.key",
       "sslCert": "./src/assets/certs/master.crt",
-      "proxyUrl": "https://leonescreamery.test",
+      "proxyUrl": "https://leones-redesign.test",
       "files": {
         "watch": [
           "./src/assets/scss/**/*.scss",

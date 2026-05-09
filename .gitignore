@@ -215,3 +215,4 @@ scripts/migrate-server.yaml
 scripts/.migrate-logs/
 scripts/.migrate-cache/
 .github/secrets.yaml.pre-cutover-*
+specs
