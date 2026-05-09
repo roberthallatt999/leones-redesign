@@ -1,16 +1,46 @@
-@charset "UTF-8";
+// =============================================================================
+// Leone's Creamery — Webflow standalone preview
+// SCSS entry. Import order: abstracts → base → vendor → layout → components → pages
+// =============================================================================
 
-// 1. Configuration and helpers
-@import
-  'abstracts/variable',
-  'abstracts/mixins';
+// --- Abstracts (no CSS output, side-effect-free) -----------------------------
+@use 'abstracts/variables';
+@use 'abstracts/mixins';
+@use 'abstracts/functions';
+@use 'abstracts/color-schemes';
 
-// 2. custom css 
-@import
-  'global/styles',
-  'global/fixes';
+// --- Base --------------------------------------------------------------------
+@use 'base/normalize';
+@use 'base/reset';
+@use 'base/typography';
+@use 'base/utilities';
 
-// 3. Page specific styles
+// --- Vendor (kept empty — Webflow runtime removed in this port) --------------
+// (was: vendor/_webflow-runtime.scss + vendor/_legacy.scss; both excluded
+//  from EE's compiled CSS. Legacy rules will be migrated into the structured
+//  partials as each page slice is ported. Runtime is permanently removed.)
 
-@import
-  'pages/flavor';
+// --- Layout ------------------------------------------------------------------
+@use 'layout/header';
+@use 'layout/footer';
+@use 'layout/section';
+
+// --- Components --------------------------------------------------------------
+@use 'components/button';
+@use 'components/card';
+@use 'components/slider';
+@use 'components/accordion';
+@use 'components/form';
+@use 'components/media';
+
+// --- Pages -------------------------------------------------------------------
+@use 'pages/home';
+@use 'pages/flavors';
+@use 'pages/flavor-detail';
+@use 'pages/about';
+@use 'pages/blog';
+@use 'pages/contact';
+@use 'pages/join-the-team';
+@use 'pages/local-partners';
+@use 'pages/scoop-it-forward';
+@use 'pages/terms';
