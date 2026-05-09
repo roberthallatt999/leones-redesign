@@ -1,34 +1,48 @@
 // =============================================================================
 // Leone's Creamery — Webflow standalone preview
-// SCSS entry. Import order: abstracts → base → vendor → layout → components → pages
+// SCSS entry.
+//
+// Cascade order matches the original webflow loading sequence:
+//   1. normalize.css
+//   2. webflow.css          (the .w-* runtime — vendor/_webflow-runtime.scss)
+//   3. leones-creamery.webflow.css
+//      (everything else — base, color-schemes, layout, components, pages)
+//
+// This order matters: rules in the runtime (e.g. .w-nav { background: #ddd })
+// must come before .color-scheme-1 { background: white } so the latter wins
+// for compound selectors like `.nav.color-scheme-1.w-nav`.
 // =============================================================================
 
-// --- Abstracts (no CSS output, side-effect-free) -----------------------------
+// --- Step 1: normalize -------------------------------------------------------
+@use 'base/normalize';
+
+// --- Step 2: webflow runtime (must come before custom rules) -----------------
+@use 'vendor/webflow-runtime';
+
+// --- Step 3: custom rules (matches leones-creamery.webflow.css load) ---------
+
+// Abstracts (variables, mixins; mostly side-effect-free).
 @use 'abstracts/variables';
 @use 'abstracts/mixins';
 @use 'abstracts/functions';
-@use 'abstracts/color-schemes';
+
+// Inline styles that lived in webflow's HTML <style> blocks (color-scheme
+// cascades + .w-richtext margin resets + .container-* alignment).
 @use 'abstracts/webflow-inline-styles';
 
-// --- Base --------------------------------------------------------------------
-@use 'base/normalize';
+// Color-scheme background/text defaults.
+@use 'abstracts/color-schemes';
+
+// Base typography, resets, utilities.
 @use 'base/reset';
 @use 'base/typography';
 @use 'base/utilities';
 
-// --- Vendor (Webflow runtime — kept until each page is fully rebuilt on BEM) -
-// .w-button / .w-nav / .w-form / .w-slider / .w-layout-grid / .w-richtext etc.
-// vendor/_legacy.scss is the catch-all bucket from the SCSS split — page rules
-// migrate out of it into structured partials as each page slice is ported.
-@use 'vendor/webflow-runtime';
-@use 'vendor/legacy';
-
-// --- Layout ------------------------------------------------------------------
+// Layout, components, pages.
 @use 'layout/header';
 @use 'layout/footer';
 @use 'layout/section';
 
-// --- Components --------------------------------------------------------------
 @use 'components/button';
 @use 'components/card';
 @use 'components/slider';
@@ -36,7 +50,6 @@
 @use 'components/form';
 @use 'components/media';
 
-// --- Pages -------------------------------------------------------------------
 @use 'pages/home';
 @use 'pages/flavors';
 @use 'pages/flavor-detail';
@@ -47,3 +60,8 @@
 @use 'pages/local-partners';
 @use 'pages/scoop-it-forward';
 @use 'pages/terms';
+
+// Legacy catch-all (rules that didn't match any structured partial during the
+// SCSS split). Loaded last so its rules can be safely shadowed by the
+// structured partials above as each page is ported.
+@use 'vendor/legacy';
