@@ -1,95 +1,109 @@
-{layout='layouts/_layout_main'}
-{layout:set name='meta_title'}Scoop it Forward | Find out if you have a special treat waiting for you at Leones' Creamery{/layout:set}
-{layout:set name='meta_description'}Scoop it Forward | Find out if you have a special treat waiting for you at Leones' Creamery{/layout:set}
-{layout:set name='social_title'}Scoop it Forward | Find out if you have a special treat waiting for you at Leones' Creamery{/layout:set}
-{layout:set name='social_description'}Scoop it Forward | Find out if you have a special treat waiting for you at Leones' Creamery{/layout:set}
-{layout:set name='social_image'}/images/socialmedia-og-image.jpg{/layout:set}
+{layout="layouts/_layout_main"}
+{layout:set name="meta_title"}Scoop it Forward | Leone's Creamery{/layout:set}
+{layout:set name="page_class"}scoop-it-forward{/layout:set}
 
-<div class="hero-section inner" style="background-image:url(/images/uploads/cropped/DSC_5727-83-1523038807.jpg)">
-    <div class="words"><h1>Scoop it Forward</h1></div>
-    <div class="overlay"></div>
-</div><!--end of hero-->
-
-<div class="content-area"><!--start of main content-->
-   <div class="triangle-border"></div><!--end of doodle border--> 
-
-      <div class="grid-container scoop-it-forward">
-          <div class="grid-x">
-             <div class="cell small-12 medium-10 large-8 float-center">
-              {exp:pro_search:results query="{segment_3}" disable="member_data" require_query="yes" require_all="keywords" keywords:lang="en" keywords:match="title" keywords:loose="right" keywords:inflect="yes" status="add to board|open"}
-               {if count == 1}
-                <h4 class="text-center">We found a gift for {if pro_search_keywords}"{pro_search_keywords}"!{/if}<br>Find out all the details below and come into the shop to come claim your scoop.</h4>
-				{/if}
-               <div class="result">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Gift</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>{first_name} {title}</td>
-                      <td>{gift}<b>{gift:quantity}</b> {gift:item}(s) {/gift}</td>
-                    </tr>
-                  </tbody>
-                </table>
-               </div>
-               {if count == total_results}
-                <div class="grid-x">
-                  <div class="cell small-12 medium-7 float-center text-center">
-                    <a href="/flavors" class="button solid">Check out the Flavor Board</a>
-                    <a href="/scoop-it-forward" class="small-link">Back to Search</a>
-                  </div>
-                </div>
-              {/if}
-              {if no_results}
-                <h4 class="text-center">
-                     Sorry, that person can't be found.
-                   </h4>
-                <p class="text-center">
-                  We searched for &ldquo;{pro_search_keywords}&rdquo; but didn't turn up a match.
-                  {exp:pro_search:suggestions keywords="{pro_search_keywords}" keywords:lang="en" limit="2"}
-                    {if suggestion_count == 1}Did you mean{/if}
-                    <a href="{pro_search:url keywords="{suggestion}"}">{suggestion}</a>{if suggestion_count != total_suggestions}&nbsp;or&nbsp;{if:else}?{/if}
-                    {if no_suggestions}Try a different spelling or search term below.{/if}
-                  {/exp:pro_search:suggestions}
-                </p>
-
-                {exp:pro_search:form result_page="scoop-it-forward/results/%s" required="keywords" secure="no"}
-                  {if pro_search_keywords_missing}
-                    <p class="search-error" role="alert">Please enter a name in the search field.</p>
-                  {/if}
-                  <div class="search">
-                    <div class="input-group">
-                      <label for="keywords-desktop" class="hide">Search</label>
-                      <input class="input-group-field desktop" name="keywords" id="keywords-desktop" type="text" placeholder="Search by Last Name or Company Name" onfocus="this.placeholder=''">
-                      <div class="input-group-button">
-                        <label for="search-submit-desktop" class="hide">Search</label>
-                        <input type="submit" class="button search-submit" id="search-submit-desktop" value="Search">
+      <header class="section_header32 color-scheme-5">
+        <div class="padding-global">
+          <div class="container-large">
+            <div class="header32_content">
+              <div class="padding-section-medium">
+                <div class="text-align-center">
+                  <div class="max-width-large align-center">
+                    <div class="margin-bottom margin-small">
+                      <h1 class="heading-style-h1">Scoop it Forward</h1>
+                    </div>
+                    <div class="margin-bottom margin-medium">
+                      <p class="text-size-medium">Want to treat a pal anonymously? Swing by the shop or send us an email at <a href="mailto:leonescreamery@gmail.com?subject=Scoop%20it%20Forward" class="text-style-link">leonescreamery@gmail.com</a>, tell us who you&#x27;d like to treat, what you&#x27;d like to treat them to (a scoop, a pint, etc.), and pay for their ice cream in advance. We keep a log of all purchases (recipients can find their name/treat below). </p>
+                    </div>
+                    <div class="search-form-wrapper">
+                      <div class="margin-bottom margin-medium">
+                        <p class="text-size-medium">Search your name to see if something delicious is waiting for you.</p>
+                      </div>
+                      <form action="/search" class="header32_search-form w-form"><input class="form_input is-alternate is-icon-left w-input" maxlength="256" name="query" placeholder="e.g. Johnson" type="search" id="search" required=""><input type="submit" class="button cursor-none w-button" value="Search">
+                        <div id="w-node-_9219e88f-db12-2ebc-1cdf-48c70d4a0680-6b6270d4" class="form_icon-wrapper">
+                          <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
+                              <path d="M10 18C11.775 17.9996 13.4988 17.4054 14.897 16.312L19.293 20.708L20.707 19.294L16.311 14.898C17.405 13.4997 17.9996 11.7754 18 10C18 5.589 14.411 2 10 2C5.589 2 2 5.589 2 10C2 14.411 5.589 18 10 18ZM10 4C13.309 4 16 6.691 16 10C16 13.309 13.309 16 10 16C6.691 16 4 13.309 4 10C4 6.691 6.691 4 10 4Z" fill="currentColor"></path>
+                            </svg></div>
+                        </div>
+                      </form>
+                      <div class="divider-search"></div>
+                      <div class="results-wrapper">
+                        <div class="results-line">
+                          <div class="results-name-wrap">
+                            <div class="results-name">Johnson, Raven</div>
+                          </div>
+                          <div class="results-icecream">
+                            <div class="result"><strong>1</strong> Single Scoop </div>
+                          </div>
+                        </div>
+                        <div class="results-line">
+                          <div class="results-name-wrap">
+                            <div class="results-name">Johnson, Taylar</div>
+                          </div>
+                          <div class="results-icecream">
+                            <div class="result"><strong>1 </strong>Single Scoop</div>
+                          </div>
+                        </div>
+                        <div class="results-line">
+                          <div class="results-name-wrap">
+                            <div class="results-name">Johnson, Tiffany</div>
+                          </div>
+                          <div class="results-icecream">
+                            <div class="result"><strong>2</strong> Double Scoops, <strong>3</strong> Single Scoops, <strong>5</strong> Waffle Cones</div>
+                          </div>
+                        </div>
+                        <div class="results-line">
+                          <div class="results-name-wrap">
+                            <div class="results-name">Johnson, Kathy</div>
+                          </div>
+                          <div class="results-icecream">
+                            <div class="result"><strong>1</strong> Quart</div>
+                          </div>
+                        </div>
+                        <div class="results-line">
+                          <div class="results-name-wrap">
+                            <div class="results-name">Johnson, April</div>
+                          </div>
+                          <div class="results-icecream">
+                            <div class="result"><strong>1</strong> Single Scoop</div>
+                          </div>
+                        </div>
+                        <div class="results-line">
+                          <div class="results-name-wrap">
+                            <div class="results-name">Johnson, Chris &amp; Jodi</div>
+                          </div>
+                          <div class="results-icecream">
+                            <div class="result"><strong>2</strong> Double Scoops </div>
+                          </div>
+                        </div>
+                        <div class="results-line">
+                          <div class="results-name-wrap">
+                            <div class="results-name">Johnson, Mitch &amp; Cash</div>
+                          </div>
+                          <div class="results-icecream">
+                            <div class="result"><strong>2</strong> Double Scoops</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div><!--end of search-->
-                {/exp:pro_search:form}
-                {/if}
-               {/exp:pro_search:results}
-
-  			     </div><!--end of centered col-->
-          </div>
-        </div><!--end of wrapping grid-container-->
-         <div class="structured-collage" style="background-image:url(/images/faqs-collage-fullwidth.jpg)">
-          <div class="grid-x">
-             <div class="cell small-12 medium-10 large-6 float-center">
-                 <div class="bottom-fact">
-                   <div class="grid-x grid-padding-x">
-                     <div class="cell small-12 medium-4 large-4 fact-icon"><img src="/images/fact.svg" alt=""/></div>
-                     <div class="cell small-12 medium-12 large-8">There’s ALWAYS room for ice cream.</div>
                   </div>
-               </div>
+                </div>
+              </div>
             </div>
-           </div>
-          <div class="overlay"></div>            
-        </div><!--end of structured collage, 3:1 ratio-->
-   
-</div><!--end of main content-->
+          </div>
+        </div>
+      </header>
+      <header class="section-collage text-color-white">
+        <div class="padding-global">
+          <div class="container-large">
+            <div class="padding-section-large">
+              <div class="section-collage-text">
+                <h4 class="heading-style-h3 collage">There’s ALWAYS room for ice cream.</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="collage-image-wrapper">
+          <div class="image-overlay-layer"></div><img sizes="(max-width: 1600px) 100vw, 1600px" srcset="/images/faqs-collage-fullwidth-p-500.avif 500w, /images/faqs-collage-fullwidth-p-800.avif 800w, /images/faqs-collage-fullwidth-p-1080.avif 1080w, /images/faqs-collage-fullwidth.avif 1600w" alt="" src="/images/faqs-collage-fullwidth.avif" loading="eager" class="collage-background-image">
+        </div>
+      </header>
