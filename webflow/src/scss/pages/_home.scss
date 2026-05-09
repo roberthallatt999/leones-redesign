@@ -94,3 +94,16 @@
     grid-row-gap: 1.5rem;
   }
 }
+
+// Inline IX2 width override (was inline <style> in index.html). Depends on
+// .w-mod-js, set by the Webflow bootstrap script.
+@media (min-width: 992px) {
+  html.w-mod-js:not(.w-mod-ix) [data-w-id="902b8033-b867-e14c-9bbe-7e208fbc26f4"] {
+    width: 200%;
+  }
+}
+@media (max-width: 991px) and (min-width: 768px) {
+  html.w-mod-js:not(.w-mod-ix) [data-w-id="902b8033-b867-e14c-9bbe-7e208fbc26f4"] {
+    width: 200%;
+  }
+}
