@@ -1,0 +1,44 @@
+// =============================================================================
+// Leone's Creamery — Webflow standalone preview
+// SCSS entry. Import order: abstracts → base → vendor → layout → components → pages
+// =============================================================================
+
+// --- Abstracts (no CSS output, side-effect-free) -----------------------------
+@use 'abstracts/variables';
+@use 'abstracts/mixins';
+@use 'abstracts/functions';
+@use 'abstracts/color-schemes';
+
+// --- Base --------------------------------------------------------------------
+@use 'base/normalize';
+@use 'base/reset';
+@use 'base/typography';
+@use 'base/utilities';
+
+// --- Vendor (Webflow runtime — quarantined, removed during EE port) ----------
+@use 'vendor/webflow-runtime';
+
+// --- Layout ------------------------------------------------------------------
+@use 'layout/header';
+@use 'layout/footer';
+@use 'layout/section';
+
+// --- Components --------------------------------------------------------------
+@use 'components/button';
+@use 'components/card';
+@use 'components/slider';
+@use 'components/accordion';
+@use 'components/form';
+@use 'components/media';
+
+// --- Pages -------------------------------------------------------------------
+@use 'pages/home';
+@use 'pages/flavors';
+@use 'pages/flavor-detail';
+@use 'pages/about';
+@use 'pages/blog';
+@use 'pages/contact';
+@use 'pages/join-the-team';
+@use 'pages/local-partners';
+@use 'pages/scoop-it-forward';
+@use 'pages/terms';
