@@ -57,6 +57,14 @@ class RegisterTimelineUploadDir extends Migration
             }
             $settings['upload_directory'] = 'ee:' . $upload_id;
             $settings['save_directory']   = 'ee:' . $upload_id;
+            // Timeline-image dimension/quantity constraints (relaxed from
+            // top_image's hero-sized defaults).
+            $settings['min_qty']    = 0;       // image is optional
+            $settings['min_width']  = 600;
+            $settings['min_height'] = 400;
+            $settings['max_width']  = 2400;
+            $settings['max_height'] = 1600;
+            $settings['ratio']      = '';      // no fixed aspect ratio
             $field->field_settings = $settings;
             $field->save();
         }
