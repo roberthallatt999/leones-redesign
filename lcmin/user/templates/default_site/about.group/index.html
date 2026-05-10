@@ -1,40 +1,43 @@
 {layout="layouts/_layout_main"}
-{!-- Page chrome from `pages` channel (url_title=about). Wrapping the
-     hero + timeline section in a single channel:entries call so {title}
-     is available throughout. FAQs use their own low_reorder loop. --}
+{!-- About page driven by the `pages` channel. Hero and Journey-intro
+     content is composed via the `page_content_blocks` Fluid field. The
+     timeline list is from the `about_timeline` channel; FAQs come from
+     the `faqs` channel via Low Reorder. --}
 {exp:channel:entries channel="pages" url_title="about" limit="1" cache="yes" refresh="60" disable="categories|category_fields|member_data|pagination"}
 {layout:set name="meta_title"}{title} | Leone's Creamery{/layout:set}
 {layout:set name="page_class"}about{/layout:set}
 
-      <header class="image-header text-color-white">
-        <div class="padding-global">
-          <div class="container-large">
-            <div class="padding-section-medium">
-              <div class="image-header-component">
-                <div class="text-align-center">
-                  <div class="max-width-large align-center">
-                    <div class="margin-bottom margin-small">
-                      <div class="about-us_about_icon-wrapper">
-                        <div class="icon-1x1-large w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 -960 960 960">
-                            <path fill="currentColor" d="M114.02-558.35q0-46.91 28.94-91.82 28.93-44.92 83.13-59.68 17.43-97.8 90.19-156.73 72.75-58.92 163.62-58.92 91.34 0 163.34 58.8 72 58.81 90.67 156.61 54.2 14.76 83.25 59.8 29.06 45.03 29.06 91.94 0 76.44-57.58 120.59-57.57 44.15-122.97 32.39L509.35-95.43q-5.48 9.19-13.48 14.29t-17.15 5.1q-9.15 0-17.61-5.1-8.46-5.1-12.94-14.29L296.09-405.37q-71.16 11.76-126.61-32.27-55.46-44.03-55.46-120.71Zm151.91 87.85q17.54 0 33.32-5 15.79-5 24.32-13.52l27.91-29.39 23.72 21.67q24.28 17.24 53.78 21.74t54.02 4.5q24.52 0 50.52-4.5 26-4.5 50.52-21.74l24.48-21.67 26.91 29.39q8.59 8.61 24.73 13.56 16.14 4.96 32.77 4.96 33.35 0 59.14-26.78 25.78-26.79 25.78-60.98 0-30.27-18.64-52.72t-52.45-28.22l-39.38-5.05-1.45-36.79q-10.28-77.81-59.7-127.07Q556.8-857.37 480-857.37q-76.8 0-126.73 49.26-49.92 49.26-59.2 127.07l-2.44 36.77-39.15 8.07q-29.36 7.62-49.84 27.76-20.49 20.14-20.49 50.3 0 34.07 25.76 60.86 25.75 26.78 58.02 26.78Zm212.83 286.61L600.3-422.74l-6-6q-26.56 13.81-57.15 20.09-30.58 6.28-54.18 6.28-30.06 0-61.46-6.28-31.41-6.28-54.81-20.09l-6 5 118.06 239.85ZM480-663.43Z"></path>
-                          </svg></div>
+      {!-- Hero block(s) from Fluid. Editor adds a "Hero Block" with title,
+           subtitle, and image; this section iterates and renders them. --}
+      {page_content_blocks}
+        {page_content_blocks:hero_block}
+          {fields}
+            <header class="image-header text-color-white">
+              <div class="padding-global">
+                <div class="container-large">
+                  <div class="padding-section-medium">
+                    <div class="image-header-component">
+                      <div class="text-align-center">
+                        <div class="max-width-large align-center">
+                          <div class="margin-bottom margin-small">
+                            <h1 class="heading-style-h1">{page_content_blocks:hero_title}{content}{/page_content_blocks:hero_title}</h1>
+                          </div>
+                          <p class="text-size-regular">{page_content_blocks:hero_subtitle}{content}{/page_content_blocks:hero_subtitle}</p>
+                        </div>
                       </div>
                     </div>
-                    <div class="margin-bottom margin-small">
-                      <h1 class="heading-style-h1">{title}</h1>
-                    </div>
-                    <p class="text-size-regular">Specializing in hand-crafting traditional and unique ice creams and frozen desserts from fresh, high-quality ingredients, it&#x27;s our joy to provide the Black Hills with happy hearts and tummies.</p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="image-header-wrapper">
-          <div class="image-overlay-layer"></div><img sizes="(max-width: 1640px) 100vw, 1640px" srcset="/images/oreo_1-p-500.avif 500w, /images/oreo_1-p-800.avif 800w, /images/oreo_1oreo.avif 1640w" alt="" src="/images/oreo_1oreo.avif" loading="eager" class="image-header-image about">
-        </div>
-      </header>
-{/exp:channel:entries}
+              <div class="image-header-wrapper">
+                <div class="image-overlay-layer"></div>
+                {page_content_blocks:hero_image}{content}<img src="{url}" alt="{title}" loading="eager" class="image-header-image about">{/content}{/page_content_blocks:hero_image}
+              </div>
+            </header>
+          {/fields}
+        {/page_content_blocks:hero_block}
+      {/page_content_blocks}
+
       <div class="timeline color-scheme-1">
         <div class="component-instructions-delete">
           <div class="container-small">
@@ -54,23 +57,33 @@
           <div class="container-large">
             <div class="padding-section-large">
               <div class="timeline-component">
-                <div class="margin-bottom margin-xxlarge">
-                  <div class="max-width-large align-center z-index-1">
-                    <div class="margin-bottom margin-xsmall">
-                      <div class="text-style-tagline">RUNNING HEAD</div>
-                    </div>
-                    <div class="margin-bottom margin-small">
-                      <h2 class="heading-style-h2">A Journey of Deliciousness</h2>
-                    </div>
-                    <div class="margin-bottom margin-small">
-                      <p class="text-size-regular">For more than a decade, Leones&#x27; Creamery has been bringing smiles to the Black Hills, one scoop at a time. What started as a dream to create exceptional, handcrafted ice cream has grown into two beloved locations serving up happiness in every cone. We&#x27;re still churning out new flavors, creating sweet memories, and showing no signs of slowing down.</p>
-                    </div>
-                    <div class="margin-bottom margin-small"><img src="/images/8-flavors-sm_18-flavors-sm.avif" loading="lazy" sizes="(max-width: 1280px) 100vw, 1280px" srcset="/images/8-flavors-sm_1-p-500.avif 500w, /images/8-flavors-sm_1-p-800.avif 800w, /images/8-flavors-sm_18-flavors-sm.avif 1280w" alt="" class="image"></div>
-                    <div class="margin-bottom margin-small">
-                      <p class="text-size-regular">Something else here that is a continuation of what we said on the homepage about the 8 flavors... and anything else before the timeline content starts.... </p>
-                    </div>
-                  </div>
-                </div>
+                {!-- Text Section block(s) from Fluid. Renders running-head,
+                     title, paragraphs, and image above the timeline list. --}
+                {page_content_blocks}
+                  {page_content_blocks:text_section_block}
+                    {fields}
+                      <div class="margin-bottom margin-xxlarge">
+                        <div class="max-width-large align-center z-index-1">
+                          <div class="margin-bottom margin-xsmall">
+                            <div class="text-style-tagline">{page_content_blocks:section_running_head}{content}{/page_content_blocks:section_running_head}</div>
+                          </div>
+                          <div class="margin-bottom margin-small">
+                            <h2 class="heading-style-h2">{page_content_blocks:section_title}{content}{/page_content_blocks:section_title}</h2>
+                          </div>
+                          <div class="margin-bottom margin-small">
+                            {page_content_blocks:section_paragraph_1}{content}{/page_content_blocks:section_paragraph_1}
+                          </div>
+                          <div class="margin-bottom margin-small">
+                            {page_content_blocks:section_image}{content}<img src="{url}" alt="{title}" loading="lazy" class="image">{/content}{/page_content_blocks:section_image}
+                          </div>
+                          <div class="margin-bottom margin-small">
+                            {page_content_blocks:section_paragraph_2}{content}{/page_content_blocks:section_paragraph_2}
+                          </div>
+                        </div>
+                      </div>
+                    {/fields}
+                  {/page_content_blocks:text_section_block}
+                {/page_content_blocks}
                 <div class="timeline-content">
                   <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec858-528c170e" class="timeline-progress">
                     <div class="timeline-fade-overlay-top"></div>
