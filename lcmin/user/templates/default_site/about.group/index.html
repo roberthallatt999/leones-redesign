@@ -34,6 +34,7 @@
           <div class="image-overlay-layer"></div><img sizes="(max-width: 1640px) 100vw, 1640px" srcset="/images/oreo_1-p-500.avif 500w, /images/oreo_1-p-800.avif 800w, /images/oreo_1oreo.avif 1640w" alt="" src="/images/oreo_1oreo.avif" loading="eager" class="image-header-image about">
         </div>
       </header>
+{/exp:channel:entries}
       <div class="timeline color-scheme-1">
         <div class="component-instructions-delete">
           <div class="container-small">
@@ -78,143 +79,109 @@
                     <div class="timeline-fade-overlay-bottom"></div>
                     <div class="timeline-progress-line-cover"></div>
                   </div>
-                  <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec85e-528c170e" class="timeline-list">
-                    <div class="timeline-row">
-                      <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec860-528c170e" class="timeline-image-wrapper"><img sizes="(max-width: 810px) 100vw, 810px" srcset="/images/leones-entrance-p-500.avif 500w, /images/leones-entrance.avif 810w" alt="" src="/images/leones-entrance.avif" loading="lazy" class="timeline13_image"></div>
-                      <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec862-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">2014</h3>
+                  <div class="timeline-list">
+                    {!-- Timeline milestones from `about_timeline` channel.
+                         Odd rows: image-left, text-right.
+                         Even rows: text-left (item-left class), image-right.
+                         Falls back to static webflow markup when channel is empty. --}
+                    {exp:channel:entries channel="about_timeline" dynamic="no" orderby="milestone_year" sort="asc" cache="yes" refresh="60" disable="categories|category_fields|member_data|pagination"}
+                      {if count % 2}
+                      <div class="timeline-row">
+                        <div class="timeline-image-wrapper">
+                          {milestone_image}<img src="{url}" alt="{title}" loading="lazy" class="timeline13_image">{/milestone_image}
+                        </div>
+                        <div class="timeline-circle-wrapper">
+                          <div class="timeline13_circle"></div>
+                        </div>
+                        <div class="margin-top margin-xsmall">
+                          <div class="timeline13_item">
+                            <div class="margin-bottom margin-small">
+                              <h3 class="heading-style-h3">{milestone_year}</h3>
+                            </div>
+                            <div class="margin-bottom margin-xsmall">
+                              <h4 class="heading-style-h5">{milestone_title}</h4>
+                            </div>
+                            <div class="text-size-regular">{milestone_description}</div>
                           </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">The beginning</h4>
-                          </div>
-                          <p class="text-size-regular">Tucked into 722½ Main St., Leones&#x27; Creamery opens its doors to delight.... talk about the cool green space out front and how people love to soak up the sun ... </p>
                         </div>
                       </div>
-                    </div>
-                    <div class="timeline-row">
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item item-left">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">2016</h3>
+                      {if:else}
+                      <div class="timeline-row">
+                        <div class="margin-top margin-xsmall">
+                          <div class="timeline13_item item-left">
+                            <div class="margin-bottom margin-small">
+                              <h3 class="heading-style-h3">{milestone_year}</h3>
+                            </div>
+                            <div class="margin-bottom margin-xsmall">
+                              <h4 class="heading-style-h5">{milestone_title}</h4>
+                            </div>
+                            <div class="text-size-regular">{milestone_description}</div>
                           </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">Next...</h4>
-                          </div>
-                          <p class="text-size-regular">Scooping ice cream at the <a href="https://www.facebook.com/CanyonAcousticSeries?__tn__=-]K*F"><strong>Canyon Acoustic Series</strong></a>, of course! Swing by to check out our snazzy umbrella, nosh on the sweet stuff, and listen to some groOoOovy tunes.</p>
+                        </div>
+                        <div class="timeline-circle-wrapper">
+                          <div class="timeline13_circle"></div>
+                        </div>
+                        <div class="timeline-image-wrapper">
+                          {milestone_image}<img src="{url}" alt="{title}" loading="lazy" class="timeline13_image">{/milestone_image}
                         </div>
                       </div>
-                      <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec889-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="timeline-image-wrapper"><img loading="lazy" src="/images/leones-bike.avif" alt="" class="timeline13_image"></div>
-                    </div>
-                    <div class="timeline-row">
-                      <div id="w-node-_1ce8e4c6-c1df-4e2f-8501-ac4f6134cef2-528c170e" class="timeline-image-wrapper"><img sizes="(max-width: 1024px) 100vw, 1024px" srcset="/images/window-sm-p-500.avif 500w, /images/window-sm.avif 1024w" alt="" src="/images/window-sm.avif" loading="lazy" class="timeline13_image"></div>
-                      <div id="w-node-_1ce8e4c6-c1df-4e2f-8501-ac4f6134cef4-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">2020</h3>
+                      {/if}
+                      {if no_results}
+                      {!-- Fallback: webflow's static milestones until the channel has entries. --}
+                      <div class="timeline-row">
+                        <div class="timeline-image-wrapper"><img sizes="(max-width: 810px) 100vw, 810px" srcset="/images/leones-entrance-p-500.avif 500w, /images/leones-entrance.avif 810w" alt="" src="/images/leones-entrance.avif" loading="lazy" class="timeline13_image"></div>
+                        <div class="timeline-circle-wrapper">
+                          <div class="timeline13_circle"></div>
+                        </div>
+                        <div class="margin-top margin-xsmall">
+                          <div class="timeline13_item">
+                            <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2014</h3></div>
+                            <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">The beginning</h4></div>
+                            <p class="text-size-regular">Tucked into 722&#xBD; Main St., Leones&#x27; Creamery opens its doors to delight.... talk about the cool green space out front and how people love to soak up the sun ... </p>
                           </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">There is always a bright side...</h4>
-                          </div>
-                          <p class="text-size-regular">Especially when ice cream is involved... </p>
                         </div>
                       </div>
-                    </div>
-                    <div id="w-node-_29d8f5bd-dfc1-d10b-f357-f2fc9008047f-528c170e" class="timeline-row">
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item item-left">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">2022</h3>
+                      <div class="timeline-row">
+                        <div class="margin-top margin-xsmall">
+                          <div class="timeline13_item item-left">
+                            <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2016</h3></div>
+                            <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">Next...</h4></div>
+                            <p class="text-size-regular">Scooping ice cream at the <a href="https://www.facebook.com/CanyonAcousticSeries?__tn__=-]K*F"><strong>Canyon Acoustic Series</strong></a>, of course! Swing by to check out our snazzy umbrella, nosh on the sweet stuff, and listen to some groOoOovy tunes.</p>
                           </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">Something else...</h4>
+                        </div>
+                        <div class="timeline-circle-wrapper">
+                          <div class="timeline13_circle"></div>
+                        </div>
+                        <div class="timeline-image-wrapper"><img loading="lazy" src="/images/leones-bike.avif" alt="" class="timeline13_image"></div>
+                      </div>
+                      <div class="timeline-row">
+                        <div class="timeline-image-wrapper"><img sizes="(max-width: 1024px) 100vw, 1024px" srcset="/images/window-sm-p-500.avif 500w, /images/window-sm.avif 1024w" alt="" src="/images/window-sm.avif" loading="lazy" class="timeline13_image"></div>
+                        <div class="timeline-circle-wrapper">
+                          <div class="timeline13_circle"></div>
+                        </div>
+                        <div class="margin-top margin-xsmall">
+                          <div class="timeline13_item">
+                            <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2020</h3></div>
+                            <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">There is always a bright side...</h4></div>
+                            <p class="text-size-regular">Especially when ice cream is involved... </p>
                           </div>
-                          <p class="text-size-regular">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
                         </div>
                       </div>
-                      <div id="w-node-_29d8f5bd-dfc1-d10b-f357-f2fc9008048a-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="timeline-image-wrapper"><img sizes="(max-width: 1662px) 100vw, 1662px" srcset="/images/milkshake-p-500.avif 500w, /images/milkshake-p-800.avif 800w, /images/milkshake.avif 1662w" alt="" src="/images/milkshake.avif" loading="lazy" class="timeline13_image"></div>
-                    </div>
-                    <div class="timeline-row">
-                      <div id="w-node-_032ef86d-84ec-7d70-6ad0-c7ab3bc10ea8-528c170e" class="timeline-image-wrapper"><img loading="lazy" src="/images/placeholder-image.svg" alt="" class="timeline13_image"></div>
-                      <div id="w-node-_032ef86d-84ec-7d70-6ad0-c7ab3bc10eaa-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">Milestone 05</h3>
+                      <div class="timeline-row">
+                        <div class="margin-top margin-xsmall">
+                          <div class="timeline13_item item-left">
+                            <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2022</h3></div>
+                            <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">Something else...</h4></div>
+                            <p class="text-size-regular">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
                           </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">Lorem Ipsum</h4>
-                          </div>
-                          <p class="text-size-regular">Lorem Ipsum</p>
                         </div>
-                      </div>
-                    </div>
-                    <div id="w-node-bf4eeff0-91c3-9c53-74cc-36a491bc7ce8-528c170e" class="timeline-row">
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item item-left">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">Milestone 06</h3>
-                          </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">Something else...</h4>
-                          </div>
-                          <p class="text-size-regular">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+                        <div class="timeline-circle-wrapper">
+                          <div class="timeline13_circle"></div>
                         </div>
+                        <div class="timeline-image-wrapper"><img sizes="(max-width: 1662px) 100vw, 1662px" srcset="/images/milkshake-p-500.avif 500w, /images/milkshake-p-800.avif 800w, /images/milkshake.avif 1662w" alt="" src="/images/milkshake.avif" loading="lazy" class="timeline13_image"></div>
                       </div>
-                      <div id="w-node-bf4eeff0-91c3-9c53-74cc-36a491bc7cf3-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="timeline-image-wrapper"><img loading="lazy" src="/images/placeholder-image.svg" alt="" class="timeline13_image"></div>
-                    </div>
-                    <div class="timeline-row">
-                      <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec88e-528c170e" class="timeline-image-wrapper"><img loading="lazy" src="/images/placeholder-image.svg" alt="" class="timeline13_image"></div>
-                      <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec890-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">Milestone 07</h3>
-                          </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">Something else...</h4>
-                          </div>
-                          <p class="text-size-regular">Lorem Ipsum</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec8a4-528c170e" class="timeline-row">
-                      <div class="margin-top margin-xsmall">
-                        <div class="timeline13_item item-left">
-                          <div class="margin-bottom margin-small">
-                            <h3 class="heading-style-h3">Milestone 08</h3>
-                          </div>
-                          <div class="margin-bottom margin-xsmall">
-                            <h4 class="heading-style-h5">Something else...</h4>
-                          </div>
-                          <p class="text-size-regular">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
-                        </div>
-                      </div>
-                      <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec8b7-528c170e" class="timeline-circle-wrapper">
-                        <div class="timeline13_circle"></div>
-                      </div>
-                      <div class="timeline-image-wrapper"><img loading="lazy" src="/images/placeholder-image.svg" alt="" class="timeline13_image"></div>
-                    </div>
+                      {/if}
+                    {/exp:channel:entries}
                   </div>
                 </div>
               </div>
@@ -222,7 +189,6 @@
           </div>
         </div>
       </div>
-{/exp:channel:entries}
       <section class="section-faqs">
         <div class="padding-global color-scheme-5">
           <div class="container-large">
