@@ -189,9 +189,14 @@
                     <p class="text-size-medium">You have questions. We have answers!</p>
                   </div>
                   <div class="faqs-list">
+                    {!-- FAQs from `faqs` channel via Low Reorder (manual ordering in CP).
+                         Limit 5 to match the 5 IX2 data-w-ids baked into webflow.js's
+                         interaction timeline; switch keeps each accordion bound to its
+                         expand/collapse animation slot. --}
+                    {exp:low_reorder:entries set="faqs" limit="5" dynamic="no" disable="categories|category_fields|member_data|pagination"}
                     <div class="faqs-accordion">
-                      <div data-w-id="58ea2e65-1ad8-3bf9-73e8-99ddf43c12b5" class="faqs-question">
-                        <div class="text-size-medium faqs">How Often do your Flavors Change?</div>
+                      <div data-w-id="{switch="58ea2e65-1ad8-3bf9-73e8-99ddf43c12b5|58ea2e65-1ad8-3bf9-73e8-99ddf43c12bf|58ea2e65-1ad8-3bf9-73e8-99ddf43c12c9|58ea2e65-1ad8-3bf9-73e8-99ddf43c12d3|58ea2e65-1ad8-3bf9-73e8-99ddf43c12dd"}" class="faqs-question">
+                        <div class="text-size-medium faqs">{question}</div>
                         <div class="extra_cta_icon-wrapper">
                           <div class="icon-embed-small w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
                               <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
@@ -200,70 +205,11 @@
                       </div>
                       <div class="extra_cta_answer">
                         <div class="margin-bottom margin-small">
-                          <p>Short answer: whenever they sell out. It completely depends on the time of the year, popularity of the flavor, and even day of the week (weekends seeing more frequent flavor rotation). Sometimes an ice cream will sell out in a week, sometimes it will sell out in an afternoon!</p>
+                          <p>{answer}</p>
                         </div>
                       </div>
                     </div>
-                    <div class="faqs-accordion">
-                      <div data-w-id="58ea2e65-1ad8-3bf9-73e8-99ddf43c12bf" class="faqs-question">
-                        <div class="text-size-medium faqs">Are You Open Year-round?</div>
-                        <div class="extra_cta_icon-wrapper">
-                          <div class="icon-embed-small w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
-                              <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
-                            </svg></div>
-                        </div>
-                      </div>
-                      <div class="extra_cta_answer">
-                        <div class="margin-bottom margin-small">
-                          <p>Indeed, we are! During our summer season, we&#x27;re scooping every day (barring Tuesdays) from noon until 10. During the winter season, we close at 9pm, but are still open each day (except Tuesdays).</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="faqs-accordion">
-                      <div data-w-id="58ea2e65-1ad8-3bf9-73e8-99ddf43c12c9" class="faqs-question">
-                        <div class="text-size-medium faqs">Catering and events?</div>
-                        <div class="extra_cta_icon-wrapper">
-                          <div class="icon-embed-small w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
-                              <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
-                            </svg></div>
-                        </div>
-                      </div>
-                      <div class="extra_cta_answer">
-                        <div class="margin-bottom margin-small">
-                          <p>Our mobile scoop-cycle brings fresh, ice cream directly to your gathering.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="faqs-accordion">
-                      <div data-w-id="58ea2e65-1ad8-3bf9-73e8-99ddf43c12d3" class="faqs-question">
-                        <div class="text-size-medium faqs">Where is the Ice Cream made?</div>
-                        <div class="extra_cta_icon-wrapper">
-                          <div class="icon-embed-small w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
-                              <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
-                            </svg></div>
-                        </div>
-                      </div>
-                      <div class="extra_cta_answer">
-                        <div class="margin-bottom margin-small">
-                          <p>All the ice cream is made in-house! We churn up our small batch (and do all of our baking) in our kitchen, which is located right at the back of our Spearfish Creamery.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="faqs-accordion">
-                      <div data-w-id="58ea2e65-1ad8-3bf9-73e8-99ddf43c12dd" class="faqs-question">
-                        <div class="text-size-medium faqs">How are your Vegan flavors made?</div>
-                        <div class="extra_cta_icon-wrapper">
-                          <div class="icon-embed-small w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
-                              <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
-                            </svg></div>
-                        </div>
-                      </div>
-                      <div class="extra_cta_answer">
-                        <div class="margin-bottom margin-small">
-                          <p>Most of our vegan flavors are made with coconut milk, but we also experiment with other forms of non-dairy milks and plant fats. Wondering about a particular flavor? Ask our staff-- they&#x27;re here to answer any and all questions about our menu!</p>
-                        </div>
-                      </div>
-                    </div>
+                    {/exp:low_reorder:entries}
                   </div>
                 </div>
               </div>
