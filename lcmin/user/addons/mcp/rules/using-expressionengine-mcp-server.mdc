@@ -1,0 +1,280 @@
+---
+description: Guide for using ExpressionEngine MCP server tools and resources
+alwaysApply: true
+---
+
+# Using the ExpressionEngine MCP Server
+
+This project has an ExpressionEngine MCP (Model Context Protocol) server configured that provides direct access to ExpressionEngine functionality through tools, resources, and prompts. **Always prefer using these MCP components instead of manually implementing functionality or making assumptions about the ExpressionEngine installation.**
+
+## Overview
+
+The ExpressionEngine MCP server exposes ExpressionEngine functionality through three types of components:
+
+- **Tools**: Perform actions and return results (e.g., clearing cache, backing up database, executing CLI commands)
+- **Resources**: Provide data access via URIs (e.g., channels, fields, templates, members)
+- **Prompts**: Generate conversation starters for complex multi-step tasks
+
+## When to Use Tools vs Resources
+
+- **Use Tools** when you need to:
+  - Perform an action (clear cache, backup database, execute commands)
+  - Modify system state
+  - Execute operations that return results
+  
+- **Use Resources** when you need to:
+  - Retrieve data about ExpressionEngine entities (channels, fields, templates, etc.)
+  - Access read-only information
+  - Get system information
+
+- **Use Prompts** when you need to:
+  - Perform complex multi-step tasks
+  - Generate templates or convert content
+  - Get guided assistance for complex operations
+
+<!-- BEGIN AUTO-GENERATED: MCP-REFERENCE -->
+## Available Tools
+
+_Auto-generated from MCP tool attributes/schemas via `scripts/generate-rule-reference.php`._
+
+#### `backup_database`
+Backup the ExpressionEngine database to an SQL file
+
+**Parameters**:
+- `relative_path` (optional, string): Path relative to cache folder where backup is stored (e.g., "backups/2025")
+- `absolute_path` (optional, string): Absolute directory path to store backup (overrides relative_path if both are provided)
+- `file_name` (optional, string): Name of the SQL file to be saved (default: database_name_timestamp.sql)
+- `speed` (optional, integer): Backup speed from 1-10 (lower is slower but safer for large databases; default: 5)
+
+#### `clear_cache`
+Clear ExpressionEngine caches by type (all, page, tag, db)
+
+**Parameters**:
+- `cache_type` (optional, enum): The type of cache to clear
+
+#### `database_query`
+Execute a read-only SQL query against the configured database.
+
+**Parameters**:
+- `query` (required, string): The SQL query to execute. Only read-only queries are allowed (i.e. SELECT, SHOW, EXPLAIN, DESCRIBE).
+- `database` (optional, string): Optional database connection name to use. Defaults to the application's default connection.
+
+#### `database_schema`
+Read the database schema for this application, including table names, columns, data types, indexes, foreign keys, and more.
+
+**Parameters**:
+- `database` (optional, string): Optional database connection name to use. Defaults to the application's default connection.
+- `filter` (optional, string): Filter the tables by name. When provided, returns full detailed schema for matching tables. When omitted, returns a simplified list of all tables with basic info only.
+
+#### `eecli`
+List and execute ExpressionEngine CLI commands
+
+**Parameters**:
+- `action` (required, enum): Action to perform: "list" to get available commands, "run" to execute a command
+- `command` (optional, string): The CLI command to execute (e.g., "cache:clear", "list", "version"). Required when action is "run".
+- `arguments` (optional, array): Array of command arguments to pass to the command
+- `options` (optional, object): Object with option flags (e.g., {"verbose": true, "force": true, "step": "2"}). Boolean options are set as flags, string/number options are passed as --key=value. Any option key is allowed.
+- `format` (optional, enum): Output format. "json" attempts to parse JSON output from commands that support it (e.g., --json flag). Default: "text"
+
+#### `execute_template_generator`
+Execute an ExpressionEngine template generator and return the generated template code (read-only, does not save templates)
+
+**Parameters**:
+- `generator_key` (required, string): The generator key to execute (e.g., "channel:channels", "channel:fields", "channel:fieldGroups")
+- `options` (optional, object): Generator-specific options as key-value pairs. Options vary by generator type.
+- `template` (optional, string): Optional: Specific template name to generate. If not provided, all templates for the generator will be generated.
+- `format` (optional, enum): Output format: "code" returns just template code, "full" returns detailed information including metadata
+
+#### `explain_field_syntax`
+Explain template syntax expectations and common mistakes for a specific ExpressionEngine field type.
+
+**Parameters**:
+- `field_id` (optional, integer): Field ID to explain (alternative to field_name)
+- `field_name` (optional, string): Field short name to explain (alternative to field_id)
+- `site_id` (optional, integer): Optional site ID override for field lookup
+- `template` (optional, string): Template variant used when generating scaffold
+- `include_scaffold` (optional, boolean): Include generated scaffold in response
+
+#### `fix_template_snippet`
+Fix ExpressionEngine field template snippets using safe repairs or exact scaffold replacement.
+
+**Parameters**:
+- `snippet` (required, string): Template snippet to fix
+- `field_id` (optional, integer): Field ID to fix against (alternative to field_name)
+- `field_name` (optional, string): Field short name to fix against (alternative to field_id)
+- `site_id` (optional, integer): Optional site ID override for field lookup
+- `template` (optional, string): Template variant used when generating scaffold
+- `mode` (optional, enum): Fixing mode: "safe" applies minimal repairs; "replace_with_scaffold" replaces snippet with generated scaffold
+
+#### `get_config`
+Get ExpressionEngine configuration values by key (e.g., base_url, site_url, debug, etc.)
+
+**Parameters**:
+- `key` (required, string): The configuration key to retrieve (e.g., base_url, site_url, site_name, debug, is_system_on, etc.)
+
+#### `get_field_template_structure`
+Get exact template scaffold code for an ExpressionEngine field using the CLI template generator. Best for complex field types like Grid and Fluid.
+
+**Parameters**:
+- `field_id` (optional, integer): Field ID to generate structure for (alternative to field_name)
+- `field_name` (optional, string): Field short name to generate structure for (alternative to field_id)
+- `template` (optional, string): Template variant to generate (usually "index")
+- `site_id` (optional, integer): Optional site ID override
+- `format` (optional, enum): Response format: "code" for scaffold only, "full" for scaffold + metadata and guidance
+
+#### `get_field_template_tags`
+Get basic/fallback template tag code for ExpressionEngine channel fields. Prefer get_field_template_structure for exact CLI-generated scaffold output.
+
+**Parameters**:
+- `field_id` (optional, integer): The field ID to get template tags for
+- `field_name` (optional, string): The field name to get template tags for (alternative to field_id)
+- `format` (optional, enum): Output format: "code" returns just the template tag code, "full" returns detailed information including field metadata
+
+#### `get_resource`
+Get a specific MCP resource by URI. Supports both regular resources and template resources with URI parameters.
+
+**Parameters**:
+- `uri` (required, string): The resource URI to retrieve (e.g., "ee://system/info" or "ee://channels/123")
+- `params` (optional, object): Optional parameters for template resources. For template resources, parameters can also be extracted from the URI if not provided.
+
+#### `graphql_introspect`
+Run GraphQL schema introspection against a configured or explicit endpoint.
+
+**Parameters**:
+- `endpoint_url` (optional, string): Optional explicit GraphQL endpoint URL (http/https)
+- `headers` (optional, object): Optional request headers map (for auth tokens, etc.)
+- `timeout_seconds` (optional, integer): Request timeout in seconds
+
+#### `graphql_query`
+Execute GraphQL queries against configured/provided endpoint (mutations blocked by default).
+
+**Parameters**:
+- `query` (required, string): GraphQL query string
+- `variables` (optional, object): Optional GraphQL variables object
+- `operation_name` (optional, string): Optional GraphQL operationName
+- `endpoint_url` (optional, string): Optional explicit GraphQL endpoint URL (http/https)
+- `headers` (optional, object): Optional request headers map (for auth tokens, etc.)
+- `timeout_seconds` (optional, integer): Request timeout in seconds
+- `allow_mutations` (optional, boolean): Allow mutation operations. Default false for safety.
+
+#### `list_resources`
+List all available MCP resources with their URIs, names, descriptions, and metadata
+
+**Parameters**:
+- `filter` (optional, string): Optional filter to search resources by name, URI, or description
+
+#### `list_template_generators`
+List all available ExpressionEngine template generators with full metadata (options, templates, validation rules, etc.)
+
+**Parameters**:
+- `generator_key` (optional, string): Optional: Filter to a specific generator by key (e.g., "channel:channels", "channel:fields")
+- `include_templates` (optional, boolean): Whether to include template definitions in the response
+
+#### `search_index_state`
+Inspect Pro Search/core search table state, table counts, and index diagnostics.
+
+**Parameters**:
+- `table_name` (optional, string): Optional specific table name for per-table diagnostics
+- `include_row_counts` (optional, boolean): Include row counts in diagnostics
+
+#### `validate_template_tags`
+Validate ExpressionEngine field template snippet syntax and detect common tag-pair mistakes for complex field types.
+
+**Parameters**:
+- `snippet` (required, string): Template snippet to validate
+- `field_id` (optional, integer): Field ID to validate against (alternative to field_name)
+- `field_name` (optional, string): Field short name to validate against (alternative to field_id)
+- `site_id` (optional, integer): Optional site ID override for field lookup
+- `template` (optional, string): Template variant used when generating scaffold
+- `include_scaffold` (optional, boolean): Include generated scaffold in response for side-by-side comparison
+
+## Available Resources
+
+_Auto-generated from MCP resource attributes via `scripts/generate-rule-reference.php`._
+
+| Resource | List URI | Detail Template URI | Category |
+|---|---|---|---|
+| Categories | `ee://categories` | `ee://categories/{categoryId}` | `content` |
+| Channels | `ee://channels` | `ee://channels/{channelId}` | `content` |
+| Field Groups | `ee://field-groups` | `ee://field-groups/{groupId}` | `content` |
+| Field Template Structures | `ee://field-template-structures` | `ee://field-template-structures/{fieldName}` and `ee://field-template-structures/id/{fieldId}` | `developer` |
+| Fields | `ee://fields` | `ee://fields/{fieldId}` | `content` |
+| Graphql Schema | `ee://graphql/schema` | N/A | `developer` |
+| Members | `ee://members` | `ee://members/{memberId}` | `members` |
+| Search Index State | `ee://search/index-state` | `ee://search/index-state/{tableName}` | `developer` |
+| System Info | `ee://system/info` | N/A | `developer` |
+| Template Groups | `ee://template-groups` | `ee://template-groups/{groupId}` | `content` |
+| Templates | `ee://templates` | `ee://templates/{templateId}` | `content` |
+<!-- END AUTO-GENERATED: MCP-REFERENCE -->
+
+## Available Prompts
+
+Prompts help guide AI assistants to perform complex tasks. They generate conversation starters that walk through multi-step processes.
+
+#### `build_channel_template`
+Generate a complete ExpressionEngine template for a channel with all fields and proper template tag structure.
+
+**When to use**: When you need to create a complete channel template with all fields properly structured.
+
+**Parameters**:
+- `channel_id` (required): The channel ID to build template for
+- `template_type` (optional): Type of template (e.g., "web_page", "feed")
+- `include_fields` (optional): Whether to include all field template tags
+
+**Example**: Generate a complete template for channel 1 with all fields.
+
+#### `convert_html_to_channel`
+Convert static HTML to an ExpressionEngine channel template by identifying fields and replacing content with channel tags.
+
+**When to use**: When you have static HTML that needs to be converted to a dynamic ExpressionEngine template.
+
+**Parameters**:
+- `html` (required): The HTML content to convert
+- `channel_id` (required): The channel ID to use for field mapping
+
+**Example**: Convert static HTML markup to a dynamic channel template.
+
+## Best Practices
+
+1. **Always check available tools/resources first**: Before implementing functionality manually, check if an MCP tool or resource already provides it using `list_resources` or by reviewing available tools.
+
+2. **Prefer tools for actions**: Use tools when you need to perform actions (clear cache, backup database, execute commands).
+
+3. **Use resources for data retrieval**: Use resources when you need to read data about ExpressionEngine entities.
+
+4. **Use prompts for complex tasks**: Use prompts when you need guidance for complex multi-step operations.
+
+5. **Combine tools and resources**: You can combine multiple tool calls and resource accesses to accomplish complex tasks.
+
+6. **Handle errors gracefully**: MCP tools may fail for various reasons. Always handle potential errors and provide helpful error messages.
+
+7. **Cache resource data when appropriate**: If you're accessing the same resource multiple times, consider caching the result to avoid unnecessary calls.
+
+8. **Use appropriate tools for the task**: Don't use `database_query` when a resource provides the same data more safely. Don't use `eecli` when a dedicated tool exists for the operation.
+
+## Common Use Cases
+
+### Getting Channel Information
+Use `ee://channels/{channelId}` resource or `get_resource` tool with URI `ee://channels/{channelId}`.
+
+### Clearing Cache After Template Changes
+Use `clear_cache` tool with `cache_type: "all"` after making template modifications.
+
+### Backing Up Before Changes
+Use `backup_database` tool before making significant changes to the database or system.
+
+### Getting Field Template Tags
+Use `get_field_template_structure` for exact CLI-generated scaffold syntax, and `get_field_template_tags` only for quick fallback snippets.
+
+### Executing CLI Commands
+Use `eecli` tool with `action: "run"` to execute ExpressionEngine CLI commands programmatically.
+
+### Getting System Information
+Use `ee://system/info` resource or `get_resource` tool to get comprehensive system information.
+
+## Remember
+
+- The MCP server is configured as "expressionengine-mcp" in your IDE
+- All tools and resources are automatically discovered from installed add-ons
+- Always prefer using MCP components over manual implementation
+- Check available tools/resources before assuming functionality doesn't exist

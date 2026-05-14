@@ -1,0 +1,11 @@
+{
+    "require": {
+        "php": "^8.1",
+        "mcp/sdk": "^0.3"
+    },
+    "config": {
+        "platform": {
+            "php": "8.1.0"
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "mcpServers": {
+        "expressionengine": {
+            "command": "ddev",
+            "args": [
+                "exec",
+                "php",
+                "-d",
+                "display_errors=0",
+                "-d",
+                "html_errors=0",
+                "lcmin/ee/eecli.php",
+                "mcp:serve"
+            ],
+            "env": {}
+        }
+    }
+}
