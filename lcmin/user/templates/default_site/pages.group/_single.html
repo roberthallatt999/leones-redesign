@@ -10,18 +10,31 @@
   page slug — e.g. "about" for /about. The route's URL segment must match
   the entry's url_title. One template serves every routed content page;
   content is composed in the CP via the `page_content_blocks` Fluid field.
-
-  Block rendering mirrors about.group/index.html (the validated reference):
-    - hero_block      full-width <header>, rendered first
+  Block rendering:
+    - hero_block      full-width <header>, rendered first (grid field)
     - running_head_block / heading_block / paragraph_block / image_block
                       atomic blocks, rendered in a centred content column
-    - faqs_block      full-width FAQs section, rendered last
+    - section_block   full-width trailing section, rendered last. A select
+                      field whose value picks a self-contained partial:
+                        "timeline" → partials/timeline_section
+                        "faqs"     → partials/faqs_section
+                        "collage"  → partials/collage_section
+                      No per-instance content — each section's markup and
+                      content live entirely in its partial.
 
-  Three {page_content_blocks} passes (hero → atomic → faqs) rather than one —
-  the hero and FAQs sections are full-width and can't sit inside the centred
-  content container. Editor block order is preserved within each pass; the
-  natural page order is hero at top, content in the middle, FAQs at the
-  bottom (matches home / about / local-partners).
+  Three {page_content_blocks} passes (hero → atomic → section) rather than
+  one — hero and the trailing sections are full-width and can't sit inside
+  the centred content container. Editor block order is preserved per pass.
+
+  section_block partials are {embed=...}ed on purpose: timeline_section and
+  faqs_section contain channel loops ({exp:channel:entries
+  channel="about_timeline"} / {exp:low_reorder:entries}) that must not be
+  nested inline inside this template's {exp:channel:entries channel="pages"}
+  (parser-order bug, commit 290b2c25). The embed boundary keeps them out of
+  that nesting.
+
+  CP setup: create a `section_block` select field with option values
+  `timeline`, `faqs`, `collage`, and enable it in page_content_blocks.
 --}
 {exp:channel:entries channel="pages" url_title="{segment_1}" limit="1" cache="yes" refresh="60" disable="categories|category_fields|member_data|pagination"}
 {layout:set name="meta_title"}{title} | Leone's Creamery{/layout:set}
@@ -101,13 +114,16 @@
         </div>
       </section>
 
-      {!-- FAQs block(s) — full-width, rendered last. The faqs_section
-           partial is self-contained (pulls all FAQs from the `faqs`
-           channel via Low Reorder). --}
+      {!-- Trailing full-width section(s). The section_block select field's
+           value picks a self-contained partial. Rendered in editor order.
+           Match {if content == ...} against the select field's option
+           VALUES, not labels. --}
       {page_content_blocks}
-        {page_content_blocks:faqs_block}
-          {embed="partials/faqs_section"}
-        {/page_content_blocks:faqs_block}
+        {page_content_blocks:section_block}
+          {if content == "timeline"}{embed="partials/timeline_section"}{/if}
+          {if content == "faqs"}{embed="partials/faqs_section"}{/if}
+          {if content == "collage"}{embed="partials/collage_section"}{/if}
+        {/page_content_blocks:section_block}
       {/page_content_blocks}
 
       {!-- No matching entry for this URL → 404. Adjust the target if the

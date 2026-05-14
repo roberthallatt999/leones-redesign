@@ -1,0 +1,133 @@
+{!--
+  Timeline section partial. Renders the milestone list from the
+  `about_timeline` channel (ordered by milestone_year).
+
+  Embedded by the `timeline_block` handler in pages/_single.html. It MUST
+  stay an embed: pages/_single wraps the whole template in
+  {exp:channel:entries channel="pages"}, and an inline
+  {exp:channel:entries channel="about_timeline"} nested inside that
+  re-triggers the parser-order bug fixed in commit 290b2c25. The embed
+  boundary keeps the about_timeline loop out of that nesting.
+
+  Odd rows: image-left, text-right. Even rows: text-left (item-left),
+  image-right. Falls back to static markup when the channel is empty.
+--}
+<div class="timeline color-scheme-1">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="timeline-component">
+          <div class="timeline-content">
+            <div class="timeline-progress">
+              <div class="timeline-fade-overlay-top"></div>
+              <div class="timeline-progress-line"></div>
+              <div class="timeline-line"></div>
+              <div class="timeline-fade-overlay-bottom"></div>
+              <div class="timeline-progress-line-cover"></div>
+            </div>
+            <div class="timeline-list">
+              {exp:channel:entries channel="about_timeline" dynamic="no" orderby="milestone_year" sort="asc" cache="yes" refresh="60" disable="categories|category_fields|member_data|pagination"}
+                {if count % 2}
+                <div class="timeline-row">
+                  <div class="timeline-image-wrapper">
+                    {milestone_image}<img src="{url}" alt="{title}" loading="lazy" class="timeline13_image">{/milestone_image}
+                  </div>
+                  <div class="timeline-circle-wrapper">
+                    <div class="timeline13_circle"></div>
+                  </div>
+                  <div class="margin-top margin-xsmall">
+                    <div class="timeline13_item">
+                      <div class="margin-bottom margin-small">
+                        <h3 class="heading-style-h3">{milestone_year}</h3>
+                      </div>
+                      <div class="margin-bottom margin-xsmall">
+                        <h4 class="heading-style-h5">{milestone_title}</h4>
+                      </div>
+                      <div class="text-size-regular">{milestone_description}</div>
+                    </div>
+                  </div>
+                </div>
+                {if:else}
+                <div class="timeline-row">
+                  <div class="margin-top margin-xsmall">
+                    <div class="timeline13_item item-left">
+                      <div class="margin-bottom margin-small">
+                        <h3 class="heading-style-h3">{milestone_year}</h3>
+                      </div>
+                      <div class="margin-bottom margin-xsmall">
+                        <h4 class="heading-style-h5">{milestone_title}</h4>
+                      </div>
+                      <div class="text-size-regular">{milestone_description}</div>
+                    </div>
+                  </div>
+                  <div class="timeline-circle-wrapper">
+                    <div class="timeline13_circle"></div>
+                  </div>
+                  <div class="timeline-image-wrapper">
+                    {milestone_image}<img src="{url}" alt="{title}" loading="lazy" class="timeline13_image">{/milestone_image}
+                  </div>
+                </div>
+                {/if}
+                {if no_results}
+                {!-- Fallback: static milestones until the channel has entries. --}
+                <div class="timeline-row">
+                  <div class="timeline-image-wrapper"><img sizes="(max-width: 810px) 100vw, 810px" srcset="/images/leones-entrance-p-500.avif 500w, /images/leones-entrance.avif 810w" alt="" src="/images/leones-entrance.avif" loading="lazy" class="timeline13_image"></div>
+                  <div class="timeline-circle-wrapper">
+                    <div class="timeline13_circle"></div>
+                  </div>
+                  <div class="margin-top margin-xsmall">
+                    <div class="timeline13_item">
+                      <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2014</h3></div>
+                      <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">The beginning</h4></div>
+                      <p class="text-size-regular">Tucked into 722&#xBD; Main St., Leones&#x27; Creamery opens its doors to delight.... talk about the cool green space out front and how people love to soak up the sun ... </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-row">
+                  <div class="margin-top margin-xsmall">
+                    <div class="timeline13_item item-left">
+                      <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2016</h3></div>
+                      <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">Next...</h4></div>
+                      <p class="text-size-regular">Scooping ice cream at the <a href="https://www.facebook.com/CanyonAcousticSeries?__tn__=-]K*F"><strong>Canyon Acoustic Series</strong></a>, of course! Swing by to check out our snazzy umbrella, nosh on the sweet stuff, and listen to some groOoOovy tunes.</p>
+                    </div>
+                  </div>
+                  <div class="timeline-circle-wrapper">
+                    <div class="timeline13_circle"></div>
+                  </div>
+                  <div class="timeline-image-wrapper"><img loading="lazy" src="/images/leones-bike.avif" alt="" class="timeline13_image"></div>
+                </div>
+                <div class="timeline-row">
+                  <div class="timeline-image-wrapper"><img sizes="(max-width: 1024px) 100vw, 1024px" srcset="/images/window-sm-p-500.avif 500w, /images/window-sm.avif 1024w" alt="" src="/images/window-sm.avif" loading="lazy" class="timeline13_image"></div>
+                  <div class="timeline-circle-wrapper">
+                    <div class="timeline13_circle"></div>
+                  </div>
+                  <div class="margin-top margin-xsmall">
+                    <div class="timeline13_item">
+                      <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2020</h3></div>
+                      <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">There is always a bright side...</h4></div>
+                      <p class="text-size-regular">Especially when ice cream is involved... </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-row">
+                  <div class="margin-top margin-xsmall">
+                    <div class="timeline13_item item-left">
+                      <div class="margin-bottom margin-small"><h3 class="heading-style-h3">2022</h3></div>
+                      <div class="margin-bottom margin-xsmall"><h4 class="heading-style-h5">Something else...</h4></div>
+                      <p class="text-size-regular">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+                    </div>
+                  </div>
+                  <div class="timeline-circle-wrapper">
+                    <div class="timeline13_circle"></div>
+                  </div>
+                  <div class="timeline-image-wrapper"><img sizes="(max-width: 1662px) 100vw, 1662px" srcset="/images/milkshake-p-500.avif 500w, /images/milkshake-p-800.avif 800w, /images/milkshake.avif 1662w" alt="" src="/images/milkshake.avif" loading="lazy" class="timeline13_image"></div>
+                </div>
+                {/if}
+              {/exp:channel:entries}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

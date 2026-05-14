@@ -1,0 +1,21 @@
+{!--
+  Collage section partial. Full-width image collage with a heading.
+  Fully self-contained — no fields. Selected via the `section_block`
+  field in pages/_single.html ({if content == "collage"}).
+
+  Edit the heading / image here in the markup.
+--}
+<header class="section-collage text-color-white">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="section-collage-text">
+          <h4 class="heading-style-h3 collage">There’s ALWAYS room for ice cream.</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="collage-image-wrapper">
+    <div class="image-overlay-layer"></div><img sizes="(max-width: 1600px) 100vw, 1600px" srcset="/images/faqs-collage-fullwidth-p-500.avif 500w, /images/faqs-collage-fullwidth-p-800.avif 800w, /images/faqs-collage-fullwidth-p-1080.avif 1080w, /images/faqs-collage-fullwidth.avif 1600w" alt="" src="/images/faqs-collage-fullwidth.avif" loading="eager" class="collage-background-image">
+  </div>
+</header>
