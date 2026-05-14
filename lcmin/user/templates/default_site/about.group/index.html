@@ -7,11 +7,12 @@
 {layout:set name="meta_title"}{title} | Leone's Creamery{/layout:set}
 {layout:set name="page_class"}about{/layout:set}
 
-      {!-- Hero block(s) from Fluid. Editor adds a "Hero Block" with title,
-           subtitle, and image; this section iterates and renders them. --}
+      {!-- Hero block(s) from Fluid (Grid-backed). Each editor-added Hero Block
+           is one Grid row inside the Fluid; {content}{/content} renders that
+           row with named columns. --}
       {page_content_blocks}
         {page_content_blocks:hero_block}
-          {fields}
+          {content}
             <header class="image-header text-color-white">
               <div class="padding-global">
                 <div class="container-large">
@@ -19,10 +20,17 @@
                     <div class="image-header-component">
                       <div class="text-align-center">
                         <div class="max-width-large align-center">
+                          {if "{page_hero_icon raw_output='yes'}" != ""}
                           <div class="margin-bottom margin-small">
-                            <h1 class="heading-style-h1">{page_content_blocks:hero_title}{content}{/page_content_blocks:hero_title}</h1>
+                            <div class="about-us_about_icon-wrapper">
+                              <div class="icon-1x1-large w-embed">{page_hero_icon raw_output="yes"}</div>
+                            </div>
                           </div>
-                          <p class="text-size-regular">{page_content_blocks:hero_subtitle}{content}{/page_content_blocks:hero_subtitle}</p>
+                          {/if}
+                          <div class="margin-bottom margin-small">
+                            <h1 class="heading-style-h1">{content:hero_title}</h1>
+                          </div>
+                          <p class="text-size-regular">{content:hero_subtitle}</p>
                         </div>
                       </div>
                     </div>
@@ -31,12 +39,13 @@
               </div>
               <div class="image-header-wrapper">
                 <div class="image-overlay-layer"></div>
-                {page_content_blocks:hero_image}{content}<img src="{url}" alt="{title}" loading="eager" class="image-header-image about">{/content}{/page_content_blocks:hero_image}
+                {content:hero_image}<img src="{url}" alt="{title}" loading="eager" class="image-header-image about">{/content:hero_image}
               </div>
             </header>
-          {/fields}
+          {/content}
         {/page_content_blocks:hero_block}
       {/page_content_blocks}
+{/exp:channel:entries}
 
       <div class="timeline color-scheme-1">
         <div class="component-instructions-delete">
@@ -57,33 +66,44 @@
           <div class="container-large">
             <div class="padding-section-large">
               <div class="timeline-component">
-                {!-- Text Section block(s) from Fluid. Renders running-head,
-                     title, paragraphs, and image above the timeline list. --}
-                {page_content_blocks}
-                  {page_content_blocks:text_section_block}
-                    {fields}
-                      <div class="margin-bottom margin-xxlarge">
-                        <div class="max-width-large align-center z-index-1">
-                          <div class="margin-bottom margin-xsmall">
-                            <div class="text-style-tagline">{page_content_blocks:section_running_head}{content}{/page_content_blocks:section_running_head}</div>
-                          </div>
-                          <div class="margin-bottom margin-small">
-                            <h2 class="heading-style-h2">{page_content_blocks:section_title}{content}{/page_content_blocks:section_title}</h2>
-                          </div>
-                          <div class="margin-bottom margin-small">
-                            {page_content_blocks:section_paragraph_1}{content}{/page_content_blocks:section_paragraph_1}
-                          </div>
-                          <div class="margin-bottom margin-small">
-                            {page_content_blocks:section_image}{content}<img src="{url}" alt="{title}" loading="lazy" class="image">{/content}{/page_content_blocks:section_image}
-                          </div>
-                          <div class="margin-bottom margin-small">
-                            {page_content_blocks:section_paragraph_2}{content}{/page_content_blocks:section_paragraph_2}
-                          </div>
+                {!-- Atomic page-content blocks from Fluid. Renders each
+                     block in editor-defined order (drag-reorder in CP).
+                     Hero Block is handled above; only atomic content
+                     blocks render here. Wrapped in its own pages
+                     channel:entries so the timeline channel:entries
+                     below isn't nested (would re-trigger the parser-
+                     order issue commit 290b2c25 fixed). --}
+                {exp:channel:entries channel="pages" url_title="about" limit="1" cache="yes" refresh="60" disable="categories|category_fields|member_data|pagination"}
+                <div class="margin-bottom margin-xxlarge">
+                  <div class="max-width-large align-center z-index-1">
+                    {page_content_blocks}
+                      {page_content_blocks:running_head_block}
+                        <div class="margin-bottom margin-xsmall">
+                          <div class="text-style-tagline">{content}</div>
                         </div>
-                      </div>
-                    {/fields}
-                  {/page_content_blocks:text_section_block}
-                {/page_content_blocks}
+                      {/page_content_blocks:running_head_block}
+
+                      {page_content_blocks:heading_block}
+                        <div class="margin-bottom margin-small">
+                          <h2 class="heading-style-h2">{content}</h2>
+                        </div>
+                      {/page_content_blocks:heading_block}
+
+                      {page_content_blocks:paragraph_block}
+                        <div class="margin-bottom margin-small">
+                          {content}
+                        </div>
+                      {/page_content_blocks:paragraph_block}
+
+                      {page_content_blocks:image_block}
+                        <div class="margin-bottom margin-small">
+                          {content}<img src="{url}" alt="{title}" loading="lazy" class="image">{/content}
+                        </div>
+                      {/page_content_blocks:image_block}
+                    {/page_content_blocks}
+                  </div>
+                </div>
+                {/exp:channel:entries}
                 <div class="timeline-content">
                   <div id="w-node-_4ce2b0a8-de24-95a8-89e8-0cbc108ec858-528c170e" class="timeline-progress">
                     <div class="timeline-fade-overlay-top"></div>
@@ -202,45 +222,7 @@
           </div>
         </div>
       </div>
-      <section class="section-faqs">
-        <div class="padding-global color-scheme-5">
-          <div class="container-large">
-            <div class="padding-section-large">
-              <div class="faqs-component">
-                <div class="w-layout-grid faqs-content">
-                  <div class="faqs-content-left">
-                    <div class="margin-bottom margin-small">
-                      <h2 class="heading-style-h2">Here&#x27;s the scoop</h2>
-                    </div>
-                    <p class="text-size-medium">You have questions. We have answers!</p>
-                  </div>
-                  <div class="faqs-list">
-                    {!-- FAQs from `faqs` channel via Low Reorder. limit=5 keeps the
-                         5 IX2 data-w-ids that webflow.js's interaction timeline expects. --}
-                    {exp:low_reorder:entries set="faqs" limit="5" dynamic="no" disable="categories|category_fields|member_data|pagination"}
-                    <div class="faqs-accordion">
-                      <div data-w-id="{switch="58ea2e65-1ad8-3bf9-73e8-99ddf43c12b5|58ea2e65-1ad8-3bf9-73e8-99ddf43c12bf|58ea2e65-1ad8-3bf9-73e8-99ddf43c12c9|58ea2e65-1ad8-3bf9-73e8-99ddf43c12d3|58ea2e65-1ad8-3bf9-73e8-99ddf43c12dd"}" class="faqs-question">
-                        <div class="text-size-medium faqs">{question}</div>
-                        <div class="extra_cta_icon-wrapper">
-                          <div class="icon-embed-small w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
-                              <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
-                            </svg></div>
-                        </div>
-                      </div>
-                      <div class="extra_cta_answer">
-                        <div class="margin-bottom margin-small">
-                          <p>{answer}</p>
-                        </div>
-                      </div>
-                    </div>
-                    {/exp:low_reorder:entries}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {embed="partials/faqs_section"}
       <header class="section-collage text-color-white">
         <div class="padding-global">
           <div class="container-large">

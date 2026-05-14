@@ -1,0 +1,57 @@
+{!--
+  FAQs section partial. Reusable across any page that wants the
+  "Here's the scoop" intro + accordion list of all FAQs from the
+  `faqs` channel (ordered via Low Reorder set "faqs").
+
+  Usage:
+    {embed="partials/faqs_section"}
+
+  Notes:
+    - Accordion open/close is handled by initFaqs() in
+      js/leones-redesign.js (toggles .is-open on .faqs-accordion); CSS in
+      vendor/_legacy.scss animates max-height + chevron rotation. The
+      former Webflow IX2 bindings (data-w-id values) capped the section
+      at 5 items — gone now, so all FAQs in the channel render.
+    - The left-side intro is static here. If a future page needs a different
+      heading/subhead, promote those to {embed:...} parameters and pass them
+      in from the page template.
+    - No Stash — per the redesign direction native EE caching + embeds replace
+      Mustash-style fragment caching.
+--}
+<section class="section-faqs">
+  <div class="padding-global color-scheme-5">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="faqs-component">
+          <div class="w-layout-grid faqs-content">
+            <div class="faqs-content-left">
+              <div class="margin-bottom margin-small">
+                <h2 class="heading-style-h2">Here&#x27;s the scoop</h2>
+              </div>
+              <p class="text-size-medium">You have questions. We have answers!</p>
+            </div>
+            <div class="faqs-list">
+              {exp:low_reorder:entries set="faqs" dynamic="no" cache="yes" refresh="60" disable="categories|category_fields|member_data|pagination"}
+              <div class="faqs-accordion">
+                <button type="button" class="faqs-question" aria-expanded="false">
+                  <div class="text-size-medium faqs">{question}</div>
+                  <div class="extra_cta_icon-wrapper">
+                    <div class="icon-embed-small w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewbox="0 0 24 24" fill="none" preserveaspectratio="xMidYMid meet" aria-hidden="true" role="img">
+                        <path d="M7.08691 9.02344C7.18774 9.02344 7.26471 9.05385 7.34277 9.13184L11.6455 13.459L11.999 13.8145L16.6816 9.13184C16.7593 9.05424 16.8257 9.03227 16.9062 9.03516C17.0005 9.0386 17.0819 9.07117 17.168 9.15723C17.246 9.23531 17.2764 9.31223 17.2764 9.41309C17.2763 9.51371 17.2458 9.59001 17.168 9.66797L12.249 14.5869C12.1949 14.6411 12.1522 14.667 12.124 14.6787C12.0885 14.6935 12.0486 14.7021 12 14.7021C11.9755 14.7021 11.9532 14.6993 11.9326 14.6953L11.875 14.6787L11.8223 14.6484C11.8015 14.634 11.7779 14.6138 11.751 14.5869L6.80664 9.64355C6.7328 9.56972 6.70662 9.50009 6.70996 9.40527C6.71375 9.29797 6.74977 9.2141 6.83203 9.13184C6.90996 9.05403 6.98632 9.02351 7.08691 9.02344Z" fill="currentColor" stroke="currentColor"></path>
+                      </svg></div>
+                  </div>
+                </button>
+                <div class="extra_cta_answer" aria-hidden="true">
+                  <div class="margin-bottom margin-small">
+                    <p>{answer}</p>
+                  </div>
+                </div>
+              </div>
+              {/exp:low_reorder:entries}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

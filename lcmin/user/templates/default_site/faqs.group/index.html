@@ -34,23 +34,9 @@
 
         </div>
 {/exp:channel:entries}
-        <div class="grid-x">
-
-          <div class="cell small-12 medium-12 large-10 float-center">
-            <ul class="multilevel-accordion-menu vertical menu" data-accordion-menu>
-{exp:low_reorder:entries set="faqs" dynamic="no"}
-              <li>
-                <a href="#"><p>{question}</p></a>
-                <ul class="menu vertical sublevel">
-                  <li class="sub-item">{answer}</li>
-                </ul>
-              </li>
-{/exp:low_reorder:entries}
-            </ul>
-          </div>
-
-        </div>
       </div><!--end of wrapping grid-container-->
+
+      {embed="partials/faqs_section"}
 
         <div class="structured-collage" style="background-image:url(/images/faqs-collage-fullwidth.jpg)">
           <div class="grid-x">

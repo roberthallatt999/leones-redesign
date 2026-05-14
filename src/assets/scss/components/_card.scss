@@ -48,6 +48,9 @@
   inset: auto 0% 0%;
 }
 .timeline {
+  // position:relative activates the negative z-index; otherwise the
+  // .timeline-progress-line-cover (top: -50vh) bleeds upward over the hero.
+  position: relative;
   z-index: -3;
 }
 .timeline-content {
