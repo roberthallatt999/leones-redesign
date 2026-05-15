@@ -88,7 +88,16 @@ class CreateLocationsChannel extends Migration
 
         $map_url = $this->makeField($site_id, 'location_map_url', 'Map URL',
             'Google Maps link for the address (target="_blank"). Optional — if blank, the address renders as plain text.',
-            'url', [], ++$order);
+            'url', [
+                // EE's Url_Ft::validate() reads `allowed_url_schemes` and calls
+                // in_array() on it directly — missing/empty crashes with a
+                // TypeError. Set the fieldtype's defaults explicitly.
+                'allowed_url_schemes' => [
+                    'http://'  => 'http://',
+                    'https://' => 'https://',
+                ],
+                'url_scheme_placeholder' => '',
+            ], ++$order);
 
         // Attach fields to the group
         $group->ChannelFields = [$open_time, $close_time, $closed_days, $phone, $street, $city, $state, $zip, $map_url];
