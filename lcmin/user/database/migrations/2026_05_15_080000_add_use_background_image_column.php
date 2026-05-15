@@ -53,7 +53,7 @@ class AddUseBackgroundImageColumn extends Migration
                 'col_search'       => 'n',
                 'col_width'        => 0,
                 'col_settings'     => json_encode([
-                    'field_default_value' => 'y',
+                    'field_default_value' => '1',
                     'field_fmt'           => 'none',
                     'field_show_fmt'      => 'n',
                 ]),
@@ -67,7 +67,7 @@ class AddUseBackgroundImageColumn extends Migration
             "SHOW COLUMNS FROM `{$data_table}` LIKE 'col_id_{$col_id}'"
         )->num_rows();
         if (! $has_col) {
-            ee()->db->query("ALTER TABLE `{$data_table}` ADD COLUMN `col_id_{$col_id}` CHAR(1) NULL DEFAULT 'y'");
+            ee()->db->query("ALTER TABLE `{$data_table}` ADD COLUMN `col_id_{$col_id}` CHAR(1) NULL DEFAULT '1'");
         }
     }
 
