@@ -50,20 +50,25 @@
             </div>
           </div>
           <div class="w-layout-grid footer3_top-wrapper">
+            {!-- One footer block per location entry. Uses the same fields
+                 as partials/locations_section.html, plus the live open /
+                 closed status. Order is whatever the editor sets up in
+                 the locations channel (default: oldest first). --}
+            {exp:channel:entries channel="locations" orderby="entry_date" sort="asc" dynamic="no" disable="categories|category_fields|member_data|pagination"}
             <div class="footer3_left-wrapper">
               <div class="margin-bottom margin-medium">
                 <div class="footer3_details-wrapper">
                   <div class="margin-bottom margin-tiny">
                     <a
-                      href="/spearfish-flavors"
+                      href="/{url_title}-flavors"
                       class="text-size-small text-weight-semibold text-style-link"
-                      >SPEARFISH CREAMERY</a
+                      >{title}</a
                     >
                   </div>
                   <div class="margin-bottom margin-small">
                     <div class="text-size-small">
-                      722½ Main St<br />Spearfish SD 57783<br />
-                      <a href="tel:16056446461">605-644-6461</a>
+                      {location_street_address}<br />{location_city} {location_state} {location_zip}<br />
+                      {if location_phone != ""}<a href="tel:{location_phone}">{location_phone}</a>{/if}
                     </div>
                   </div>
                   <div class="margin-bottom margin-tiny">
@@ -71,39 +76,14 @@
                       HOURS
                     </div>
                     <div class="text-size-small">
-                      Open: Noon - 9PM<br />Closed: Tuesdays
+                      {embed="partials/location_status" slug="{url_title}"}<br />
+                      Open: {location_open_time format="%g:%i %A"} &ndash; {location_close_time format="%g:%i %A"}{if location_closed_days != ""}<br />Closed: {location_closed_days backspace="2"}{item}s, {/location_closed_days}{/if}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="footer3_left-wrapper">
-              <div class="margin-bottom margin-medium">
-                <div class="footer3_details-wrapper">
-                  <div class="margin-bottom margin-tiny">
-                    <a
-                      href="/rapid-city-flavors"
-                      class="text-size-small text-weight-semibold text-style-link"
-                      >RAPID CITY SCOOP SHOP</a
-                    >
-                  </div>
-                  <div class="margin-bottom margin-small">
-                    <div class="text-size-small">
-                      412 St Joseph Street<br />Rapid City SD 57701<br />
-                      <a href="tel:16056446461">605-644-6461</a>
-                    </div>
-                  </div>
-                  <div class="margin-bottom margin-tiny">
-                    <div class="text-size-small text-weight-semibold">
-                      HOURS
-                    </div>
-                    <div class="text-size-small">
-                      Open: Noon - 9PM<br />Closed: Mondays &amp; Tuesdays
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/exp:channel:entries}
             <div
               id="w-node-_6f416a89-c354-df86-b71d-b6027dc28d55-e7c00888"
               class="w-layout-grid footer3_menu-wrapper"
@@ -147,7 +127,9 @@
               © 2026 Leones&#x27; Creamery. All rights reserved.
             </div>
             <div class="w-layout-grid footer3_legal-list">
-              <a href="#" class="footer3_legal-link">Privacy Policy</a>
+              <a href="/privacy-policy" class="footer3_legal-link"
+                >Privacy Policy</a
+              >
               <a href="/terms-of-service" class="footer3_legal-link"
                 >Terms of Service</a
               >

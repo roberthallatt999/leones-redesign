@@ -29,17 +29,42 @@
             <div class="padding-section-small flavors mobile">
               <div class="spearfish-flavors_feature_component">
                 <div class="w-layout-grid spearfish-flavors_feature_grid-list">
-                  <div class="spearfish-flavors_feature_item">
-                    <div class="banner2_content">
-                      <div class="banner2_icon-wrapper">
-                        <div class="icon-embed-small hours w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveaspectratio="xMidYMid meet" viewbox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" fill="currentColor"></circle>
-                          </svg></div>
-                      </div>
-                      <div class="banner2_text-wrapper">
-                        <div class="text-size-regular"><strong>OPEN</strong> | We&#x27;re scooping today from NOON to 9 PM </div>
-                      </div>
-                    </div>
+      {!-- Live open/closed banner driven by the locations channel.
+           State (is-open / is-closed) is applied to the dot wrapper
+           so the SVG fill cascades via currentColor. Conditionals are
+           duplicated for dot + text because EE conditional syntax
+           can't live inside an HTML class attribute (no &quot;). --}
+      {exp:channel:entries channel="locations" url_title="rapid-city" limit="1" disable="categories|category_fields|member_data|pagination"}
+      <div class="spearfish-flavors_feature_item">
+        <div class="banner2_content">
+          <div class="banner2_icon-wrapper">
+            {if "|{location_closed_days}|" *= "|{current_time format='%A'}|"}
+              <div class="icon-embed-small hours is-closed w-embed"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="100%" height="100%" preserveaspectratio="xMidYMid meet" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"></circle></svg></div>
+            {if:else}
+              {if "{current_time format='%H%i'}" >= "{location_open_time format='%H%i'}" AND "{current_time format='%H%i'}" <= "{location_close_time format='%H%i'}"}
+                <div class="icon-embed-small hours is-open w-embed"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="100%" height="100%" preserveaspectratio="xMidYMid meet" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"></circle></svg></div>
+              {if:else}
+                <div class="icon-embed-small hours is-closed w-embed"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="100%" height="100%" preserveaspectratio="xMidYMid meet" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"></circle></svg></div>
+              {/if}
+            {/if}
+          </div>
+          <div class="banner2_text-wrapper">
+            <div class="text-size-regular">
+              {if "|{location_closed_days}|" *= "|{current_time format='%A'}|"}
+                <strong>CLOSED</strong> | We&#x27;re closed today
+              {if:else}
+                {if "{current_time format='%H%i'}" >= "{location_open_time format='%H%i'}" AND "{current_time format='%H%i'}" <= "{location_close_time format='%H%i'}"}
+                  <strong>OPEN</strong> | We&#x27;re scooping today from {location_open_time format="%g:%i %A"} to {location_close_time format="%g:%i %A"}
+                {if:else}
+                  <strong>CLOSED</strong> | We open at {location_open_time format="%g:%i %A"}
+                {/if}
+              {/if}
+            </div>
+          </div>
+        </div>
+      </div>
+      {/exp:channel:entries}
+      </div>
                   </div>
                   <div class="spearfish-flavors_feature_item">
                     <div class="banner2_content">

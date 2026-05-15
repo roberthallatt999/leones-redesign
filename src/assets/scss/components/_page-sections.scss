@@ -1,0 +1,50 @@
+// Layout fixes for the consolidated pages/index.html sections.
+
+// ---- Image-header hero: consistent min-height across pages ----------
+// Without this, the hero's height depends entirely on its text content
+// (title + optional subtitle + optional page_hero_icon). Pages with an
+// icon (About) end up ~100px taller than pages without one (Contact),
+// which looks inconsistent across the site. The min-height anchors a
+// floor so the visual rhythm matches About even when no icon is set.
+//
+// Tune by feel; this value approximates About's rendered height on
+// desktop. Image fills the wrapper automatically (object-fit: cover).
+.image-header {
+  min-height: 24rem;
+  // Flex-centre the content area within the min-height. Without this, when
+  // the content is shorter than the floor (e.g. no page_hero_icon set), it
+  // sits at the top of the hero with whitespace below — visually inconsistent
+  // with pages that have an icon. flex column + justify-content: center keeps
+  // title/subtitle in the same vertical position either way.
+  //
+  // .image-header-wrapper (the image background) is position:absolute inset:0,
+  // so it stays full-bleed regardless of the flex layout.
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media screen and (max-width: 767px) {
+  .image-header {
+    min-height: 18rem;
+  }
+}
+
+// ---- section-page-content: collapse when empty ----------------------
+// pages/index.html always renders the .section-page-content wrapper for
+// the atomic-blocks pass (running_head / heading / paragraph / image).
+// When an entry has none of those block types (e.g. the Contact page,
+// which only uses hero_block + section_block), the inner column is
+// rendered empty but the wrapper still has padding-section-large
+// (7rem top + 7rem bottom), leaving a large empty white band.
+//
+// :not(:has(...)) collapses the wrapper visually when the inner column
+// has no element children. Whitespace doesn't count as a child element,
+// so EE-output indentation doesn't trigger a false-positive render.
+//
+// NOTE: :has() cannot contain :has() (CSS Selectors L4) — including
+// inside :not(:has(...)). The earlier `:has(.foo:not(:has(*)))` form was
+// invalid and got silently dropped by browsers. Keep this flat form.
+.section-page-content:not(:has(> .padding-global > .container-large > .padding-section-large > .max-width-large.align-center > *)) {
+  display: none;
+}

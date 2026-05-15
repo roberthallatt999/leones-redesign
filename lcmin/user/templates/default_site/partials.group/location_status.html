@@ -1,0 +1,44 @@
+{!--
+  Dynamic "open / closed now" status for a single location. Usage:
+
+    {embed="partials/location_status" slug="spearfish"}
+
+  Looks up the location entry by url_title and renders a status dot
+  followed by a short message:
+    - Closed today           — if today is in location_closed_days
+    - Open until 9:00 PM     — if current time is between open / close
+    - Closed — opens at …    — otherwise
+
+  Closed-day check matches whole tokens: location_closed_days stores a
+  pipe-delimited list like "Monday|Tuesday"; wrapping with |...| around
+  both sides means *= matches the day name as a discrete token (not as
+  a substring of e.g. "Wednesday").
+
+  Time comparison uses {format="%H%i"} which renders an integer-ish
+  zero-padded 24-hour HHMM ("0900", "2100"). String comparison on
+  those values orders correctly.
+
+  No `cache="yes"` — the status changes minute-by-minute. Any page that
+  embeds this should avoid page-level caching too, or its status will
+  freeze.
+
+  Timezone: {current_time}, {location_open_time}, {location_close_time}
+  are all in the EE site timezone (Site Preferences → Localization).
+  Set it to the shop's local timezone — UTC will give wrong results.
+--}
+<span class="location-status">
+{exp:channel:entries channel="locations" url_title="{embed:slug}" limit="1" disable="categories|category_fields|member_data|pagination"}
+  {if "|{location_closed_days}|" *= "|{current_time format='%A'}|"}
+    <span class="status-dot is-closed" aria-hidden="true"></span>
+    <span class="status-text">Closed today</span>
+  {if:else}
+    {if "{current_time format='%H%i'}" >= "{location_open_time format='%H%i'}" AND "{current_time format='%H%i'}" <= "{location_close_time format='%H%i'}"}
+      <span class="status-dot is-open" aria-hidden="true"></span>
+      <span class="status-text">Open until {location_close_time format="%g:%i %A"}</span>
+    {if:else}
+      <span class="status-dot is-closed" aria-hidden="true"></span>
+      <span class="status-text">Closed &mdash; opens at {location_open_time format="%g:%i %A"}</span>
+    {/if}
+  {/if}
+{/exp:channel:entries}
+</span>

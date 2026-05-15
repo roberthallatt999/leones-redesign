@@ -1,0 +1,53 @@
+// Open / closed indicator rendered by partials/location_status.html and
+// by the inline banners on the spearfish-flavors / rapid-city-flavors
+// templates.
+//
+// Two surfaces:
+//   1. .location-status — the standalone partial output (footer, cards).
+//      Renders its own dot + text on one line.
+//   2. .spearfish-flavors_feature_item — the existing flavor-page banner.
+//      The dot lives in the banner's SVG (using currentColor), so we set
+//      `color` on the parent state class and let it cascade in.
+
+$status-open-color:   #2faa5d;   // green
+$status-closed-color: #6b6b6b;   // muted grey
+
+// ---- 1. Partial: .location-status ------------------------------------
+.location-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  line-height: 1.4;
+}
+
+.status-dot {
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background-color: $status-closed-color;
+
+  &.is-open {
+    background-color: $status-open-color;
+  }
+
+  &.is-closed {
+    background-color: $status-closed-color;
+  }
+}
+
+// ---- 2. Flavor-page banner ------------------------------------------
+// The flavor-page banner markup puts the state class directly on the dot
+// wrapper (.icon-embed-small.hours) because EE conditionals can't live
+// inside an HTML attribute. The SVG inside uses fill="currentColor", so
+// setting `color` here flows through to the dot fill.
+.icon-embed-small.hours {
+  &.is-open {
+    color: $status-open-color;
+  }
+
+  &.is-closed {
+    color: $status-closed-color;
+  }
+}

@@ -34,3 +34,5 @@
 // legacy CSS as pages are ported off the Webflow runtime. Keep these small
 // and scoped (no broad rewrites) so they don't shadow legacy rules.
 @use 'components/section-blog-post-header';
+@use 'components/location-status';
+@use 'components/page-sections';

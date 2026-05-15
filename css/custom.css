@@ -10426,3 +10426,47 @@ figcaption {
     padding-top: 1.5rem;
   }
 }
+.location-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  line-height: 1.4;
+}
+
+.status-dot {
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background-color: #6b6b6b;
+}
+.status-dot.is-open {
+  background-color: #2faa5d;
+}
+.status-dot.is-closed {
+  background-color: #6b6b6b;
+}
+
+.icon-embed-small.hours.is-open {
+  color: #2faa5d;
+}
+.icon-embed-small.hours.is-closed {
+  color: #6b6b6b;
+}
+
+.image-header {
+  min-height: 24rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media screen and (max-width: 767px) {
+  .image-header {
+    min-height: 18rem;
+  }
+}
+.section-page-content:not(:has(> .padding-global > .container-large > .padding-section-large > .max-width-large.align-center > *)) {
+  display: none;
+}
