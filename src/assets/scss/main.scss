@@ -29,3 +29,8 @@
 
 // Step 4: original leones-creamery.webflow.css (the full site CSS, verbatim) -
 @use 'vendor/legacy';
+
+// Step 5: per-page-port overrides — focused partials layered on top of the
+// legacy CSS as pages are ported off the Webflow runtime. Keep these small
+// and scoped (no broad rewrites) so they don't shadow legacy rules.
+@use 'components/section-blog-post-header';

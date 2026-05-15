@@ -1,0 +1,39 @@
+// Spacing tweaks for the text-only policy/legal page header
+// (rendered by hero_block when Use Background Image is OFF).
+//
+// The default .padding-section-large gives 7rem top + 7rem bottom on
+// every wrapped section. When a policy header sits directly above the
+// page content section, the stacked 14rem gap between the page title
+// and the first paragraph is too wide for a layout that has no hero
+// image filling the space. We halve the stacked paddings here.
+//
+// The image-hero variant uses .image-header (not .section_blog-post-header1),
+// so this rule does not affect it — image heroes keep their full breathing
+// room for the image to land.
+
+.section_blog-post-header1 .padding-section-large {
+  padding-bottom: 3rem;
+}
+
+.section_blog-post-header1 + .section-page-content .padding-section-large {
+  padding-top: 3rem;
+}
+
+// Match the responsive cadence of the rest of the site
+@media screen and (max-width: 991px) {
+  .section_blog-post-header1 .padding-section-large {
+    padding-bottom: 2.5rem;
+  }
+  .section_blog-post-header1 + .section-page-content .padding-section-large {
+    padding-top: 2.5rem;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .section_blog-post-header1 .padding-section-large {
+    padding-bottom: 1.5rem;
+  }
+  .section_blog-post-header1 + .section-page-content .padding-section-large {
+    padding-top: 1.5rem;
+  }
+}

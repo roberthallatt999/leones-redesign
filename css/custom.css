@@ -10402,3 +10402,27 @@ figcaption {
     grid-area: span 1/span 2/span 1/span 2;
   }
 }
+.section_blog-post-header1 .padding-section-large {
+  padding-bottom: 3rem;
+}
+
+.section_blog-post-header1 + .section-page-content .padding-section-large {
+  padding-top: 3rem;
+}
+
+@media screen and (max-width: 991px) {
+  .section_blog-post-header1 .padding-section-large {
+    padding-bottom: 2.5rem;
+  }
+  .section_blog-post-header1 + .section-page-content .padding-section-large {
+    padding-top: 2.5rem;
+  }
+}
+@media screen and (max-width: 767px) {
+  .section_blog-post-header1 .padding-section-large {
+    padding-bottom: 1.5rem;
+  }
+  .section_blog-post-header1 + .section-page-content .padding-section-large {
+    padding-top: 1.5rem;
+  }
+}

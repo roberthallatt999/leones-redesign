@@ -40,39 +40,76 @@
 {layout:set name="meta_title"}{title} | Leone's Creamery{/layout:set}
 {layout:set name="page_class"}{url_title}{/layout:set}
 
-      {!-- Hero block(s) — full-width --}
+      {!-- Page body wrapper — applies the optional page color scheme to
+           hero + atomic content. Trailing section_blocks render outside
+           so they keep their own backgrounds. Empty class is harmless. --}
+      <div class="{page_color_scheme}">
+
+      {!-- Hero block(s) — full-width. Two variants depending on
+           use_background_image: "y" (default) → image-header with white
+           text; "n" → text-only on the page color scheme, dark text. --}
       {page_content_blocks}
         {page_content_blocks:hero_block}
           {content}
-            <header class="image-header text-color-white">
-              <div class="padding-global">
-                <div class="container-large">
-                  <div class="padding-section-medium">
-                    <div class="image-header-component">
-                      <div class="text-align-center">
+            {if content:use_background_image == "0"}
+              <header class="section_blog-post-header1">
+                <div class="padding-global">
+                  <div class="container-large">
+                    <div class="padding-section-large">
+                      <div class="blog-post-header1_component">
                         <div class="max-width-large align-center">
-                          {if "{page_hero_icon raw_output='yes'}" != ""}
-                          <div class="margin-bottom margin-small">
-                            <div class="about-us_about_icon-wrapper">
-                              <div class="icon-1x1-large w-embed">{page_hero_icon raw_output="yes"}</div>
+                          <div class="blog-post-header1_title-wrapper">
+                            {if "{page_hero_icon raw_output='yes'}" != ""}
+                            <div class="margin-bottom margin-small">
+                              <div class="about-us_about_icon-wrapper">
+                                <div class="icon-1x1-large w-embed">{page_hero_icon raw_output="yes"}</div>
+                              </div>
                             </div>
+                            {/if}
+                            <h1 class="heading-style-h2 text-align-center">{content:hero_title}</h1>
+                            {if content:hero_subtitle}
+                            <div class="margin-top margin-small">
+                              <div class="text-size-small">{content:hero_subtitle}</div>
+                            </div>
+                            {/if}
                           </div>
-                          {/if}
-                          <div class="margin-bottom margin-small">
-                            <h1 class="heading-style-h1">{content:hero_title}</h1>
-                          </div>
-                          <p class="text-size-regular">{content:hero_subtitle}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="image-header-wrapper">
-                <div class="image-overlay-layer"></div>
-                {content:hero_image}<img src="{url}" alt="{title}" loading="eager" class="image-header-image">{/content:hero_image}
-              </div>
-            </header>
+              </header>
+            {if:else}
+              <header class="image-header text-color-white">
+                <div class="padding-global">
+                  <div class="container-large">
+                    <div class="padding-section-medium">
+                      <div class="image-header-component">
+                        <div class="text-align-center">
+                          <div class="max-width-large align-center">
+                            {if "{page_hero_icon raw_output='yes'}" != ""}
+                            <div class="margin-bottom margin-small">
+                              <div class="about-us_about_icon-wrapper">
+                                <div class="icon-1x1-large w-embed">{page_hero_icon raw_output="yes"}</div>
+                              </div>
+                            </div>
+                            {/if}
+                            <div class="margin-bottom margin-small">
+                              <h1 class="heading-style-h1">{content:hero_title}</h1>
+                            </div>
+                            <p class="text-size-regular">{content:hero_subtitle}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="image-header-wrapper">
+                  <div class="image-overlay-layer"></div>
+                  {content:hero_image}<img src="{url}" alt="{title}" loading="eager" class="image-header-image">{/content:hero_image}
+                </div>
+              </header>
+            {/if}
           {/content}
         {/page_content_blocks:hero_block}
       {/page_content_blocks}
@@ -113,6 +150,8 @@
           </div>
         </div>
       </section>
+
+      </div>{!-- /page color scheme wrapper --}
 
       {!-- Trailing full-width section(s). The section_block select value
            (timeline|faqs|collage) names the partial to embed:
